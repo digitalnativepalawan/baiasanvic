@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, Play, X, Maximize2 } from "lucide-react";
+import { createPortal } from "react-dom";
 import { RoomTier } from "../types";
 
 export interface RoomCardProps {
