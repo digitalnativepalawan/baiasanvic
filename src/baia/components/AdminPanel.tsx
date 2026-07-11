@@ -65,6 +65,8 @@ const fileToBase64 = (file: File) =>
 export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const {
     hero,
+    philosophy,
+    islandIntro,
     logo,
     header,
     footer,
@@ -73,6 +75,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     rooms,
     activities,
     updateHero,
+    updatePhilosophy,
+    updateIslandIntro,
     updateLogo,
     updateHeader,
     updateFooter,
