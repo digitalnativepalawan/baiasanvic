@@ -162,12 +162,21 @@ export const PRESETS: { [key: string]: ThemeColors } = {
   }
 };
 
+export interface MediaPlayback {
+  autoplay: boolean;
+  muted: boolean;
+  loop: boolean;
+  controls: boolean;
+  posterUrl?: string;
+}
+
 export interface HeroData {
   title: string;
   subtitle: string;
   backgroundImage: string;
   videoUrl?: string;
   youtubeUrl?: string;
+  playback?: MediaPlayback;
 }
 
 export interface PhilosophyData {
@@ -179,6 +188,7 @@ export interface PhilosophyData {
   youtubeUrl?: string;
   badgeTitle: string;
   badgeText: string;
+  playback?: MediaPlayback;
 }
 
 export interface IslandIntroData {
@@ -189,7 +199,16 @@ export interface IslandIntroData {
   image: string;
   videoUrl?: string;
   youtubeUrl?: string;
+  playback?: MediaPlayback;
 }
+
+export const DEFAULT_HERO_PLAYBACK: MediaPlayback = {
+  autoplay: true, muted: true, loop: true, controls: false, posterUrl: "",
+};
+export const DEFAULT_SECTION_PLAYBACK: MediaPlayback = {
+  autoplay: false, muted: false, loop: false, controls: true, posterUrl: "",
+};
+
 
 export interface LogoData {
   text: string;
