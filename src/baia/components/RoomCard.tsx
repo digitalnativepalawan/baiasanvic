@@ -10,6 +10,7 @@ export interface RoomCardProps {
 
 const RoomCard: React.FC<RoomCardProps> = ({ room, onBook }) => {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   // Fallback to array if images field is missing or empty
   const mediaList = room.images && room.images.length > 0 
