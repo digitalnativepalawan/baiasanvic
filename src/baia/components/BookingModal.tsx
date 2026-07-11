@@ -229,8 +229,7 @@ export default function BookingModal({ isOpen, onClose, initialDates, onSubmitte
           <h2 className="text-xl md:text-2xl uppercase tracking-wider text-luxury-100 font-medium">
             {step === 1 && "Choose Your Villa sanctuary"}
             {step === 2 && "Personal Details"}
-            {step === 3 && "Secure Payment Gateway"}
-            {step === 4 && "Reservation Secured"}
+            {step === 4 && "Inquiry Received"}
           </h2>
 
           {/* Progress Steps Visualizer */}
@@ -238,8 +237,7 @@ export default function BookingModal({ isOpen, onClose, initialDates, onSubmitte
             {[
               { num: 1, label: "Select Room" },
               { num: 2, label: "Details" },
-              { num: 3, label: "Payment" },
-              { num: 4, label: "Receipt" },
+              { num: 4, label: "Confirmation" },
             ].map((s) => (
               <div key={s.num} className="flex items-center space-x-2">
                 <div
