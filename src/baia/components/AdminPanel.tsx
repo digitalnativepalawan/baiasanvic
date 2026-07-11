@@ -1518,7 +1518,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                         <input
                                           type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                           ref={(el) => { roomFileRefs.current[room.id] = el; }}
-                                          accept="image/*,video/*"
+
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) {
@@ -1584,7 +1584,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                         <input
                                           type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                           ref={(el) => { roomAddMediaFileRefs.current[room.id] = el; }}
-                                          accept="image/*,video/*"
+
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) {
