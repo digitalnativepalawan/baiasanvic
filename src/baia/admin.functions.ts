@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { ALLOWED_IMAGE_MIME_TYPES, MAX_UPLOAD_BYTES, verifyAdminPasskey } from "./admin.server";
+import {
+  ALLOWED_IMAGE_MIME_TYPES,
+  ALLOWED_VIDEO_MIME_TYPES,
+  MAX_IMAGE_BYTES,
+  MAX_VIDEO_BYTES,
+  verifyAdminPasskey,
+} from "./admin.server";
 
 export const uploadSiteAsset = createServerFn({ method: "POST" })
   .inputValidator(
@@ -15,17 +21,20 @@ export const uploadSiteAsset = createServerFn({ method: "POST" })
     verifyAdminPasskey(data.passkey);
 
     const contentType = (data.contentType || "").toLowerCase();
-    if (!ALLOWED_IMAGE_MIME_TYPES.has(contentType)) {
+    const isImage = ALLOWED_IMAGE_MIME_TYPES.has(contentType);
+    const isVideo = ALLOWED_VIDEO_MIME_TYPES.has(contentType);
+    if (!isImage && !isVideo) {
       throw new Error(
-        "Unsupported file type. Use WEBP, PNG, JPG/JPEG, or SVG.",
+        "Unsupported file type. Use WEBP, PNG, JPG/JPEG, SVG for images or MP4/WEBM for videos.",
       );
     }
 
     const bytes = Buffer.from(data.base64, "base64");
     if (bytes.byteLength === 0) throw new Error("Empty file");
-    if (bytes.byteLength > MAX_UPLOAD_BYTES) {
+    const cap = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+    if (bytes.byteLength > cap) {
       throw new Error(
-        `File too large (${(bytes.byteLength / 1024 / 1024).toFixed(2)} MB). Max 5 MB.`,
+        `File too large (${(bytes.byteLength / 1024 / 1024).toFixed(2)} MB). Max ${cap / 1024 / 1024} MB.`,
       );
     }
 
