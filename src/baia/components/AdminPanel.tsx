@@ -50,7 +50,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     updateActivity,
     addActivity,
     deleteActivity,
-    resetToDefault
+    resetToDefault,
+    adminPasskey,
   } = useSite();
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
