@@ -744,6 +744,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetToDefault = () => {
     if (window.confirm("Are you sure you want to revert all site customizations back to the original design?")) {
       setHero(DEFAULT_HERO);
+      setPhilosophy(DEFAULT_PHILOSOPHY);
+      setIslandIntro(DEFAULT_ISLAND_INTRO);
       setLogo(DEFAULT_LOGO);
       setHeader(DEFAULT_HEADER);
       setFooter(DEFAULT_FOOTER);
@@ -759,6 +761,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <SiteContext.Provider
       value={{
         hero,
+        philosophy,
+        islandIntro,
         logo,
         header,
         footer,
@@ -767,6 +771,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         rooms,
         activities,
         updateHero,
+        updatePhilosophy,
+        updateIslandIntro,
         updateLogo,
         updateHeader,
         updateFooter,
