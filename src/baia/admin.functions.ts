@@ -1,20 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-const ALLOWED_MIME = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/jpg",
-  "image/webp",
-  "image/gif",
-  "image/svg+xml",
-]);
-const MAX_BYTES = 5 * 1024 * 1024;
-
-function verifyPasskey(passkey: string) {
-  const expected = process.env.ADMIN_PASSKEY;
-  if (!expected) throw new Error("ADMIN_PASSKEY not configured");
-  if (passkey !== expected) throw new Error("Unauthorized");
-}
+import { ALLOWED_IMAGE_MIME_TYPES, MAX_UPLOAD_BYTES, verifyAdminPasskey } from "./admin.server";
 
 export const uploadSiteAsset = createServerFn({ method: "POST" })
   .inputValidator(
@@ -26,18 +12,18 @@ export const uploadSiteAsset = createServerFn({ method: "POST" })
     }) => data,
   )
   .handler(async ({ data }) => {
-    verifyPasskey(data.passkey);
+    verifyAdminPasskey(data.passkey);
 
     const contentType = (data.contentType || "").toLowerCase();
-    if (!ALLOWED_MIME.has(contentType)) {
+    if (!ALLOWED_IMAGE_MIME_TYPES.has(contentType)) {
       throw new Error(
-        "Unsupported file type. Allowed: PNG, JPEG, WEBP, GIF, SVG.",
+        "Unsupported file type. Use WEBP, PNG, JPG/JPEG, or SVG.",
       );
     }
 
     const bytes = Buffer.from(data.base64, "base64");
     if (bytes.byteLength === 0) throw new Error("Empty file");
-    if (bytes.byteLength > MAX_BYTES) {
+    if (bytes.byteLength > MAX_UPLOAD_BYTES) {
       throw new Error(
         `File too large (${(bytes.byteLength / 1024 / 1024).toFixed(2)} MB). Max 5 MB.`,
       );
@@ -55,17 +41,13 @@ export const uploadSiteAsset = createServerFn({ method: "POST" })
       .upload(path, bytes, { contentType, upsert: false });
     if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
 
-    const { data: pub } = supabaseAdmin.storage
-      .from("site-assets")
-      .getPublicUrl(path);
-
-    return { url: pub.publicUrl, path };
+    return { url: `/api/site-assets/${path}`, path };
   });
 
 export const saveSiteState = createServerFn({ method: "POST" })
   .inputValidator((data: { passkey: string; state: unknown }) => data)
   .handler(async ({ data }) => {
-    verifyPasskey(data.passkey);
+    verifyAdminPasskey(data.passkey);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("site_state")

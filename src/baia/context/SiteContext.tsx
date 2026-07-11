@@ -374,6 +374,51 @@ const DEFAULT_GALLERY: GalleryItem[] = [
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
 
+const normalizeAssetUrl = (url: unknown) => {
+  if (typeof url !== "string") return url;
+  const marker = "/storage/v1/object/public/site-assets/";
+  const markerIndex = url.indexOf(marker);
+  if (markerIndex === -1) return url;
+  const objectPath = url.slice(markerIndex + marker.length).split("?")[0];
+  return objectPath ? `/api/site-assets/${objectPath}` : url;
+};
+
+const normalizeLoadedSiteState = (data: any) => {
+  const normalized = { ...data };
+  if (normalized.hero?.backgroundImage) {
+    normalized.hero = {
+      ...normalized.hero,
+      backgroundImage: normalizeAssetUrl(normalized.hero.backgroundImage),
+    };
+  }
+  if (normalized.logo?.customImage) {
+    normalized.logo = {
+      ...normalized.logo,
+      customImage: normalizeAssetUrl(normalized.logo.customImage),
+    };
+  }
+  if (Array.isArray(normalized.galleryItems)) {
+    normalized.galleryItems = normalized.galleryItems.map((item: GalleryItem) => ({
+      ...item,
+      src: normalizeAssetUrl(item.src) as string,
+    }));
+  }
+  if (Array.isArray(normalized.rooms)) {
+    normalized.rooms = normalized.rooms.map((room: RoomTier) => ({
+      ...room,
+      imageUrl: normalizeAssetUrl(room.imageUrl) as string,
+      images: room.images?.map((image) => normalizeAssetUrl(image) as string),
+    }));
+  }
+  if (Array.isArray(normalized.activities)) {
+    normalized.activities = normalized.activities.map((activity: Activity) => ({
+      ...activity,
+      imageUrl: normalizeAssetUrl(activity.imageUrl) as string,
+    }));
+  }
+  return normalized;
+};
+
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hero, setHero] = useState<HeroData>(DEFAULT_HERO);
   const [logo, setLogo] = useState<LogoData>(DEFAULT_LOGO);
@@ -399,7 +444,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq("key", "default")
         .maybeSingle();
       if (!cancelled && !error && data?.data) {
-        const d: any = data.data;
+        const d: any = normalizeLoadedSiteState(data.data);
         if (d.hero) setHero({ ...DEFAULT_HERO, ...d.hero });
         if (d.logo) setLogo({ ...DEFAULT_LOGO, ...d.logo });
         if (d.header) setHeader({ ...DEFAULT_HEADER, ...d.header });
