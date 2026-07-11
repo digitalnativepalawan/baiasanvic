@@ -166,6 +166,29 @@ export interface HeroData {
   title: string;
   subtitle: string;
   backgroundImage: string;
+  videoUrl?: string;
+  youtubeUrl?: string;
+}
+
+export interface PhilosophyData {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  videoUrl?: string;
+  youtubeUrl?: string;
+  badgeTitle: string;
+  badgeText: string;
+}
+
+export interface IslandIntroData {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  ctaLabel: string;
+  image: string;
+  videoUrl?: string;
+  youtubeUrl?: string;
 }
 
 export interface LogoData {
