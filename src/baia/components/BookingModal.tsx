@@ -738,10 +738,10 @@ export default function BookingModal({ isOpen, onClose, initialDates, onSubmitte
 
                 <div className="space-y-2">
                   <h3 className="text-2xl font-serif text-luxury-100 uppercase tracking-wider">
-                    We can't wait to welcome you home
+                    Thank you — your inquiry is with us
                   </h3>
                   <p className="text-xs text-luxury-300 leading-relaxed max-w-md mx-auto">
-                    Your luxury villa at BAIA has been reserved. A confirmation summary and pre-arrival concierge survey have been sent to <strong className="text-gold-300">{confirmedReservation.guestEmail}</strong>.
+                    We've received your booking inquiry and our reservations team will be in touch shortly at <strong className="text-gold-300">{confirmedReservation.guestEmail}</strong> to confirm availability, rates, and next steps. No payment has been taken.
                   </p>
                 </div>
 
@@ -749,13 +749,13 @@ export default function BookingModal({ isOpen, onClose, initialDates, onSubmitte
                 <div id="booking-receipt-ticket" className="bg-luxury-950 border border-luxury-800 p-6 text-left rounded-sm space-y-4 font-sans text-xs">
                   <div className="flex justify-between items-center pb-3.5 border-b border-luxury-800/60">
                     <div>
-                      <p className="text-[9px] tracking-widest text-luxury-400 uppercase font-semibold">RESERVATION CODE</p>
+                      <p className="text-[9px] tracking-widest text-luxury-400 uppercase font-semibold">INQUIRY REFERENCE</p>
                       <p className="text-sm font-semibold text-gold-300 font-mono mt-0.5">{confirmedReservation.id}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-[9px] tracking-widest text-luxury-400 uppercase font-semibold">STATUS</p>
-                      <span className="inline-block bg-green-500/10 text-green-400 text-[10px] px-2.5 py-0.5 uppercase tracking-wider font-semibold rounded-full mt-0.5">
-                        {confirmedReservation.status}
+                      <span className="inline-block bg-gold-500/10 text-gold-300 text-[10px] px-2.5 py-0.5 uppercase tracking-wider font-semibold rounded-full mt-0.5">
+                        Pending confirmation
                       </span>
                     </div>
                   </div>
@@ -784,18 +784,19 @@ export default function BookingModal({ isOpen, onClose, initialDates, onSubmitte
                     </div>
                   </div>
 
-                  {/* Payment summary */}
+                  {/* Next steps summary */}
                   <div className="pt-4 mt-2 border-t border-luxury-800/60 flex justify-between items-center">
                     <div>
-                      <p className="text-[9px] tracking-widest text-luxury-400 uppercase">METHOD CHARGED</p>
-                      <p className="text-luxury-100 font-mono mt-0.5">Visa Ending in {confirmedReservation.paymentCardLast4}</p>
+                      <p className="text-[9px] tracking-widest text-luxury-400 uppercase">NEXT STEPS</p>
+                      <p className="text-luxury-100 mt-0.5">Our team will email you to confirm rates and hold your dates.</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[9px] tracking-widest text-luxury-400 uppercase">TOTAL CHARGED</p>
-                      <p className="text-lg font-serif font-bold text-gold-300">${confirmedReservation.totalPrice}</p>
+                      <p className="text-[9px] tracking-widest text-luxury-400 uppercase">ESTIMATE</p>
+                      <p className="text-lg font-serif font-bold text-gold-300">On request</p>
                     </div>
                   </div>
                 </div>
+
 
                 {/* Return button */}
                 <div id="success-footer-actions">
