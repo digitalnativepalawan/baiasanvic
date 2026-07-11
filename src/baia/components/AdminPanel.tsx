@@ -647,6 +647,45 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                         </div>
                       </div>
 
+                      {/* Hero Video / YouTube (optional) */}
+                      <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4 text-left">
+                        <h4 className="text-xs tracking-widest text-gold-300 font-sans uppercase font-bold">
+                          Hero Video (optional — overrides image)
+                        </h4>
+                        <p className="text-[10px] text-luxury-400 font-sans">Upload a background video from your device, paste a YouTube URL, or leave both empty to use the image above. Priority: YouTube → Video → Image.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Upload Video from Device</label>
+                            <input
+                              type="file" accept={ACCEPTED_VIDEO_TYPES}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(file, (url) => {
+                                  updateHero({ videoUrl: url });
+                                  triggerSuccess("Hero video uploaded.");
+                                }, { allowVideo: true });
+                              }}
+                              className="w-full text-xs text-luxury-200"
+                            />
+                            <p className="mt-2 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">{ACCEPTED_VIDEO_GUIDANCE}</p>
+                            {hero.videoUrl && (
+                              <button type="button" onClick={() => updateHero({ videoUrl: "" })} className="mt-2 text-[10px] text-red-300 hover:text-red-200 uppercase tracking-wider">Clear video</button>
+                            )}
+                          </div>
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Or YouTube URL</label>
+                            <input
+                              type="text"
+                              placeholder="https://youtube.com/watch?v=..."
+                              value={hero.youtubeUrl || ""}
+                              onChange={(e) => updateHero({ youtubeUrl: e.target.value })}
+                              className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+                            />
+                            <p className="mt-2 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">Plays muted &amp; looped as background.</p>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Hero Copy Content */}
                       <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4 text-left">
                         <h4 className="text-xs tracking-widest text-gold-300 font-sans uppercase font-bold">
