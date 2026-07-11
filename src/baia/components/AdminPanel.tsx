@@ -577,7 +577,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                               <input
                                 type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                 ref={heroFileRef}
-                                accept="image/*"
+
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
@@ -709,7 +709,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                 <input
                                   type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                   ref={logoFileRef}
-                                  accept="image/*"
+
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
                                     if (file) {
@@ -1175,7 +1175,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                 <input
                                   type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                   ref={editingGalleryId === "new" ? newGalleryFileRef : editGalleryFileRef}
-                                  accept="image/*"
+
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
                                     if (file) {
@@ -1788,7 +1788,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                         <input
                                           type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                           ref={(el) => { activityFileRefs.current[act.id] = el; }}
-                                          accept="image/*"
+
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) {
