@@ -384,7 +384,9 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [rooms, setRooms] = useState<RoomTier[]>(DEFAULT_ROOMS);
   const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
   const [loaded, setLoaded] = useState(false);
-  const isAdminRef = useRef(false);
+  const [adminPasskey, setAdminPasskey] = useState<string | null>(null);
+  const adminPasskeyRef = useRef<string | null>(null);
+  adminPasskeyRef.current = adminPasskey;
 
   // Load site state from Supabase on mount, and track admin session for save gating
   useEffect(() => {
