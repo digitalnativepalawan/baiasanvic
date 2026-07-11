@@ -209,13 +209,15 @@ export default function App() {
             image={hero.backgroundImage}
             videoUrl={hero.videoUrl}
             youtubeUrl={hero.youtubeUrl}
+            playback={hero.playback}
             alt="Baia Resort hero"
-            className="w-full h-full object-cover object-center animate-fade-in pointer-events-none"
+            className="w-full h-full object-cover object-center animate-fade-in"
           />
           {/* Custom cinematic dark overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-transparent to-black/50" />
-          <div className="absolute inset-0 bg-black/10 mix-blend-overlay" />
+          <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-transparent to-black/50 pointer-events-none" />
+          <div className="absolute inset-0 bg-black/10 mix-blend-overlay pointer-events-none" />
         </div>
+
 
         {/* Content Centering Area */}
         <div className="max-w-7xl mx-auto px-6 lg:px-12 flex-1 flex flex-col justify-center relative z-10 w-full pt-16">
