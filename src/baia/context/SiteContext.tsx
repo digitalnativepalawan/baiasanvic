@@ -823,10 +823,23 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAdminPasskey,
       }}
     >
-      {children}
+      {!loaded ? (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "#0c0c0c",
+            zIndex: 9999,
+          }}
+          aria-hidden="true"
+        />
+      ) : (
+        children
+      )}
     </SiteContext.Provider>
   );
 };
+
 
 export const useSite = () => {
   const context = useContext(SiteContext);
