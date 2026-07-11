@@ -334,9 +334,12 @@ export default function App() {
                 image={islandIntro.image}
                 videoUrl={islandIntro.videoUrl}
                 youtubeUrl={islandIntro.youtubeUrl}
+                playback={islandIntro.playback}
+                lazy
                 alt={islandIntro.title}
                 className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
               />
+
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/40 to-transparent pointer-events-none" />
             </div>
           </motion.div>
