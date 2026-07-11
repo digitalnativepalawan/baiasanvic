@@ -1116,7 +1116,19 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                             </div>
                           </div>
                         </div>
+                        <PlaybackControls
+                          label="Philosophy"
+                          playback={philosophy.playback}
+                          fallback={DEFAULT_SECTION_PLAYBACK}
+                          onChange={(pb) => updatePhilosophy({ playback: pb })}
+                          onUploadPoster={(f) => handleImageUpload(f, (url) => {
+                            const cur = { ...DEFAULT_SECTION_PLAYBACK, ...(philosophy.playback || {}) };
+                            updatePhilosophy({ playback: { ...cur, posterUrl: url } });
+                            triggerSuccess("Philosophy poster uploaded.");
+                          })}
+                        />
                       </div>
+
 
                       {/* ISLAND INTRO */}
                       <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4 text-left">
