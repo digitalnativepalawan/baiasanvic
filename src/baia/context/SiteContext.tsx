@@ -470,11 +470,24 @@ const normalizeLoadedSiteState = (data: any) => {
       customImage: normalizeAssetUrl(normalized.logo.customImage),
     };
   }
+  const normalizePlayback = (pb: any, fallback: MediaPlayback): MediaPlayback => ({
+    ...fallback,
+    ...(pb || {}),
+    posterUrl: normalizeAssetUrl(pb?.posterUrl ?? fallback.posterUrl ?? "") as string,
+  });
+  if (normalized.hero) {
+    normalized.hero = {
+      ...normalized.hero,
+      videoUrl: normalized.hero.videoUrl ? normalizeAssetUrl(normalized.hero.videoUrl) : normalized.hero.videoUrl,
+      playback: normalizePlayback(normalized.hero.playback, DEFAULT_HERO_PLAYBACK),
+    };
+  }
   if (normalized.philosophy) {
     normalized.philosophy = {
       ...normalized.philosophy,
       image: normalizeAssetUrl(normalized.philosophy.image),
       videoUrl: normalizeAssetUrl(normalized.philosophy.videoUrl),
+      playback: normalizePlayback(normalized.philosophy.playback, DEFAULT_SECTION_PLAYBACK),
     };
   }
   if (normalized.islandIntro) {
@@ -482,14 +495,10 @@ const normalizeLoadedSiteState = (data: any) => {
       ...normalized.islandIntro,
       image: normalizeAssetUrl(normalized.islandIntro.image),
       videoUrl: normalizeAssetUrl(normalized.islandIntro.videoUrl),
+      playback: normalizePlayback(normalized.islandIntro.playback, DEFAULT_SECTION_PLAYBACK),
     };
   }
-  if (normalized.hero?.videoUrl) {
-    normalized.hero = {
-      ...normalized.hero,
-      videoUrl: normalizeAssetUrl(normalized.hero.videoUrl),
-    };
-  }
+
   if (Array.isArray(normalized.galleryItems)) {
     normalized.galleryItems = normalized.galleryItems.map((item: GalleryItem) => ({
       ...item,
