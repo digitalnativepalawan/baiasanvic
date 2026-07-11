@@ -591,6 +591,7 @@ export default function App() {
             isOpen={isBookingOpen}
             onClose={handleBookingClose}
             initialDates={activeReservationData}
+            onSubmitted={handleInquirySubmitted}
           />
         )}
       </AnimatePresence>
@@ -598,8 +599,9 @@ export default function App() {
       {/* Admin Panel Modal Overlay */}
       <AnimatePresence>
         {isAdminOpen && (
-          <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+          <AdminGate onClose={() => setIsAdminOpen(false)} />
         )}
+
       </AnimatePresence>
 
       {/* Minimalist Floating Back to Top Button */}
