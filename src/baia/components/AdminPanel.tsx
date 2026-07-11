@@ -468,6 +468,18 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     </button>
 
                     <button
+                      onClick={() => setActiveTab("sections")}
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-sm font-sans text-xs tracking-wider uppercase transition-all text-left ${
+                        activeTab === "sections"
+                          ? "bg-gold-500/10 text-gold-300 border-l-2 border-gold-300 font-medium"
+                          : "text-luxury-400 hover:text-luxury-100 hover:bg-luxury-900/50"
+                      }`}
+                    >
+                      <FileText size={14} />
+                      <span>Page Sections</span>
+                    </button>
+
+                    <button
                       onClick={() => setActiveTab("header_footer")}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-sm font-sans text-xs tracking-wider uppercase transition-all text-left ${
                         activeTab === "header_footer"
