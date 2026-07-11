@@ -3,7 +3,6 @@ export const ALLOWED_IMAGE_MIME_TYPES = new Set([
   "image/jpeg",
   "image/jpg",
   "image/webp",
-  "image/gif",
   "image/svg+xml",
 ]);
 

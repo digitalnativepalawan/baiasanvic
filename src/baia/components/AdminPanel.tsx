@@ -26,6 +26,36 @@ const isVideo = (url: string) => {
 
 type AdminTab = "hero_logo" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "system";
 
+const ACCEPTED_IMAGE_TYPES = "image/webp,image/png,image/jpeg,image/svg+xml,.webp,.png,.jpg,.jpeg,.svg";
+const ACCEPTED_IMAGE_GUIDANCE = "Accepted file types: WEBP, PNG, JPG/JPEG, SVG. Max 5 MB.";
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const MIME_BY_EXTENSION: Record<string, string> = {
+  webp: "image/webp",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  svg: "image/svg+xml",
+};
+
+const getFileContentType = (file: File) => {
+  const browserType = (file.type || "").toLowerCase();
+  if (browserType) return browserType;
+  const ext = file.name.split(".").pop()?.toLowerCase() || "";
+  return MIME_BY_EXTENSION[ext] || "";
+};
+
+const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      const comma = result.indexOf(",");
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error || new Error("The file could not be read completely."));
+    reader.readAsDataURL(file);
+  });
+
 export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const {
     hero,
@@ -146,26 +176,17 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       if (!adminPasskey) {
         throw new Error("Admin not unlocked. Enter passkey and try again.");
       }
-      const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/svg+xml"];
-      const ct = (file.type || "").toLowerCase();
+      const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+      const ct = getFileContentType(file);
       if (!allowed.includes(ct)) {
-        throw new Error("Unsupported file type. Use PNG, JPEG, WEBP, GIF, or SVG.");
+        throw new Error("Unsupported file type. Use WEBP, PNG, JPG/JPEG, or SVG.");
       }
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > MAX_UPLOAD_BYTES) {
         throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(2)} MB). Max 5 MB.`);
       }
 
-      // Read file as base64
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          const comma = result.indexOf(",");
-          resolve(comma >= 0 ? result.slice(comma + 1) : result);
-        };
-        reader.onerror = () => reject(reader.error || new Error("Read failed"));
-        reader.readAsDataURL(file);
-      });
+      const base64 = await fileToBase64(file);
+      if (!base64) throw new Error("The file could not be read completely. Please try exporting it again as WEBP, PNG, JPG/JPEG, or SVG.");
 
       const { url } = await uploadSiteAsset({
         data: { passkey: adminPasskey, filename: file.name, contentType: ct, base64 },

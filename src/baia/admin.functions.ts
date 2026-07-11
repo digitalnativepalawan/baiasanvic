@@ -17,7 +17,7 @@ export const uploadSiteAsset = createServerFn({ method: "POST" })
     const contentType = (data.contentType || "").toLowerCase();
     if (!ALLOWED_IMAGE_MIME_TYPES.has(contentType)) {
       throw new Error(
-        "Unsupported file type. Use WEBP, PNG, JPG/JPEG, GIF, or SVG.",
+        "Unsupported file type. Use WEBP, PNG, JPG/JPEG, or SVG.",
       );
     }
 
