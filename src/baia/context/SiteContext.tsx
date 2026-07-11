@@ -491,6 +491,8 @@ const normalizeLoadedSiteState = (data: any) => {
 
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hero, setHero] = useState<HeroData>(DEFAULT_HERO);
+  const [philosophy, setPhilosophy] = useState<PhilosophyData>(DEFAULT_PHILOSOPHY);
+  const [islandIntro, setIslandIntro] = useState<IslandIntroData>(DEFAULT_ISLAND_INTRO);
   const [logo, setLogo] = useState<LogoData>(DEFAULT_LOGO);
   const [header, setHeader] = useState<HeaderData>(DEFAULT_HEADER);
   const [footer, setFooter] = useState<FooterData>(DEFAULT_FOOTER);
