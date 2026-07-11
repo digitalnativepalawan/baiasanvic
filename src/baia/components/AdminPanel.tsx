@@ -183,17 +183,23 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       if (!adminPasskey) {
         throw new Error("Admin not unlocked. Enter passkey and try again.");
       }
-      const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+      const imageAllowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+      const videoAllowed = ["video/mp4", "video/webm", "video/quicktime"];
       const ct = getFileContentType(file);
-      if (!allowed.includes(ct)) {
-        throw new Error("Unsupported file type. Use WEBP, PNG, JPG/JPEG, or SVG.");
+      const isImage = imageAllowed.includes(ct);
+      const isVideo = videoAllowed.includes(ct);
+      if (!isImage && !(opts.allowVideo && isVideo)) {
+        throw new Error(opts.allowVideo
+          ? "Unsupported file type. Use WEBP/PNG/JPG/SVG for images or MP4/WEBM/MOV for video."
+          : "Unsupported file type. Use WEBP, PNG, JPG/JPEG, or SVG.");
       }
-      if (file.size > MAX_UPLOAD_BYTES) {
-        throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(2)} MB). Max 5 MB.`);
+      const cap = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+      if (file.size > cap) {
+        throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(2)} MB). Max ${cap / 1024 / 1024} MB.`);
       }
 
       const base64 = await fileToBase64(file);
-      if (!base64) throw new Error("The file could not be read completely. Please try exporting it again as WEBP, PNG, JPG/JPEG, or SVG.");
+      if (!base64) throw new Error("The file could not be read completely. Try another export.");
 
       const { url } = await uploadSiteAsset({
         data: { passkey: adminPasskey, filename: file.name, contentType: ct, base64 },
