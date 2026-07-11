@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from "r
 import { RoomTier, Activity, Testimonial } from "../types";
 import { ROOMS as DEFAULT_ROOMS, ACTIVITIES as DEFAULT_ACTIVITIES } from "../data";
 import { supabase } from "@/integrations/supabase/client";
+import { saveSiteState } from "../admin.functions";
 
 export interface ThemeColors {
   gold50: string;
