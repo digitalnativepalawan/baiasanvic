@@ -233,6 +233,9 @@ interface SiteContextType {
   deleteActivity: (id: string) => void;
   // General Image Updater (helper for raw asset overrides)
   resetToDefault: () => void;
+  // Admin passkey (in-memory; set by AdminGate on unlock)
+  adminPasskey: string | null;
+  setAdminPasskey: (passkey: string | null) => void;
 }
 
 const DEFAULT_HERO: HeroData = {
