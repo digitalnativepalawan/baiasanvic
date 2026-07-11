@@ -1184,7 +1184,19 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                             </div>
                           </div>
                         </div>
+                        <PlaybackControls
+                          label="Island intro"
+                          playback={islandIntro.playback}
+                          fallback={DEFAULT_SECTION_PLAYBACK}
+                          onChange={(pb) => updateIslandIntro({ playback: pb })}
+                          onUploadPoster={(f) => handleImageUpload(f, (url) => {
+                            const cur = { ...DEFAULT_SECTION_PLAYBACK, ...(islandIntro.playback || {}) };
+                            updateIslandIntro({ playback: { ...cur, posterUrl: url } });
+                            triggerSuccess("Island poster uploaded.");
+                          })}
+                        />
                       </div>
+
                     </div>
                   )}
 
