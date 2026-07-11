@@ -209,13 +209,13 @@ export default function App() {
             className="lg:col-span-5 space-y-6"
           >
             <span className="text-[10px] tracking-[0.3em] font-sans text-gold-300 font-semibold uppercase">
-              OUR PHILOSOPHY
+              {philosophy.eyebrow}
             </span>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-luxury-100 tracking-wide uppercase leading-tight font-light">
-              "True luxury is feeling completely at home in nature."
+              {philosophy.title}
             </h2>
             <p className="text-sm text-luxury-400 font-sans font-light leading-relaxed max-w-md pt-2">
-              At BAIA, we believe that slowing down connects you to what truly matters. Here, simplicity becomes riches, and raw tropical beauty is framed by custom design and hospitality.
+              {philosophy.subtitle}
             </p>
           </motion.div>
 
@@ -228,13 +228,14 @@ export default function App() {
             className="lg:col-span-7 relative group"
           >
             <div className="aspect-[16/10] overflow-hidden bg-luxury-900 shadow-2xl relative rounded-sm">
-              <img
-                src="/src/assets/images/baia_beachfront_lounge_1783731978499.jpg"
-                alt="Baia beachfront luxury canopy lounge"
+              <MediaFrame
+                image={philosophy.image}
+                videoUrl={philosophy.videoUrl}
+                youtubeUrl={philosophy.youtubeUrl}
+                alt={philosophy.badgeText}
                 className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/50 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/50 to-transparent pointer-events-none" />
             </div>
             {/* Visual bronze floating badge */}
             <motion.div
@@ -244,8 +245,8 @@ export default function App() {
               transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
               className="absolute -bottom-8 -left-8 bg-luxury-900 border border-luxury-800 p-6 shadow-xl hidden md:block max-w-[200px] text-left"
             >
-              <p className="text-[10px] tracking-widest text-gold-300 font-sans uppercase font-bold">THE EXPERIENCE</p>
-              <p className="text-xs text-luxury-100 font-serif mt-1 leading-relaxed">Quiet luxury on the shorelines of San Vicente.</p>
+              <p className="text-[10px] tracking-widest text-gold-300 font-sans uppercase font-bold">{philosophy.badgeTitle}</p>
+              <p className="text-xs text-luxury-100 font-serif mt-1 leading-relaxed">{philosophy.badgeText}</p>
             </motion.div>
           </motion.div>
         </div>
