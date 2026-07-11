@@ -133,43 +133,49 @@ export default function BookingModal({ isOpen, onClose, initialDates, onSubmitte
     }
   };
 
-  const handleNextToPayment = (e: React.FormEvent) => {
+  const handleNextToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const tempErrors: Record<string, string> = {};
     if (!fullName.trim()) tempErrors.fullName = "Please enter your full name";
     if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) tempErrors.email = "Please enter a valid email address";
+    if (!selectedRoom) tempErrors.fullName = "Please select a sanctuary first";
 
     if (Object.keys(tempErrors).length > 0) {
       setErrors(tempErrors);
       return;
     }
-    setErrors({});
-    setStep(3);
-  };
-
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const tempErrors: Record<string, string> = {};
-    if (!cardName.trim()) tempErrors.cardName = "Enter the name printed on your card";
-    if (cardNumber.replace(/\s/g, "").length < 16) tempErrors.cardNumber = "Enter a valid 16-digit card number";
-    if (expiry.length < 5) tempErrors.expiry = "Enter a valid expiry date (MM/YY)";
-    if (cvv.length < 3) tempErrors.cvv = "Enter your 3 or 4 digit secure CVV code";
-
-    if (Object.keys(tempErrors).length > 0) {
-      setErrors(tempErrors);
-      return;
-    }
-
     setErrors({});
     setIsProcessing(true);
 
-    // Simulate SSL handshake and charge authorization
-    await new Promise((resolve) => setTimeout(resolve, 2200));
+    // Submit inquiry to Supabase (status = pending). No payment is taken here —
+    // BAIA responds by email to confirm rates and availability.
+    const { data: inserted, error } = await supabase
+      .from("booking_inquiries")
+      .insert({
+        check_in: checkIn,
+        check_out: checkOut,
+        guest_name: fullName,
+        guest_email: email,
+        guests_count: guestsCount,
+        room_tier_id: selectedRoom!.id,
+        room_tier_name: selectedRoom!.name,
+        total_nights: totalNights,
+        total_price: totalPrice,
+        special_requests: specialRequests || null,
+        status: "pending",
+      })
+      .select("id, reference, created_at")
+      .single();
 
-    // Compile reservation receipt
-    const bookingRef = "BAIA-" + Math.floor(100000 + Math.random() * 900000);
+    setIsProcessing(false);
+
+    if (error) {
+      setErrors({ fullName: "We couldn't submit your inquiry just now. Please try again in a moment." });
+      return;
+    }
+
     const reservation: Reservation = {
-      id: bookingRef,
+      id: inserted?.reference ?? "BAIA-PENDING",
       checkIn,
       checkOut,
       guestName: fullName,
@@ -179,20 +185,19 @@ export default function BookingModal({ isOpen, onClose, initialDates, onSubmitte
       roomTierName: selectedRoom!.name,
       totalNights,
       totalPrice,
-      status: "Confirmed",
-      paymentCardLast4: cardNumber.substring(cardNumber.length - 4),
-      createdAt: new Date().toISOString(),
+      status: "Pending",
+      paymentCardLast4: "",
+      createdAt: inserted?.created_at ?? new Date().toISOString(),
     };
 
-    // Save reservation to local storage for user profile viewing
-    const currentBookings: Reservation[] = JSON.parse(localStorage.getItem("baia_reservations") || "[]");
-    currentBookings.push(reservation);
-    localStorage.setItem("baia_reservations", JSON.stringify(currentBookings));
-
+    onSubmitted?.(reservation);
     setConfirmedReservation(reservation);
-    setIsProcessing(false);
     setStep(4);
   };
+
+  // Fake payment step removed — kept as no-op for older references.
+  const handlePaymentSubmit = handleNextToPayment;
+
 
   return (
     <div id="booking-modal-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-luxury-950/85 backdrop-blur-md">
