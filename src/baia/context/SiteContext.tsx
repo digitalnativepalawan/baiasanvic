@@ -518,6 +518,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!cancelled && !error && data?.data) {
         const d: any = normalizeLoadedSiteState(data.data);
         if (d.hero) setHero({ ...DEFAULT_HERO, ...d.hero });
+        if (d.philosophy) setPhilosophy({ ...DEFAULT_PHILOSOPHY, ...d.philosophy });
+        if (d.islandIntro) setIslandIntro({ ...DEFAULT_ISLAND_INTRO, ...d.islandIntro });
         if (d.logo) setLogo({ ...DEFAULT_LOGO, ...d.logo });
         if (d.header) setHeader({ ...DEFAULT_HEADER, ...d.header });
         if (d.footer) setFooter({ ...DEFAULT_FOOTER, ...d.footer });
