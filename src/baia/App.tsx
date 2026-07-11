@@ -147,11 +147,12 @@ export default function App() {
       >
         {/* Immersive background sunset palm photograph with dark overlay matching the image */}
         <div className="absolute inset-0 bg-luxury-950/40 z-0">
-          <img
-            src={hero.backgroundImage}
-            alt="Baia Resort Sunset with palm tree"
-            className="w-full h-full object-cover object-center animate-fade-in"
-            referrerPolicy="no-referrer"
+          <MediaFrame
+            image={hero.backgroundImage}
+            videoUrl={hero.videoUrl}
+            youtubeUrl={hero.youtubeUrl}
+            alt="Baia Resort hero"
+            className="w-full h-full object-cover object-center animate-fade-in pointer-events-none"
           />
           {/* Custom cinematic dark overlays */}
           <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-transparent to-black/50" />
