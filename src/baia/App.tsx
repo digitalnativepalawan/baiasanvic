@@ -292,11 +292,14 @@ export default function App() {
                 image={philosophy.image}
                 videoUrl={philosophy.videoUrl}
                 youtubeUrl={philosophy.youtubeUrl}
+                playback={philosophy.playback}
+                lazy
                 alt={philosophy.badgeText}
                 className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/50 to-transparent pointer-events-none" />
             </div>
+
             {/* Visual bronze floating badge */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
