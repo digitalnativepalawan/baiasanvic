@@ -404,14 +404,15 @@ export default function App() {
                         {/* Charges Footer */}
                         <div className="pt-4 mt-6 border-t border-luxury-800 flex justify-between items-center">
                           <div>
-                            <p className="text-[8px] tracking-widest text-luxury-500 uppercase">PAYMENT</p>
-                            <p className="text-luxury-300 text-[11px] font-mono mt-0.5">Visa Ending in {res.paymentCardLast4}</p>
+                            <p className="text-[8px] tracking-widest text-luxury-500 uppercase">STATUS</p>
+                            <p className="text-luxury-300 text-[11px] font-mono mt-0.5 uppercase">{res.status} · Awaiting confirmation</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-[8px] tracking-widest text-luxury-500 uppercase">PAID DIRECT</p>
-                            <p className="text-base font-serif font-bold text-gold-300">${res.totalPrice}</p>
+                            <p className="text-[8px] tracking-widest text-luxury-500 uppercase">ESTIMATE</p>
+                            <p className="text-base font-serif font-bold text-gold-300">On request</p>
                           </div>
                         </div>
+
                       </motion.div>
                     ))}
                   </div>
