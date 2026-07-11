@@ -635,14 +635,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setGalleryItems(DEFAULT_GALLERY);
       setRooms(DEFAULT_ROOMS);
       setActivities(DEFAULT_ACTIVITIES);
-      localStorage.removeItem("baia_custom_hero");
-      localStorage.removeItem("baia_custom_logo");
-      localStorage.removeItem("baia_custom_header");
-      localStorage.removeItem("baia_custom_footer");
-      localStorage.removeItem("baia_custom_theme");
-      localStorage.removeItem("baia_custom_gallery");
-      localStorage.removeItem("baia_custom_rooms_v3");
-      localStorage.removeItem("baia_custom_activities");
+
     }
   };
 
