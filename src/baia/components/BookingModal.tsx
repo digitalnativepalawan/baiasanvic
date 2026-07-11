@@ -18,11 +18,12 @@ interface BookingModalProps {
     checkOut: string;
     guests: number;
   };
+  onSubmitted?: (r: Reservation) => void;
 }
 
-export default function BookingModal({ isOpen, onClose, initialDates }: BookingModalProps) {
+export default function BookingModal({ isOpen, onClose, initialDates, onSubmitted }: BookingModalProps) {
   const { rooms } = useSite();
-  // Booking progress steps: 1 = select-room, 2 = guest-details, 3 = secure-payment, 4 = success
+  // Booking progress steps: 1 = select-room, 2 = guest-details, 3 = confirmation
   const [step, setStep] = useState(1);
 
   // Search parameters state
