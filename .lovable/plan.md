@@ -1,67 +1,56 @@
 ## Goal
 
-Make the two "TRUE LUXURY..." (Philosophy) and "PALAWAN AS IT SHOULD BE" (Island Intro) sections fully editable from the Admin panel, and add optional video support (device upload or YouTube URL) to every media slot on the site — hero first, plus philosophy, island intro, rooms, activities, and gallery.
+Give the admin control over how each video plays (sound, loop, autoplay, controls, poster) and make videos load fast on first paint after publish.
 
-## What's editable today vs. missing
+## Problems today
 
-Editable now (in `SiteContext` + Admin panel): hero title/subtitle/image, logo, header, footer, theme, gallery items, rooms, activities.
+1. Every `<video>` in the site is hardcoded `autoPlay muted loop playsInline` with no `controls` — users can't unmute, pause, or scrub.
+2. YouTube embeds are forced to `autoplay=1&mute=1&loop=1&controls=0` — same issue.
+3. Uploaded videos are served through `/api/site-assets/$` which streams the whole object from storage on every request (no `Range` support, no CDN cache hit on first visit). On a fresh publish this means multi-MB videos block the hero paint.
+4. No `poster` image, no `preload` strategy, no lazy loading for below-the-fold videos — hero video downloads eagerly even when a poster would do.
 
-Hardcoded in `src/baia/App.tsx` (NOT editable — this is the bug in the screenshots):
-- Philosophy section: eyebrow, headline, body copy, image, badge title/text.
-- Island Intro block: eyebrow, headline, body copy, image, CTA label.
+## Changes
 
-No section currently supports video (device MP4/WEBM or YouTube URL).
+### 1. Per-video playback settings (admin-editable)
 
-## Scope of changes
+Extend the media shape everywhere a video slot exists (hero, philosophy, island intro, rooms, activities, gallery) with:
 
-### 1. Two new editable sections
+- `autoplay` (default true for hero background, false elsewhere)
+- `muted` (default true — required for autoplay to work in browsers)
+- `loop` (default true for ambient hero, false elsewhere)
+- `controls` (default true everywhere except full-bleed hero background)
+- `posterUrl` (image shown before play; uploaded like any other image)
 
-Add to `SiteContext`:
-- `philosophy: { eyebrow, title, subtitle, image, videoUrl, youtubeUrl, badgeTitle, badgeText }`
-- `islandIntro: { eyebrow, title, subtitle, ctaLabel, image, videoUrl, youtubeUrl }`
+Admin panel: under every `MediaField` that accepts video, add a small "Playback" group with 4 toggles + a poster image uploader. Include a helper note: "Browsers block autoplay unless the video is muted. Turn autoplay off if you want the visitor to press play and hear sound."
 
-Wire `App.tsx` to render from context instead of hardcoded strings/images. Include the same `/api/site-assets/` URL normalization already used for hero/logo.
+### 2. Rendering
 
-### 2. Video support (device + YouTube) on every media slot
+Central `MediaFrame` reads those flags:
 
-Introduce a shared `MediaField` component in the admin panel that renders:
-- Image upload (device) — accept `image/webp,image/png,image/jpeg,image/svg+xml` with a visible "Allowed: WEBP, PNG, JPG, SVG · Max 5 MB" label (matches existing hero behavior; extend to the other slots).
-- Video upload (device) — accept `video/mp4,video/webm` with "Allowed: MP4, WEBM · Max 20 MB".
-- YouTube URL input — validated `youtube.com/watch?v=…` or `youtu.be/…`.
-- Clear/reset buttons per media type.
+- `<video>` element: `autoPlay={autoplay && muted}` (never autoplay with sound), `muted={muted}`, `loop={loop}`, `controls={controls}`, `playsInline`, `poster={posterUrl}`, `preload={autoplay ? "auto" : "metadata"}`.
+- YouTube iframe: build the embed URL from the same flags (`autoplay`, `mute`, `loop`+`playlist=<id>`, `controls`). If autoplay is off, don't force mute.
+- Below-the-fold videos get `preload="none"` + `loading="lazy"` on the poster image; the `<video>` only mounts after the section scrolls into view (IntersectionObserver).
 
-Backend: extend `admin.functions.ts` + `admin.server.ts` to accept video MIMEs and a higher size cap (20 MB) via the same server function, storing under `site-assets/uploads/…`. The existing `/api/site-assets/$` proxy already serves any object type — no route change needed.
+### 3. Faster loading of uploaded videos
 
-Apply `MediaField` to:
-- Hero (existing image → add video/YouTube).
-- Philosophy (new).
-- Island Intro (new).
-- Rooms main image + slideshow entries.
-- Activities image.
-- Gallery items.
+- Add `Range` request support and correct `Accept-Ranges`, `Content-Length`, `Content-Range`, `206 Partial Content` handling to `src/routes/api/site-assets/$.ts` so browsers can start playback before the full file downloads and can seek.
+- Keep the existing `cache-control: public, max-age=31536000, immutable` — the CDN in front of the published site will cache after the first hit.
+- Hero: require a `posterUrl` for videos (admin panel warns if missing); the poster is what the visitor sees during the first byte of video download, so LCP is the poster image, not the video.
+- Admin UI copy: recommend keeping hero videos under ~5 MB, 1080p max, H.264 MP4 or WebM, and always uploading a poster. Add a line explaining that very large videos will feel slow on mobile.
 
-### 3. Front-end rendering priority
+### 4. Defaults on existing content
 
-For any section with media, the render order is: `youtubeUrl` → embedded iframe; else `videoUrl` → `<video autoPlay muted loop playsInline>`; else `image` → `<img>`. Hero uses a full-bleed background video/iframe with the same overlay when a video is set.
+Migrate current state on load: if a section has `videoUrl` or `youtubeUrl` but no playback flags, default to `{ autoplay: true, muted: true, loop: true, controls: false }` for hero and `{ autoplay: false, muted: false, loop: false, controls: true }` for every other section — so non-hero videos immediately gain a working play button with sound.
 
-### 4. File-type guidance in admin
+## Files touched
 
-Every upload input shows the accepted formats and max size directly under it (already partly done for hero/logo — replicate everywhere via `MediaField`).
-
-### 5. Persistence
-
-`saveSiteState` already stores the whole state blob keyed by `default`; new fields flow through automatically. No migration needed.
-
-## Technical notes (for reviewers)
-
-- Files touched: `src/baia/context/SiteContext.tsx`, `src/baia/App.tsx`, `src/baia/components/AdminPanel.tsx`, `src/baia/admin.server.ts`, `src/baia/admin.functions.ts`, `src/baia/components/RoomCard.tsx` (video branch in lightbox is already partly there), `src/baia/components/Activities.tsx`, `src/baia/components/IslandPerspectives.tsx`.
-- YouTube URL parsed to `https://www.youtube.com/embed/<id>?autoplay=1&mute=1&loop=1&playlist=<id>&controls=0` for hero-style ambient loops; standard embed elsewhere.
-- Server function keeps passkey verification; only MIME allowlist and size cap widen for video.
-- No DB schema changes; `site_state.data` is JSONB.
+- `src/baia/context/SiteContext.tsx` — extend media types with playback flags + poster, add migration defaults.
+- `src/baia/App.tsx` — `MediaFrame` reads flags, builds YouTube URL from flags, adds IntersectionObserver-based lazy mount.
+- `src/baia/components/AdminPanel.tsx` — Playback toggles + poster uploader on every video-capable slot; helper copy about muted autoplay and file size.
+- `src/baia/components/RoomCard.tsx`, `Activities.tsx`, `IslandPerspectives.tsx` — render via `MediaFrame` (or mirror the same flag logic) so room/activity/gallery videos also honor admin settings.
+- `src/routes/api/site-assets/$.ts` — implement HTTP `Range` handling for partial content responses.
 
 ## Out of scope
 
-- Testimonials, footer, and navbar text (already editable; not mentioned as broken).
-- Real auth (passkey stays as-is).
-
-Approve to implement.
+- Transcoding uploads to multiple bitrates or generating posters server-side (would need ffmpeg — not available in the Worker runtime). Admin uploads the poster manually.
+- Switching storage/CDN providers.
