@@ -109,60 +109,29 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     setSuccessMsg(msg);
   };
 
-  // Base64 file reader helper with simulated interactive progress bar
-  const handleImageUpload = (
-    file: File, 
-    callback: (base64: string) => void
+  // Upload file to Supabase Storage (site-assets bucket) and return the public URL
+  // to the caller. Keeps the original callback signature so every call site still
+  // just receives a string it can drop into an <img src>.
+  const handleImageUpload = async (
+    file: File,
+    callback: (url: string) => void
   ) => {
     setIsUploading(true);
     setUploadProgress(5);
     setUploadFileName(file.name);
     setUploadStatus("uploading");
 
-    const reader = new FileReader();
-    
-    // Smooth progress simulation to give a high-fidelity visual experience
     let currentVal = 5;
     const interval = setInterval(() => {
-      // Slower increment as it approaches 95% to allow file processing
       const step = currentVal < 60 ? (Math.floor(Math.random() * 12) + 6) : (Math.floor(Math.random() * 6) + 1);
       currentVal = Math.min(95, currentVal + step);
       setUploadProgress(currentVal);
     }, 100);
 
-    reader.onloadend = () => {
-      clearInterval(interval);
-      if (typeof reader.result === "string") {
-        setUploadProgress(100);
-        setUploadStatus("completed");
-        callback(reader.result);
-        
-        // Show success confirmation toast
-        triggerSuccess(`"${file.name}" uploaded and optimized successfully!`);
-
-        // Close/fade progress window after a comfortable reading delay
-        setTimeout(() => {
-          setIsUploading(false);
-          setUploadProgress(0);
-          setUploadStatus("idle");
-          setUploadFileName("");
-        }, 3000);
-      } else {
-        setUploadStatus("error");
-        triggerSuccess(`Failed to parse file "${file.name}".`);
-        setTimeout(() => {
-          setIsUploading(false);
-          setUploadProgress(0);
-          setUploadStatus("idle");
-          setUploadFileName("");
-        }, 3000);
-      }
-    };
-
-    reader.onerror = () => {
+    const finishError = (msg: string) => {
       clearInterval(interval);
       setUploadStatus("error");
-      triggerSuccess(`Error occurred during upload of "${file.name}".`);
+      triggerSuccess(msg);
       setTimeout(() => {
         setIsUploading(false);
         setUploadProgress(0);
@@ -171,8 +140,33 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       }, 3000);
     };
 
-    reader.readAsDataURL(file);
+    try {
+      const ext = (file.name.split(".").pop() || "bin").toLowerCase();
+      const path = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("site-assets")
+        .upload(path, file, { contentType: file.type || undefined, upsert: false });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage.from("site-assets").getPublicUrl(path);
+      const url = pub.publicUrl;
+
+      clearInterval(interval);
+      setUploadProgress(100);
+      setUploadStatus("completed");
+      callback(url);
+      triggerSuccess(`"${file.name}" uploaded successfully!`);
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(0);
+        setUploadStatus("idle");
+        setUploadFileName("");
+      }, 3000);
+    } catch (err: any) {
+      finishError(err?.message ? `Upload failed: ${err.message}` : `Error occurred during upload of "${file.name}".`);
+    }
   };
+
 
   const handleCreateNewRoom = () => {
     addRoom({
