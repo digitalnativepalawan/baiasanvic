@@ -46,24 +46,38 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBook }) => {
     >
       {/* Media Carousel Container */}
       <div className="aspect-[16/10] overflow-hidden relative bg-luxury-950 group/carousel">
-        {isVideo(currentMediaUrl) ? (
-          <video 
-            src={currentMediaUrl}
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <img 
-            src={currentMediaUrl} 
-            alt={`${room.name} - slide ${activeMediaIndex + 1}`} 
-            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
-            referrerPolicy="no-referrer"
-          />
-        )}
+        <button
+          type="button"
+          onClick={() => setLightboxOpen(true)}
+          className="absolute inset-0 w-full h-full cursor-zoom-in z-0"
+          aria-label={`View larger images of ${room.name}`}
+        >
+          {isVideo(currentMediaUrl) ? (
+            <video
+              src={currentMediaUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src={currentMediaUrl}
+              alt={`${room.name} - slide ${activeMediaIndex + 1}`}
+              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+              referrerPolicy="no-referrer"
+            />
+          )}
+        </button>
         <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/80 via-transparent to-transparent pointer-events-none" />
+
+        {/* Zoom hint */}
+        <div className="absolute top-4 left-4 flex items-center space-x-1.5 text-[9px] tracking-widest text-gold-300 uppercase font-sans font-semibold bg-luxury-950/80 backdrop-blur-sm border border-luxury-800/50 px-2.5 py-1 rounded-sm opacity-0 group-hover/carousel:opacity-100 transition-opacity z-10 pointer-events-none">
+          <Maximize2 size={10} />
+          <span>View</span>
+        </div>
+
 
         {/* Carousel Controls (if more than 1 image/video exists) */}
         {mediaList.length > 1 && (
