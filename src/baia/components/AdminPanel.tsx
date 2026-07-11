@@ -63,7 +63,85 @@ const fileToBase64 = (file: File) =>
     reader.readAsDataURL(file);
   });
 
+// Reusable playback controls block: 4 toggles + poster uploader.
+function PlaybackControls({
+  label, playback, fallback, onChange, onUploadPoster,
+}: {
+  label: string;
+  playback: MediaPlayback | undefined;
+  fallback: MediaPlayback;
+  onChange: (pb: MediaPlayback) => void;
+  onUploadPoster: (file: File) => void;
+}) {
+  const pb: MediaPlayback = { ...fallback, ...(playback || {}) };
+  const set = (patch: Partial<MediaPlayback>) => onChange({ ...pb, ...patch });
+  const Toggle = ({ k, title, hint }: { k: keyof MediaPlayback; title: string; hint?: string }) => (
+    <label className="flex items-start gap-2 text-xs text-luxury-200 cursor-pointer select-none">
+      <input
+        type="checkbox"
+        checked={!!pb[k]}
+        onChange={(e) => set({ [k]: e.target.checked } as Partial<MediaPlayback>)}
+        className="mt-0.5 accent-gold-500"
+      />
+      <span>
+        <span className="font-semibold tracking-wider uppercase text-[10px] text-luxury-100">{title}</span>
+        {hint && <span className="block text-[10px] text-luxury-500 font-light leading-snug">{hint}</span>}
+      </span>
+    </label>
+  );
+  return (
+    <div className="mt-4 pt-4 border-t border-luxury-900 space-y-3">
+      <div className="flex items-center justify-between">
+        <h5 className="text-[10px] tracking-widest text-gold-300 font-sans uppercase font-bold">{label} · Video playback</h5>
+      </div>
+      <p className="text-[10px] text-luxury-500 leading-relaxed">
+        Browsers block autoplay unless the video is muted. Turn Autoplay off if you want visitors to press play and hear sound.
+      </p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Toggle k="autoplay" title="Autoplay" hint="Start on page load" />
+        <Toggle k="muted" title="Muted" hint="Required for autoplay" />
+        <Toggle k="loop" title="Loop" hint="Restart when ended" />
+        <Toggle k="controls" title="Show controls" hint="Play / pause / volume" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center pt-2">
+        <div className="md:col-span-3">
+          <div className="aspect-video bg-luxury-900 border border-luxury-800 rounded-sm overflow-hidden">
+            {pb.posterUrl ? (
+              <img src={pb.posterUrl} alt="Poster preview" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[9px] text-luxury-500 uppercase tracking-widest">No poster</div>
+            )}
+          </div>
+        </div>
+        <div className="md:col-span-9 space-y-2">
+          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block">Poster image (shown before video loads — speeds up first paint)</label>
+          <input
+            type="file"
+            accept="image/webp,image/png,image/jpeg,.webp,.png,.jpg,.jpeg"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadPoster(f); }}
+            className="w-full text-xs text-luxury-200"
+          />
+          <input
+            type="text"
+            placeholder="Or paste poster image URL"
+            value={pb.posterUrl || ""}
+            onChange={(e) => set({ posterUrl: e.target.value })}
+            className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+          />
+          {pb.posterUrl && (
+            <button type="button" onClick={() => set({ posterUrl: "" })} className="text-[10px] text-red-300 hover:text-red-200 uppercase tracking-wider">Clear poster</button>
+          )}
+          <p className="text-[10px] text-luxury-500 leading-snug">
+            Tip: keep hero videos under ~5 MB (MP4 H.264 or WebM, 1080p). Large videos load slowly on mobile — always add a poster.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
+
   const {
     hero,
     philosophy,
