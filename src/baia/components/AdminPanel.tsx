@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useSite, GalleryItem, DEFAULT_THEME } from "../context/SiteContext";
 import { RoomTier, Activity } from "../types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AdminPanelProps {
   isOpen: boolean;
