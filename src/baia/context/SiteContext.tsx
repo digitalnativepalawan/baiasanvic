@@ -166,6 +166,29 @@ export interface HeroData {
   title: string;
   subtitle: string;
   backgroundImage: string;
+  videoUrl?: string;
+  youtubeUrl?: string;
+}
+
+export interface PhilosophyData {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  videoUrl?: string;
+  youtubeUrl?: string;
+  badgeTitle: string;
+  badgeText: string;
+}
+
+export interface IslandIntroData {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  ctaLabel: string;
+  image: string;
+  videoUrl?: string;
+  youtubeUrl?: string;
 }
 
 export interface LogoData {
@@ -207,6 +230,8 @@ export interface GalleryItem {
 
 interface SiteContextType {
   hero: HeroData;
+  philosophy: PhilosophyData;
+  islandIntro: IslandIntroData;
   logo: LogoData;
   header: HeaderData;
   footer: FooterData;
@@ -215,6 +240,8 @@ interface SiteContextType {
   rooms: RoomTier[];
   activities: Activity[];
   updateHero: (data: Partial<HeroData>) => void;
+  updatePhilosophy: (data: Partial<PhilosophyData>) => void;
+  updateIslandIntro: (data: Partial<IslandIntroData>) => void;
   updateLogo: (data: Partial<LogoData>) => void;
   updateHeader: (data: Partial<HeaderData>) => void;
   updateFooter: (data: Partial<FooterData>) => void;
@@ -241,7 +268,30 @@ interface SiteContextType {
 const DEFAULT_HERO: HeroData = {
   title: "Escape\nBeyond the\nOrdinary",
   subtitle: "A barefoot luxury retreat on the island of Palawan, where nature, design, and soul move in perfect rhythm.",
-  backgroundImage: "/src/assets/images/baia_hero_sunset_1783731965243.jpg"
+  backgroundImage: "/src/assets/images/baia_hero_sunset_1783731965243.jpg",
+  videoUrl: "",
+  youtubeUrl: "",
+};
+
+const DEFAULT_PHILOSOPHY: PhilosophyData = {
+  eyebrow: "OUR PHILOSOPHY",
+  title: "\"True luxury is feeling completely at home in nature.\"",
+  subtitle: "At BAIA, we believe that slowing down connects you to what truly matters. Here, simplicity becomes riches, and raw tropical beauty is framed by custom design and hospitality.",
+  image: "/src/assets/images/baia_beachfront_lounge_1783731978499.jpg",
+  videoUrl: "",
+  youtubeUrl: "",
+  badgeTitle: "THE EXPERIENCE",
+  badgeText: "Quiet luxury on the shorelines of San Vicente.",
+};
+
+const DEFAULT_ISLAND_INTRO: IslandIntroData = {
+  eyebrow: "THE ISLAND",
+  title: "Palawan as it should be",
+  subtitle: "Unspoiled. Untamed. Unforgettable. Discover a slower pace of life surrounded by raw natural beauty, turquoise saltwater tidal pools, and warm Filipino island hospitality.",
+  ctaLabel: "EXPLORE CURATED EXPERIENCES",
+  image: "/src/assets/images/baia_luxury_room_1783731990599.jpg",
+  videoUrl: "",
+  youtubeUrl: "",
 };
 
 const DEFAULT_LOGO: LogoData = {
@@ -397,6 +447,26 @@ const normalizeLoadedSiteState = (data: any) => {
       customImage: normalizeAssetUrl(normalized.logo.customImage),
     };
   }
+  if (normalized.philosophy) {
+    normalized.philosophy = {
+      ...normalized.philosophy,
+      image: normalizeAssetUrl(normalized.philosophy.image),
+      videoUrl: normalizeAssetUrl(normalized.philosophy.videoUrl),
+    };
+  }
+  if (normalized.islandIntro) {
+    normalized.islandIntro = {
+      ...normalized.islandIntro,
+      image: normalizeAssetUrl(normalized.islandIntro.image),
+      videoUrl: normalizeAssetUrl(normalized.islandIntro.videoUrl),
+    };
+  }
+  if (normalized.hero?.videoUrl) {
+    normalized.hero = {
+      ...normalized.hero,
+      videoUrl: normalizeAssetUrl(normalized.hero.videoUrl),
+    };
+  }
   if (Array.isArray(normalized.galleryItems)) {
     normalized.galleryItems = normalized.galleryItems.map((item: GalleryItem) => ({
       ...item,
@@ -421,6 +491,8 @@ const normalizeLoadedSiteState = (data: any) => {
 
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hero, setHero] = useState<HeroData>(DEFAULT_HERO);
+  const [philosophy, setPhilosophy] = useState<PhilosophyData>(DEFAULT_PHILOSOPHY);
+  const [islandIntro, setIslandIntro] = useState<IslandIntroData>(DEFAULT_ISLAND_INTRO);
   const [logo, setLogo] = useState<LogoData>(DEFAULT_LOGO);
   const [header, setHeader] = useState<HeaderData>(DEFAULT_HEADER);
   const [footer, setFooter] = useState<FooterData>(DEFAULT_FOOTER);
@@ -446,6 +518,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!cancelled && !error && data?.data) {
         const d: any = normalizeLoadedSiteState(data.data);
         if (d.hero) setHero({ ...DEFAULT_HERO, ...d.hero });
+        if (d.philosophy) setPhilosophy({ ...DEFAULT_PHILOSOPHY, ...d.philosophy });
+        if (d.islandIntro) setIslandIntro({ ...DEFAULT_ISLAND_INTRO, ...d.islandIntro });
         if (d.logo) setLogo({ ...DEFAULT_LOGO, ...d.logo });
         if (d.header) setHeader({ ...DEFAULT_HEADER, ...d.header });
         if (d.footer) setFooter({ ...DEFAULT_FOOTER, ...d.footer });
@@ -472,7 +546,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await saveSiteState({
           data: {
             passkey,
-            state: { hero, logo, header, footer, theme, galleryItems, rooms, activities },
+            state: { hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities },
           },
         });
       } catch (err) {
@@ -480,7 +554,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }, 600);
     return () => clearTimeout(timer);
-  }, [loaded, adminPasskey, hero, logo, header, footer, theme, galleryItems, rooms, activities]);
+  }, [loaded, adminPasskey, hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities]);
 
   // Load Google Fonts and apply CSS custom properties dynamically
   useEffect(() => {
@@ -579,6 +653,14 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setHero((prev) => ({ ...prev, ...data }));
   };
 
+  const updatePhilosophy = (data: Partial<PhilosophyData>) => {
+    setPhilosophy((prev) => ({ ...prev, ...data }));
+  };
+
+  const updateIslandIntro = (data: Partial<IslandIntroData>) => {
+    setIslandIntro((prev) => ({ ...prev, ...data }));
+  };
+
   const updateLogo = (data: Partial<LogoData>) => {
     setLogo((prev) => ({ ...prev, ...data }));
   };
@@ -662,6 +744,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetToDefault = () => {
     if (window.confirm("Are you sure you want to revert all site customizations back to the original design?")) {
       setHero(DEFAULT_HERO);
+      setPhilosophy(DEFAULT_PHILOSOPHY);
+      setIslandIntro(DEFAULT_ISLAND_INTRO);
       setLogo(DEFAULT_LOGO);
       setHeader(DEFAULT_HEADER);
       setFooter(DEFAULT_FOOTER);
@@ -677,6 +761,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <SiteContext.Provider
       value={{
         hero,
+        philosophy,
+        islandIntro,
         logo,
         header,
         footer,
@@ -685,6 +771,8 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         rooms,
         activities,
         updateHero,
+        updatePhilosophy,
+        updateIslandIntro,
         updateLogo,
         updateHeader,
         updateFooter,

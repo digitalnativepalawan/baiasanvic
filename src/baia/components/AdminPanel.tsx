@@ -24,17 +24,23 @@ const isVideo = (url: string) => {
          url.includes("video");
 };
 
-type AdminTab = "hero_logo" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "system";
+type AdminTab = "hero_logo" | "sections" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "system";
 
 const ACCEPTED_IMAGE_TYPES = "image/webp,image/png,image/jpeg,image/svg+xml,.webp,.png,.jpg,.jpeg,.svg";
-const ACCEPTED_IMAGE_GUIDANCE = "Accepted file types: WEBP, PNG, JPG/JPEG, SVG. Max 5 MB.";
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_GUIDANCE = "Accepted image types: WEBP, PNG, JPG/JPEG, SVG. Max 5 MB.";
+const ACCEPTED_VIDEO_TYPES = "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov";
+const ACCEPTED_VIDEO_GUIDANCE = "Accepted video types: MP4, WEBM, MOV. Max 20 MB.";
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
 const MIME_BY_EXTENSION: Record<string, string> = {
   webp: "image/webp",
   png: "image/png",
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
   svg: "image/svg+xml",
+  mp4: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
 };
 
 const getFileContentType = (file: File) => {
@@ -59,6 +65,8 @@ const fileToBase64 = (file: File) =>
 export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const {
     hero,
+    philosophy,
+    islandIntro,
     logo,
     header,
     footer,
@@ -67,6 +75,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     rooms,
     activities,
     updateHero,
+    updatePhilosophy,
+    updateIslandIntro,
     updateLogo,
     updateHeader,
     updateFooter,
@@ -146,7 +156,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   // just receives a string it can drop into an <img src>.
   const handleImageUpload = async (
     file: File,
-    callback: (url: string) => void
+    callback: (url: string) => void,
+    opts: { allowVideo?: boolean } = {}
   ) => {
     setIsUploading(true);
     setUploadProgress(5);
@@ -176,17 +187,23 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       if (!adminPasskey) {
         throw new Error("Admin not unlocked. Enter passkey and try again.");
       }
-      const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+      const imageAllowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+      const videoAllowed = ["video/mp4", "video/webm", "video/quicktime"];
       const ct = getFileContentType(file);
-      if (!allowed.includes(ct)) {
-        throw new Error("Unsupported file type. Use WEBP, PNG, JPG/JPEG, or SVG.");
+      const isImage = imageAllowed.includes(ct);
+      const isVideo = videoAllowed.includes(ct);
+      if (!isImage && !(opts.allowVideo && isVideo)) {
+        throw new Error(opts.allowVideo
+          ? "Unsupported file type. Use WEBP/PNG/JPG/SVG for images or MP4/WEBM/MOV for video."
+          : "Unsupported file type. Use WEBP, PNG, JPG/JPEG, or SVG.");
       }
-      if (file.size > MAX_UPLOAD_BYTES) {
-        throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(2)} MB). Max 5 MB.`);
+      const cap = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+      if (file.size > cap) {
+        throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(2)} MB). Max ${cap / 1024 / 1024} MB.`);
       }
 
       const base64 = await fileToBase64(file);
-      if (!base64) throw new Error("The file could not be read completely. Please try exporting it again as WEBP, PNG, JPG/JPEG, or SVG.");
+      if (!base64) throw new Error("The file could not be read completely. Try another export.");
 
       const { url } = await uploadSiteAsset({
         data: { passkey: adminPasskey, filename: file.name, contentType: ct, base64 },
@@ -451,6 +468,18 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     </button>
 
                     <button
+                      onClick={() => setActiveTab("sections")}
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-sm font-sans text-xs tracking-wider uppercase transition-all text-left ${
+                        activeTab === "sections"
+                          ? "bg-gold-500/10 text-gold-300 border-l-2 border-gold-300 font-medium"
+                          : "text-luxury-400 hover:text-luxury-100 hover:bg-luxury-900/50"
+                      }`}
+                    >
+                      <FileText size={14} />
+                      <span>Page Sections</span>
+                    </button>
+
+                    <button
                       onClick={() => setActiveTab("header_footer")}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-sm font-sans text-xs tracking-wider uppercase transition-all text-left ${
                         activeTab === "header_footer"
@@ -614,6 +643,45 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                 {ACCEPTED_IMAGE_GUIDANCE}
                               </p>
                             </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Hero Video / YouTube (optional) */}
+                      <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4 text-left">
+                        <h4 className="text-xs tracking-widest text-gold-300 font-sans uppercase font-bold">
+                          Hero Video (optional — overrides image)
+                        </h4>
+                        <p className="text-[10px] text-luxury-400 font-sans">Upload a background video from your device, paste a YouTube URL, or leave both empty to use the image above. Priority: YouTube → Video → Image.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Upload Video from Device</label>
+                            <input
+                              type="file" accept={ACCEPTED_VIDEO_TYPES}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(file, (url) => {
+                                  updateHero({ videoUrl: url });
+                                  triggerSuccess("Hero video uploaded.");
+                                }, { allowVideo: true });
+                              }}
+                              className="w-full text-xs text-luxury-200"
+                            />
+                            <p className="mt-2 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">{ACCEPTED_VIDEO_GUIDANCE}</p>
+                            {hero.videoUrl && (
+                              <button type="button" onClick={() => updateHero({ videoUrl: "" })} className="mt-2 text-[10px] text-red-300 hover:text-red-200 uppercase tracking-wider">Clear video</button>
+                            )}
+                          </div>
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Or YouTube URL</label>
+                            <input
+                              type="text"
+                              placeholder="https://youtube.com/watch?v=..."
+                              value={hero.youtubeUrl || ""}
+                              onChange={(e) => updateHero({ youtubeUrl: e.target.value })}
+                              className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+                            />
+                            <p className="mt-2 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">Plays muted &amp; looped as background.</p>
                           </div>
                         </div>
                       </div>
@@ -881,6 +949,136 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                               <Download size={13} />
                               <span>Download High-Res PNG</span>
                             </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* -------------------- TAB: PAGE SECTIONS (Philosophy + Island Intro) -------------------- */}
+                  {activeTab === "sections" && (
+                    <div className="space-y-8">
+                      <div>
+                        <h3 className="text-xl font-serif text-luxury-100 uppercase tracking-wider mb-1">
+                          Page Sections
+                        </h3>
+                        <p className="text-xs text-luxury-400 font-sans font-light">
+                          Edit copy, images, and optional videos for the Philosophy and Island intro sections. All media supports device upload (image or video) or a YouTube URL. Priority: YouTube → Video → Image.
+                        </p>
+                      </div>
+
+                      {/* PHILOSOPHY */}
+                      <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4 text-left">
+                        <h4 className="text-xs tracking-widest text-gold-300 font-sans uppercase font-bold">Philosophy Section</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Eyebrow / Tag</label>
+                            <input type="text" value={philosophy.eyebrow} onChange={(e) => updatePhilosophy({ eyebrow: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Badge Title</label>
+                            <input type="text" value={philosophy.badgeTitle} onChange={(e) => updatePhilosophy({ badgeTitle: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Headline (Title)</label>
+                          <textarea rows={2} value={philosophy.title} onChange={(e) => updatePhilosophy({ title: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-2 px-3 text-xs text-luxury-100 rounded focus:outline-none font-serif leading-relaxed" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Body Copy</label>
+                          <textarea rows={3} value={philosophy.subtitle} onChange={(e) => updatePhilosophy({ subtitle: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-2 px-3 text-xs text-luxury-100 rounded focus:outline-none font-sans leading-relaxed" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Badge Body</label>
+                          <input type="text" value={philosophy.badgeText} onChange={(e) => updatePhilosophy({ badgeText: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start pt-2 border-t border-luxury-900">
+                          <div className="md:col-span-4">
+                            <div className="aspect-[16/10] bg-luxury-900 border border-luxury-800 rounded-sm overflow-hidden">
+                              <img src={philosophy.image} alt="Philosophy preview" className="w-full h-full object-cover" />
+                            </div>
+                          </div>
+                          <div className="md:col-span-8 space-y-3">
+                            <div>
+                              <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Image URL</label>
+                              <input type="text" value={philosophy.image} onChange={(e) => updatePhilosophy({ image: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                            </div>
+                            <div>
+                              <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Upload Image from Device</label>
+                              <input type="file" accept={ACCEPTED_IMAGE_TYPES} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, (url) => { updatePhilosophy({ image: url }); triggerSuccess("Philosophy image uploaded."); }); }} className="w-full text-xs text-luxury-200" />
+                              <p className="mt-1 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">{ACCEPTED_IMAGE_GUIDANCE}</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-luxury-900">
+                              <div>
+                                <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Optional Video (Device)</label>
+                                <input type="file" accept={ACCEPTED_VIDEO_TYPES} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, (url) => { updatePhilosophy({ videoUrl: url }); triggerSuccess("Philosophy video uploaded."); }, { allowVideo: true }); }} className="w-full text-xs text-luxury-200" />
+                                <p className="mt-1 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">{ACCEPTED_VIDEO_GUIDANCE}</p>
+                                {philosophy.videoUrl && (
+                                  <button type="button" onClick={() => updatePhilosophy({ videoUrl: "" })} className="mt-2 text-[10px] text-red-300 hover:text-red-200 uppercase tracking-wider">Clear video</button>
+                                )}
+                              </div>
+                              <div>
+                                <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Or YouTube URL</label>
+                                <input type="text" placeholder="https://youtube.com/watch?v=..." value={philosophy.youtubeUrl || ""} onChange={(e) => updatePhilosophy({ youtubeUrl: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ISLAND INTRO */}
+                      <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4 text-left">
+                        <h4 className="text-xs tracking-widest text-gold-300 font-sans uppercase font-bold">Island Intro (above The Stay)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Eyebrow / Tag</label>
+                            <input type="text" value={islandIntro.eyebrow} onChange={(e) => updateIslandIntro({ eyebrow: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">CTA Button Label</label>
+                            <input type="text" value={islandIntro.ctaLabel} onChange={(e) => updateIslandIntro({ ctaLabel: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Headline (Title)</label>
+                          <input type="text" value={islandIntro.title} onChange={(e) => updateIslandIntro({ title: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-2 px-3 text-xs text-luxury-100 rounded focus:outline-none font-serif" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Body Copy</label>
+                          <textarea rows={3} value={islandIntro.subtitle} onChange={(e) => updateIslandIntro({ subtitle: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-2 px-3 text-xs text-luxury-100 rounded focus:outline-none font-sans leading-relaxed" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start pt-2 border-t border-luxury-900">
+                          <div className="md:col-span-4">
+                            <div className="aspect-[4/3] bg-luxury-900 border border-luxury-800 rounded-sm overflow-hidden">
+                              <img src={islandIntro.image} alt="Island preview" className="w-full h-full object-cover" />
+                            </div>
+                          </div>
+                          <div className="md:col-span-8 space-y-3">
+                            <div>
+                              <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Image URL</label>
+                              <input type="text" value={islandIntro.image} onChange={(e) => updateIslandIntro({ image: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                            </div>
+                            <div>
+                              <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Upload Image from Device</label>
+                              <input type="file" accept={ACCEPTED_IMAGE_TYPES} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, (url) => { updateIslandIntro({ image: url }); triggerSuccess("Island image uploaded."); }); }} className="w-full text-xs text-luxury-200" />
+                              <p className="mt-1 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">{ACCEPTED_IMAGE_GUIDANCE}</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-luxury-900">
+                              <div>
+                                <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Optional Video (Device)</label>
+                                <input type="file" accept={ACCEPTED_VIDEO_TYPES} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, (url) => { updateIslandIntro({ videoUrl: url }); triggerSuccess("Island video uploaded."); }, { allowVideo: true }); }} className="w-full text-xs text-luxury-200" />
+                                <p className="mt-1 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">{ACCEPTED_VIDEO_GUIDANCE}</p>
+                                {islandIntro.videoUrl && (
+                                  <button type="button" onClick={() => updateIslandIntro({ videoUrl: "" })} className="mt-2 text-[10px] text-red-300 hover:text-red-200 uppercase tracking-wider">Clear video</button>
+                                )}
+                              </div>
+                              <div>
+                                <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Or YouTube URL</label>
+                                <input type="text" placeholder="https://youtube.com/watch?v=..." value={islandIntro.youtubeUrl || ""} onChange={(e) => updateIslandIntro({ youtubeUrl: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

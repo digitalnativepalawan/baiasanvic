@@ -1,34 +1,67 @@
-## Problem
+## Goal
 
-The admin panel unlocks with a client-side passkey (`5309`) that creates no Supabase session. As a result:
-- Image uploads to the private `site-assets` bucket are blocked by RLS (`storage.objects` requires an authenticated admin).
-- `site_state` upserts are gated by `isAdminRef` (a real Supabase admin session), so hero/logo/rooms/theme edits never save.
-- No file-type restriction on `<input type="file">`, so users can pick anything.
+Make the two "TRUE LUXURY..." (Philosophy) and "PALAWAN AS IT SHOULD BE" (Island Intro) sections fully editable from the Admin panel, and add optional video support (device upload or YouTube URL) to every media slot on the site — hero first, plus philosophy, island intro, rooms, activities, and gallery.
 
-## Fix
+## What's editable today vs. missing
 
-Route admin writes through TanStack server functions that use the service-role client and validate the passkey server-side. Keep the passkey UX unchanged.
+Editable now (in `SiteContext` + Admin panel): hero title/subtitle/image, logo, header, footer, theme, gallery items, rooms, activities.
 
-### 1. Add server passkey secret
-- Add `ADMIN_PASSKEY` secret (value `5309`) so it isn't hard-coded in the client for writes. The client keeps its passkey for unlocking UI; the server independently verifies for mutations.
+Hardcoded in `src/baia/App.tsx` (NOT editable — this is the bug in the screenshots):
+- Philosophy section: eyebrow, headline, body copy, image, badge title/text.
+- Island Intro block: eyebrow, headline, body copy, image, CTA label.
 
-### 2. New server functions (`src/baia/admin.functions.ts`)
-- `uploadSiteAsset({ passkey, filename, contentType, base64 })` — verifies passkey, validates MIME is `image/*` (png/jpeg/webp/gif/svg), size ≤ 5 MB, uploads to `site-assets` via `supabaseAdmin`, returns a signed URL (long-lived) or switches the bucket to public and returns `getPublicUrl`. Preferred: flip bucket to public (via `supabase--storage_update_bucket`) so `<img src>` works everywhere without re-signing.
-- `saveSiteState({ passkey, data })` — verifies passkey, upserts the single `site_state` row via `supabaseAdmin`.
+No section currently supports video (device MP4/WEBM or YouTube URL).
 
-### 3. Client wiring
-- `AdminPanel.handleImageUpload`: read file → base64 → call `uploadSiteAsset` server fn → pass returned `url` to existing callback. Add `accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"` on all file inputs (hero, logo, gallery, rooms main image, room slideshow, activity image) and a size check (≤5 MB) with a friendly error.
-- `SiteContext`: store the passkey in a ref when `AdminGate` unlocks (via a small `setAdminPasskey` on context). Replace the direct `supabase.from("site_state").upsert(...)` in the debounced save with a call to `saveSiteState` server fn. Drop the `isAdminRef` Supabase-auth check; gate saving on "passkey present in memory".
-- `AdminGate`: on successful passkey, call `setAdminPasskey("5309")` from context; on Lock, clear it.
+## Scope of changes
 
-### 4. Bucket visibility
-- Flip `site-assets` bucket to public so uploaded image URLs render on the public site. Keep write policies restrictive (writes only go through service-role server fn).
+### 1. Two new editable sections
 
-### 5. Verify
-- Build + typecheck.
-- Manual: unlock admin, upload a logo PNG and a hero JPG from device, refresh page, confirm both persist and render.
+Add to `SiteContext`:
+- `philosophy: { eyebrow, title, subtitle, image, videoUrl, youtubeUrl, badgeTitle, badgeText }`
+- `islandIntro: { eyebrow, title, subtitle, ctaLabel, image, videoUrl, youtubeUrl }`
 
-## Notes / trade-offs
+Wire `App.tsx` to render from context instead of hardcoded strings/images. Include the same `/api/site-assets/` URL normalization already used for hero/logo.
 
-- Passkey in a client bundle is not real security — same posture as today. Server-side verification just prevents a random visitor from hitting the server fn without the passkey. If you later want real auth, we switch `AdminGate` back to Supabase email/password and drop the passkey check.
-- Files stored under `site-assets/uploads/<timestamp>-<rand>.<ext>`; publicly readable once bucket is public.
+### 2. Video support (device + YouTube) on every media slot
+
+Introduce a shared `MediaField` component in the admin panel that renders:
+- Image upload (device) — accept `image/webp,image/png,image/jpeg,image/svg+xml` with a visible "Allowed: WEBP, PNG, JPG, SVG · Max 5 MB" label (matches existing hero behavior; extend to the other slots).
+- Video upload (device) — accept `video/mp4,video/webm` with "Allowed: MP4, WEBM · Max 20 MB".
+- YouTube URL input — validated `youtube.com/watch?v=…` or `youtu.be/…`.
+- Clear/reset buttons per media type.
+
+Backend: extend `admin.functions.ts` + `admin.server.ts` to accept video MIMEs and a higher size cap (20 MB) via the same server function, storing under `site-assets/uploads/…`. The existing `/api/site-assets/$` proxy already serves any object type — no route change needed.
+
+Apply `MediaField` to:
+- Hero (existing image → add video/YouTube).
+- Philosophy (new).
+- Island Intro (new).
+- Rooms main image + slideshow entries.
+- Activities image.
+- Gallery items.
+
+### 3. Front-end rendering priority
+
+For any section with media, the render order is: `youtubeUrl` → embedded iframe; else `videoUrl` → `<video autoPlay muted loop playsInline>`; else `image` → `<img>`. Hero uses a full-bleed background video/iframe with the same overlay when a video is set.
+
+### 4. File-type guidance in admin
+
+Every upload input shows the accepted formats and max size directly under it (already partly done for hero/logo — replicate everywhere via `MediaField`).
+
+### 5. Persistence
+
+`saveSiteState` already stores the whole state blob keyed by `default`; new fields flow through automatically. No migration needed.
+
+## Technical notes (for reviewers)
+
+- Files touched: `src/baia/context/SiteContext.tsx`, `src/baia/App.tsx`, `src/baia/components/AdminPanel.tsx`, `src/baia/admin.server.ts`, `src/baia/admin.functions.ts`, `src/baia/components/RoomCard.tsx` (video branch in lightbox is already partly there), `src/baia/components/Activities.tsx`, `src/baia/components/IslandPerspectives.tsx`.
+- YouTube URL parsed to `https://www.youtube.com/embed/<id>?autoplay=1&mute=1&loop=1&playlist=<id>&controls=0` for hero-style ambient loops; standard embed elsewhere.
+- Server function keeps passkey verification; only MIME allowlist and size cap widen for video.
+- No DB schema changes; `site_state.data` is JSONB.
+
+## Out of scope
+
+- Testimonials, footer, and navbar text (already editable; not mentioned as broken).
+- Real auth (passkey stays as-is).
+
+Approve to implement.
