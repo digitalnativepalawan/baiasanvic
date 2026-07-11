@@ -47,42 +47,22 @@ export default function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Fetch current reservations on mount
-  useEffect(() => {
-    const fetchReservations = () => {
-      const stored = localStorage.getItem("baia_reservations");
-      if (stored) {
-        try {
-          setReservations(JSON.parse(stored));
-        } catch (e) {
-          console.error("Failed to parse reservations", e);
-        }
-      }
-    };
-    fetchReservations();
-
-    // Listen to storage events to auto-update
-    window.addEventListener("storage", fetchReservations);
-    return () => window.removeEventListener("storage", fetchReservations);
-  }, [isBookingOpen]);
-
-  // Update reservations when modal closes (or after booking)
+  // Reservations are session-only: we display any inquiry submitted this session
+  // (they are also persisted server-side in Supabase as booking inquiries).
   const handleBookingClose = () => {
     setIsBookingOpen(false);
-    const stored = localStorage.getItem("baia_reservations");
-    if (stored) {
-      setReservations(JSON.parse(stored));
+  };
+
+  const handleInquirySubmitted = (r: Reservation) => {
+    setReservations((prev) => [...prev, r]);
+  };
+
+  const handleDeleteReservation = (id: string) => {
+    if (window.confirm("Remove this inquiry from this view? (It stays on file with the resort.)")) {
+      setReservations((prev) => prev.filter((r) => r.id !== id));
     }
   };
 
-  // Delete a reservation
-  const handleDeleteReservation = (id: string) => {
-    if (window.confirm("Are you sure you want to cancel this reservation?")) {
-      const updated = reservations.filter((r) => r.id !== id);
-      setReservations(updated);
-      localStorage.setItem("baia_reservations", JSON.stringify(updated));
-    }
-  };
 
   // Format date helper
   const formatHumanDate = (dateStr: string) => {
