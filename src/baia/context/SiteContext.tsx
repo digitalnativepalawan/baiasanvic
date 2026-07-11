@@ -653,7 +653,9 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateActivity,
         addActivity,
         deleteActivity,
-        resetToDefault
+        resetToDefault,
+        adminPasskey,
+        setAdminPasskey,
       }}
     >
       {children}
