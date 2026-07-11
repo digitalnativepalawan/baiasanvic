@@ -24,17 +24,23 @@ const isVideo = (url: string) => {
          url.includes("video");
 };
 
-type AdminTab = "hero_logo" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "system";
+type AdminTab = "hero_logo" | "sections" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "system";
 
 const ACCEPTED_IMAGE_TYPES = "image/webp,image/png,image/jpeg,image/svg+xml,.webp,.png,.jpg,.jpeg,.svg";
-const ACCEPTED_IMAGE_GUIDANCE = "Accepted file types: WEBP, PNG, JPG/JPEG, SVG. Max 5 MB.";
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_GUIDANCE = "Accepted image types: WEBP, PNG, JPG/JPEG, SVG. Max 5 MB.";
+const ACCEPTED_VIDEO_TYPES = "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov";
+const ACCEPTED_VIDEO_GUIDANCE = "Accepted video types: MP4, WEBM, MOV. Max 20 MB.";
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
 const MIME_BY_EXTENSION: Record<string, string> = {
   webp: "image/webp",
   png: "image/png",
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
   svg: "image/svg+xml",
+  mp4: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
 };
 
 const getFileContentType = (file: File) => {
