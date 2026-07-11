@@ -596,7 +596,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                 <span>Choose Local File</span>
                               </button>
                               <input
-                                type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                                type="file" accept={ACCEPTED_IMAGE_TYPES}
                                 ref={heroFileRef}
 
                                 onChange={(e) => {
@@ -610,6 +610,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                 }}
                                 className="hidden"
                               />
+                              <p className="mt-2 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">
+                                {ACCEPTED_IMAGE_GUIDANCE}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -728,7 +731,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                   <span>Choose Logo File</span>
                                 </button>
                                 <input
-                                  type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                                  type="file" accept={ACCEPTED_IMAGE_TYPES}
                                   ref={logoFileRef}
 
                                   onChange={(e) => {
@@ -742,6 +745,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                   }}
                                   className="hidden"
                                 />
+                                <span className="basis-full text-[8px] tracking-wider text-luxury-500 font-sans uppercase">
+                                  {ACCEPTED_IMAGE_GUIDANCE}
+                                </span>
                                 {logo.customImage && (
                                   <button
                                     type="button"
@@ -1194,7 +1200,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                   <span>Choose File</span>
                                 </button>
                                 <input
-                                  type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                                  type="file" accept={ACCEPTED_IMAGE_TYPES}
                                   ref={editingGalleryId === "new" ? newGalleryFileRef : editGalleryFileRef}
 
                                   onChange={(e) => {
@@ -1213,6 +1219,10 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                   className="hidden"
                                 />
                               </div>
+
+                              <p className="text-[9px] tracking-wider text-luxury-500 font-sans uppercase">
+                                {ACCEPTED_IMAGE_GUIDANCE}
+                              </p>
 
                               <div>
                                 <label className="text-[9px] tracking-wider text-luxury-500 font-sans uppercase block mb-1">
@@ -1537,7 +1547,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                           <span>Choose New File</span>
                                         </button>
                                         <input
-                                          type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                                          type="file" accept={ACCEPTED_IMAGE_TYPES}
                                           ref={(el) => { roomFileRefs.current[room.id] = el; }}
 
                                           onChange={(e) => {
@@ -1556,6 +1566,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                           className="hidden"
                                         />
                                       </div>
+                                      <p className="mb-2 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">
+                                        {ACCEPTED_IMAGE_GUIDANCE}
+                                      </p>
                                       <input
                                         type="text"
                                         value={room.imageUrl}
@@ -1600,10 +1613,10 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                           className="bg-gold-500 hover:bg-gold-400 text-luxury-950 text-[10px] tracking-wider font-sans uppercase font-bold px-3 py-1.5 rounded-sm flex items-center space-x-1 cursor-pointer"
                                         >
                                           <Plus size={10} />
-                                          <span>Upload Image/Video</span>
+                                          <span>Upload Image</span>
                                         </button>
                                         <input
-                                          type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                                          type="file" accept={ACCEPTED_IMAGE_TYPES}
                                           ref={(el) => { roomAddMediaFileRefs.current[room.id] = el; }}
 
                                           onChange={(e) => {
@@ -1620,6 +1633,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                         />
                                       </div>
                                     </div>
+                                    <p className="text-[9px] tracking-wider text-luxury-500 font-sans uppercase">
+                                      {ACCEPTED_IMAGE_GUIDANCE}
+                                    </p>
 
                                     {/* Display slides grid */}
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -1807,7 +1823,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                           <span>Choose New File</span>
                                         </button>
                                         <input
-                                          type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                                          type="file" accept={ACCEPTED_IMAGE_TYPES}
                                           ref={(el) => { activityFileRefs.current[act.id] = el; }}
 
                                           onChange={(e) => {
@@ -1822,6 +1838,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                           className="hidden"
                                         />
                                       </div>
+                                      <p className="mb-2 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">
+                                        {ACCEPTED_IMAGE_GUIDANCE}
+                                      </p>
                                       <input
                                         type="text"
                                         value={act.imageUrl}
