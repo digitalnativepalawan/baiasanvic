@@ -223,7 +223,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBook }) => {
               )}
 
               {isVideo(currentMediaUrl) ? (
-                <video src={currentMediaUrl} autoPlay muted loop playsInline className="max-h-[80vh] max-w-full object-contain" />
+                <video src={currentMediaUrl} controls autoPlay muted loop playsInline preload="metadata" className="max-h-[80vh] max-w-full object-contain" />
               ) : (
                 <img
                   src={currentMediaUrl}
