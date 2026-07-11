@@ -8,6 +8,7 @@ import { X, Lock, CheckCircle, ArrowLeft, ArrowRight, Star, CreditCard, ShieldCh
 import { motion, AnimatePresence } from "motion/react";
 import { useSite } from "../context/SiteContext";
 import { RoomTier, Reservation } from "../types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BookingModalProps {
   isOpen: boolean;
