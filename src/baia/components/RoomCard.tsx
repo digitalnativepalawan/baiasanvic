@@ -39,6 +39,26 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBook }) => {
 
   const currentMediaUrl = mediaList[activeMediaIndex] || room.imageUrl;
 
+  const stepNext = () => setActiveMediaIndex((p) => (p + 1) % mediaList.length);
+  const stepPrev = () => setActiveMediaIndex((p) => (p - 1 + mediaList.length) % mediaList.length);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxOpen(false);
+      else if (e.key === "ArrowRight") stepNext();
+      else if (e.key === "ArrowLeft") stepPrev();
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [lightboxOpen, mediaList.length]);
+
+
   return (
     <div 
       id={`room-card-${room.id}`}
