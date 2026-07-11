@@ -955,6 +955,136 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     </div>
                   )}
 
+                  {/* -------------------- TAB: PAGE SECTIONS (Philosophy + Island Intro) -------------------- */}
+                  {activeTab === "sections" && (
+                    <div className="space-y-8">
+                      <div>
+                        <h3 className="text-xl font-serif text-luxury-100 uppercase tracking-wider mb-1">
+                          Page Sections
+                        </h3>
+                        <p className="text-xs text-luxury-400 font-sans font-light">
+                          Edit copy, images, and optional videos for the Philosophy and Island intro sections. All media supports device upload (image or video) or a YouTube URL. Priority: YouTube → Video → Image.
+                        </p>
+                      </div>
+
+                      {/* PHILOSOPHY */}
+                      <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4 text-left">
+                        <h4 className="text-xs tracking-widest text-gold-300 font-sans uppercase font-bold">Philosophy Section</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Eyebrow / Tag</label>
+                            <input type="text" value={philosophy.eyebrow} onChange={(e) => updatePhilosophy({ eyebrow: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Badge Title</label>
+                            <input type="text" value={philosophy.badgeTitle} onChange={(e) => updatePhilosophy({ badgeTitle: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Headline (Title)</label>
+                          <textarea rows={2} value={philosophy.title} onChange={(e) => updatePhilosophy({ title: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-2 px-3 text-xs text-luxury-100 rounded focus:outline-none font-serif leading-relaxed" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Body Copy</label>
+                          <textarea rows={3} value={philosophy.subtitle} onChange={(e) => updatePhilosophy({ subtitle: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-2 px-3 text-xs text-luxury-100 rounded focus:outline-none font-sans leading-relaxed" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Badge Body</label>
+                          <input type="text" value={philosophy.badgeText} onChange={(e) => updatePhilosophy({ badgeText: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start pt-2 border-t border-luxury-900">
+                          <div className="md:col-span-4">
+                            <div className="aspect-[16/10] bg-luxury-900 border border-luxury-800 rounded-sm overflow-hidden">
+                              <img src={philosophy.image} alt="Philosophy preview" className="w-full h-full object-cover" />
+                            </div>
+                          </div>
+                          <div className="md:col-span-8 space-y-3">
+                            <div>
+                              <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Image URL</label>
+                              <input type="text" value={philosophy.image} onChange={(e) => updatePhilosophy({ image: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                            </div>
+                            <div>
+                              <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Upload Image from Device</label>
+                              <input type="file" accept={ACCEPTED_IMAGE_TYPES} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, (url) => { updatePhilosophy({ image: url }); triggerSuccess("Philosophy image uploaded."); }); }} className="w-full text-xs text-luxury-200" />
+                              <p className="mt-1 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">{ACCEPTED_IMAGE_GUIDANCE}</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-luxury-900">
+                              <div>
+                                <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Optional Video (Device)</label>
+                                <input type="file" accept={ACCEPTED_VIDEO_TYPES} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, (url) => { updatePhilosophy({ videoUrl: url }); triggerSuccess("Philosophy video uploaded."); }, { allowVideo: true }); }} className="w-full text-xs text-luxury-200" />
+                                <p className="mt-1 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">{ACCEPTED_VIDEO_GUIDANCE}</p>
+                                {philosophy.videoUrl && (
+                                  <button type="button" onClick={() => updatePhilosophy({ videoUrl: "" })} className="mt-2 text-[10px] text-red-300 hover:text-red-200 uppercase tracking-wider">Clear video</button>
+                                )}
+                              </div>
+                              <div>
+                                <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Or YouTube URL</label>
+                                <input type="text" placeholder="https://youtube.com/watch?v=..." value={philosophy.youtubeUrl || ""} onChange={(e) => updatePhilosophy({ youtubeUrl: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ISLAND INTRO */}
+                      <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4 text-left">
+                        <h4 className="text-xs tracking-widest text-gold-300 font-sans uppercase font-bold">Island Intro (above The Stay)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Eyebrow / Tag</label>
+                            <input type="text" value={islandIntro.eyebrow} onChange={(e) => updateIslandIntro({ eyebrow: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">CTA Button Label</label>
+                            <input type="text" value={islandIntro.ctaLabel} onChange={(e) => updateIslandIntro({ ctaLabel: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Headline (Title)</label>
+                          <input type="text" value={islandIntro.title} onChange={(e) => updateIslandIntro({ title: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-2 px-3 text-xs text-luxury-100 rounded focus:outline-none font-serif" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Body Copy</label>
+                          <textarea rows={3} value={islandIntro.subtitle} onChange={(e) => updateIslandIntro({ subtitle: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-2 px-3 text-xs text-luxury-100 rounded focus:outline-none font-sans leading-relaxed" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start pt-2 border-t border-luxury-900">
+                          <div className="md:col-span-4">
+                            <div className="aspect-[4/3] bg-luxury-900 border border-luxury-800 rounded-sm overflow-hidden">
+                              <img src={islandIntro.image} alt="Island preview" className="w-full h-full object-cover" />
+                            </div>
+                          </div>
+                          <div className="md:col-span-8 space-y-3">
+                            <div>
+                              <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Image URL</label>
+                              <input type="text" value={islandIntro.image} onChange={(e) => updateIslandIntro({ image: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                            </div>
+                            <div>
+                              <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Upload Image from Device</label>
+                              <input type="file" accept={ACCEPTED_IMAGE_TYPES} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, (url) => { updateIslandIntro({ image: url }); triggerSuccess("Island image uploaded."); }); }} className="w-full text-xs text-luxury-200" />
+                              <p className="mt-1 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">{ACCEPTED_IMAGE_GUIDANCE}</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-luxury-900">
+                              <div>
+                                <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Optional Video (Device)</label>
+                                <input type="file" accept={ACCEPTED_VIDEO_TYPES} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, (url) => { updateIslandIntro({ videoUrl: url }); triggerSuccess("Island video uploaded."); }, { allowVideo: true }); }} className="w-full text-xs text-luxury-200" />
+                                <p className="mt-1 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">{ACCEPTED_VIDEO_GUIDANCE}</p>
+                                {islandIntro.videoUrl && (
+                                  <button type="button" onClick={() => updateIslandIntro({ videoUrl: "" })} className="mt-2 text-[10px] text-red-300 hover:text-red-200 uppercase tracking-wider">Clear video</button>
+                                )}
+                              </div>
+                              <div>
+                                <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Or YouTube URL</label>
+                                <input type="text" placeholder="https://youtube.com/watch?v=..." value={islandIntro.youtubeUrl || ""} onChange={(e) => updateIslandIntro({ youtubeUrl: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* -------------------- TAB: HEADER & FOOTER -------------------- */}
                   {activeTab === "header_footer" && (
                     <div className="space-y-8">
