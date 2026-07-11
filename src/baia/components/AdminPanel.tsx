@@ -143,15 +143,33 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     };
 
     try {
-      const ext = (file.name.split(".").pop() || "bin").toLowerCase();
-      const path = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("site-assets")
-        .upload(path, file, { contentType: file.type || undefined, upsert: false });
-      if (upErr) throw upErr;
+      if (!adminPasskey) {
+        throw new Error("Admin not unlocked. Enter passkey and try again.");
+      }
+      const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/svg+xml"];
+      const ct = (file.type || "").toLowerCase();
+      if (!allowed.includes(ct)) {
+        throw new Error("Unsupported file type. Use PNG, JPEG, WEBP, GIF, or SVG.");
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error(`File too large (${(file.size / 1024 / 1024).toFixed(2)} MB). Max 5 MB.`);
+      }
 
-      const { data: pub } = supabase.storage.from("site-assets").getPublicUrl(path);
-      const url = pub.publicUrl;
+      // Read file as base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          const comma = result.indexOf(",");
+          resolve(comma >= 0 ? result.slice(comma + 1) : result);
+        };
+        reader.onerror = () => reject(reader.error || new Error("Read failed"));
+        reader.readAsDataURL(file);
+      });
+
+      const { url } = await uploadSiteAsset({
+        data: { passkey: adminPasskey, filename: file.name, contentType: ct, base64 },
+      });
 
       clearInterval(interval);
       setUploadProgress(100);
