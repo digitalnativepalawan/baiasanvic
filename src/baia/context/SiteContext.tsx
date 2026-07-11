@@ -412,47 +412,30 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!cancelled) setLoaded(true);
     })();
 
-    // Check admin role on session changes so save gating stays accurate
-    const refreshAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { isAdminRef.current = false; return; }
-      const { data: role } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      isAdminRef.current = !!role;
-    };
-    refreshAdmin();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      refreshAdmin();
-    });
-
     return () => {
       cancelled = true;
-      sub.subscription.unsubscribe();
     };
   }, []);
 
-  // Debounced save to Supabase when signed-in admin edits content
+  // Debounced save to Supabase (via server fn) when admin passkey is present
   useEffect(() => {
     if (!loaded) return;
+    const passkey = adminPasskeyRef.current;
+    if (!passkey) return;
     const timer = setTimeout(async () => {
-      if (!isAdminRef.current) return;
-      await supabase
-        .from("site_state")
-        .upsert(
-          {
-            key: "default",
-            data: { hero, logo, header, footer, theme, galleryItems, rooms, activities } as any,
-            updated_at: new Date().toISOString(),
+      try {
+        await saveSiteState({
+          data: {
+            passkey,
+            state: { hero, logo, header, footer, theme, galleryItems, rooms, activities },
           },
-          { onConflict: "key" }
-        );
+        });
+      } catch (err) {
+        console.error("[BAIA] Failed to save site state:", err);
+      }
     }, 600);
     return () => clearTimeout(timer);
-  }, [loaded, hero, logo, header, footer, theme, galleryItems, rooms, activities]);
+  }, [loaded, adminPasskey, hero, logo, header, footer, theme, galleryItems, rooms, activities]);
 
   // Load Google Fonts and apply CSS custom properties dynamically
   useEffect(() => {
