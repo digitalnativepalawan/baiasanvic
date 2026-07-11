@@ -1,11 +1,10 @@
-@import "tailwindcss" source(none);
-@source "../src";
-@import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
 
 @theme {
   --font-serif: var(--font-hero, "Cormorant Garamond"), Georgia, serif;
   --font-sans: var(--font-sections, "Inter"), ui-sans-serif, system-ui, sans-serif;
-
+  
   --color-gold-50: var(--gold-50, #f9f8f4);
   --color-gold-100: var(--gold-100, #e5e3d8);
   --color-gold-200: var(--gold-200, #c9c5b9);
@@ -17,7 +16,7 @@
   --color-gold-800: var(--gold-800, #222218);
   --color-gold-900: var(--gold-900, #11110c);
   --color-gold-950: var(--gold-950, #080806);
-
+  
   --color-luxury-50: var(--luxury-50, #1a1a1a);
   --color-luxury-100: var(--luxury-100, #2d2d2d);
   --color-luxury-200: var(--luxury-200, #3e3c35);
@@ -33,22 +32,26 @@
 
 @layer base {
   body {
-    @apply font-sans bg-luxury-950 text-luxury-200 antialiased;
-    -webkit-font-smoothing: antialiased;
+    @apply font-sans bg-luxury-950 text-luxury-200 antialiased selection:bg-gold-500 selection:text-white;
   }
-
+  
   h1, h2, h3, h4 {
     @apply font-serif;
   }
-
-  ::selection {
-    background-color: var(--color-gold-500);
-    color: white;
-  }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f1f0eb; }
-::-webkit-scrollbar-thumb { background: #c9c5b9; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #5a5a40; }
+/* Custom scrollbar for an elegant feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f0eb;
+}
+::-webkit-scrollbar-thumb {
+  background: #c9c5b9;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5a40;
+}
+
