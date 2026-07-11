@@ -18,8 +18,45 @@ import Newsletter from "./components/Newsletter";
 import { useSite } from "./context/SiteContext";
 import { Reservation, RoomTier } from "./types";
 
+// YouTube URL → embed src helper. Returns null if not a valid YouTube URL.
+function youtubeEmbedSrc(url: string | undefined, opts: { loop?: boolean } = {}): string | null {
+  if (!url) return null;
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  if (!m) return null;
+  const id = m[1];
+  const loop = opts.loop ? `&loop=1&playlist=${id}` : "";
+  return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1${loop}`;
+}
+
+// Renders a media slot with priority: youtube > video > image.
+function MediaFrame({
+  image, videoUrl, youtubeUrl, alt, className, loop = true,
+}: {
+  image: string; videoUrl?: string; youtubeUrl?: string; alt: string; className?: string; loop?: boolean;
+}) {
+  const yt = youtubeEmbedSrc(youtubeUrl, { loop });
+  if (yt) {
+    return (
+      <iframe
+        src={yt}
+        title={alt}
+        className={className}
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen
+        frameBorder={0}
+      />
+    );
+  }
+  if (videoUrl) {
+    return (
+      <video src={videoUrl} className={className} autoPlay muted loop={loop} playsInline preload="metadata" />
+    );
+  }
+  return <img src={image} alt={alt} className={className} referrerPolicy="no-referrer" />;
+}
+
 export default function App() {
-  const { hero, footer, logo, rooms } = useSite();
+  const { hero, philosophy, islandIntro, footer, logo, rooms } = useSite();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [activeReservationData, setActiveReservationData] = useState<{
