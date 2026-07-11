@@ -447,6 +447,26 @@ const normalizeLoadedSiteState = (data: any) => {
       customImage: normalizeAssetUrl(normalized.logo.customImage),
     };
   }
+  if (normalized.philosophy) {
+    normalized.philosophy = {
+      ...normalized.philosophy,
+      image: normalizeAssetUrl(normalized.philosophy.image),
+      videoUrl: normalizeAssetUrl(normalized.philosophy.videoUrl),
+    };
+  }
+  if (normalized.islandIntro) {
+    normalized.islandIntro = {
+      ...normalized.islandIntro,
+      image: normalizeAssetUrl(normalized.islandIntro.image),
+      videoUrl: normalizeAssetUrl(normalized.islandIntro.videoUrl),
+    };
+  }
+  if (normalized.hero?.videoUrl) {
+    normalized.hero = {
+      ...normalized.hero,
+      videoUrl: normalizeAssetUrl(normalized.hero.videoUrl),
+    };
+  }
   if (Array.isArray(normalized.galleryItems)) {
     normalized.galleryItems = normalized.galleryItems.map((item: GalleryItem) => ({
       ...item,
