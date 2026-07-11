@@ -12,7 +12,7 @@ import BookingModal from "./components/BookingModal";
 import Activities from "./components/Activities";
 import IslandPerspectives from "./components/IslandPerspectives";
 import Testimonials from "./components/Testimonials";
-import AdminPanel from "./components/AdminPanel";
+import AdminGate from "./components/AdminGate";
 import RoomCard from "./components/RoomCard";
 import Newsletter from "./components/Newsletter";
 import { useSite } from "./context/SiteContext";
