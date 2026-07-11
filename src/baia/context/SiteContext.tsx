@@ -653,6 +653,14 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setHero((prev) => ({ ...prev, ...data }));
   };
 
+  const updatePhilosophy = (data: Partial<PhilosophyData>) => {
+    setPhilosophy((prev) => ({ ...prev, ...data }));
+  };
+
+  const updateIslandIntro = (data: Partial<IslandIntroData>) => {
+    setIslandIntro((prev) => ({ ...prev, ...data }));
+  };
+
   const updateLogo = (data: Partial<LogoData>) => {
     setLogo((prev) => ({ ...prev, ...data }));
   };
