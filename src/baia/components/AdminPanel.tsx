@@ -1503,7 +1503,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                         </button>
                                         <input
                                           type="file"
-                                          ref={(el) => (roomFileRefs.current[room.id] = el)}
+                                          ref={(el) => { roomFileRefs.current[room.id] = el; }}
                                           accept="image/*,video/*"
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
@@ -1569,7 +1569,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                         </button>
                                         <input
                                           type="file"
-                                          ref={(el) => (roomAddMediaFileRefs.current[room.id] = el)}
+                                          ref={(el) => { roomAddMediaFileRefs.current[room.id] = el; }}
                                           accept="image/*,video/*"
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
@@ -1773,7 +1773,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                         </button>
                                         <input
                                           type="file"
-                                          ref={(el) => (activityFileRefs.current[act.id] = el)}
+                                          ref={(el) => { activityFileRefs.current[act.id] = el; }}
                                           accept="image/*"
                                           onChange={(e) => {
                                             const file = e.target.files?.[0];
@@ -1803,7 +1803,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                         <input
                                           type="text"
                                           value={act.difficulty}
-                                          onChange={(e) => updateActivity(act.id, { difficulty: e.target.value })}
+                                          onChange={(e) => updateActivity(act.id, { difficulty: e.target.value as "Easy" | "Medium" | "Challenging" })}
                                           className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-2 text-xs text-luxury-100 rounded focus:outline-none"
                                         />
                                       </div>
