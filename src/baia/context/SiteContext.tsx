@@ -546,7 +546,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await saveSiteState({
           data: {
             passkey,
-            state: { hero, logo, header, footer, theme, galleryItems, rooms, activities },
+            state: { hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities },
           },
         });
       } catch (err) {
@@ -554,7 +554,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }, 600);
     return () => clearTimeout(timer);
-  }, [loaded, adminPasskey, hero, logo, header, footer, theme, galleryItems, rooms, activities]);
+  }, [loaded, adminPasskey, hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities]);
 
   // Load Google Fonts and apply CSS custom properties dynamically
   useEffect(() => {
