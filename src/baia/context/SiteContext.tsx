@@ -230,6 +230,8 @@ export interface GalleryItem {
 
 interface SiteContextType {
   hero: HeroData;
+  philosophy: PhilosophyData;
+  islandIntro: IslandIntroData;
   logo: LogoData;
   header: HeaderData;
   footer: FooterData;
@@ -238,6 +240,8 @@ interface SiteContextType {
   rooms: RoomTier[];
   activities: Activity[];
   updateHero: (data: Partial<HeroData>) => void;
+  updatePhilosophy: (data: Partial<PhilosophyData>) => void;
+  updateIslandIntro: (data: Partial<IslandIntroData>) => void;
   updateLogo: (data: Partial<LogoData>) => void;
   updateHeader: (data: Partial<HeaderData>) => void;
   updateFooter: (data: Partial<FooterData>) => void;
@@ -264,7 +268,30 @@ interface SiteContextType {
 const DEFAULT_HERO: HeroData = {
   title: "Escape\nBeyond the\nOrdinary",
   subtitle: "A barefoot luxury retreat on the island of Palawan, where nature, design, and soul move in perfect rhythm.",
-  backgroundImage: "/src/assets/images/baia_hero_sunset_1783731965243.jpg"
+  backgroundImage: "/src/assets/images/baia_hero_sunset_1783731965243.jpg",
+  videoUrl: "",
+  youtubeUrl: "",
+};
+
+const DEFAULT_PHILOSOPHY: PhilosophyData = {
+  eyebrow: "OUR PHILOSOPHY",
+  title: "\"True luxury is feeling completely at home in nature.\"",
+  subtitle: "At BAIA, we believe that slowing down connects you to what truly matters. Here, simplicity becomes riches, and raw tropical beauty is framed by custom design and hospitality.",
+  image: "/src/assets/images/baia_beachfront_lounge_1783731978499.jpg",
+  videoUrl: "",
+  youtubeUrl: "",
+  badgeTitle: "THE EXPERIENCE",
+  badgeText: "Quiet luxury on the shorelines of San Vicente.",
+};
+
+const DEFAULT_ISLAND_INTRO: IslandIntroData = {
+  eyebrow: "THE ISLAND",
+  title: "Palawan as it should be",
+  subtitle: "Unspoiled. Untamed. Unforgettable. Discover a slower pace of life surrounded by raw natural beauty, turquoise saltwater tidal pools, and warm Filipino island hospitality.",
+  ctaLabel: "EXPLORE CURATED EXPERIENCES",
+  image: "/src/assets/images/baia_luxury_room_1783731990599.jpg",
+  videoUrl: "",
+  youtubeUrl: "",
 };
 
 const DEFAULT_LOGO: LogoData = {
