@@ -162,12 +162,21 @@ export const PRESETS: { [key: string]: ThemeColors } = {
   }
 };
 
+export interface MediaPlayback {
+  autoplay: boolean;
+  muted: boolean;
+  loop: boolean;
+  controls: boolean;
+  posterUrl?: string;
+}
+
 export interface HeroData {
   title: string;
   subtitle: string;
   backgroundImage: string;
   videoUrl?: string;
   youtubeUrl?: string;
+  playback?: MediaPlayback;
 }
 
 export interface PhilosophyData {
@@ -179,6 +188,7 @@ export interface PhilosophyData {
   youtubeUrl?: string;
   badgeTitle: string;
   badgeText: string;
+  playback?: MediaPlayback;
 }
 
 export interface IslandIntroData {
@@ -189,7 +199,16 @@ export interface IslandIntroData {
   image: string;
   videoUrl?: string;
   youtubeUrl?: string;
+  playback?: MediaPlayback;
 }
+
+export const DEFAULT_HERO_PLAYBACK: MediaPlayback = {
+  autoplay: true, muted: true, loop: true, controls: false, posterUrl: "",
+};
+export const DEFAULT_SECTION_PLAYBACK: MediaPlayback = {
+  autoplay: false, muted: false, loop: false, controls: true, posterUrl: "",
+};
+
 
 export interface LogoData {
   text: string;
@@ -271,6 +290,7 @@ const DEFAULT_HERO: HeroData = {
   backgroundImage: "/src/assets/images/baia_hero_sunset_1783731965243.jpg",
   videoUrl: "",
   youtubeUrl: "",
+  playback: { ...DEFAULT_HERO_PLAYBACK },
 };
 
 const DEFAULT_PHILOSOPHY: PhilosophyData = {
@@ -282,6 +302,7 @@ const DEFAULT_PHILOSOPHY: PhilosophyData = {
   youtubeUrl: "",
   badgeTitle: "THE EXPERIENCE",
   badgeText: "Quiet luxury on the shorelines of San Vicente.",
+  playback: { ...DEFAULT_SECTION_PLAYBACK },
 };
 
 const DEFAULT_ISLAND_INTRO: IslandIntroData = {
@@ -292,7 +313,9 @@ const DEFAULT_ISLAND_INTRO: IslandIntroData = {
   image: "/src/assets/images/baia_luxury_room_1783731990599.jpg",
   videoUrl: "",
   youtubeUrl: "",
+  playback: { ...DEFAULT_SECTION_PLAYBACK },
 };
+
 
 const DEFAULT_LOGO: LogoData = {
   text: "BAIA",
@@ -447,11 +470,24 @@ const normalizeLoadedSiteState = (data: any) => {
       customImage: normalizeAssetUrl(normalized.logo.customImage),
     };
   }
+  const normalizePlayback = (pb: any, fallback: MediaPlayback): MediaPlayback => ({
+    ...fallback,
+    ...(pb || {}),
+    posterUrl: normalizeAssetUrl(pb?.posterUrl ?? fallback.posterUrl ?? "") as string,
+  });
+  if (normalized.hero) {
+    normalized.hero = {
+      ...normalized.hero,
+      videoUrl: normalized.hero.videoUrl ? normalizeAssetUrl(normalized.hero.videoUrl) : normalized.hero.videoUrl,
+      playback: normalizePlayback(normalized.hero.playback, DEFAULT_HERO_PLAYBACK),
+    };
+  }
   if (normalized.philosophy) {
     normalized.philosophy = {
       ...normalized.philosophy,
       image: normalizeAssetUrl(normalized.philosophy.image),
       videoUrl: normalizeAssetUrl(normalized.philosophy.videoUrl),
+      playback: normalizePlayback(normalized.philosophy.playback, DEFAULT_SECTION_PLAYBACK),
     };
   }
   if (normalized.islandIntro) {
@@ -459,14 +495,10 @@ const normalizeLoadedSiteState = (data: any) => {
       ...normalized.islandIntro,
       image: normalizeAssetUrl(normalized.islandIntro.image),
       videoUrl: normalizeAssetUrl(normalized.islandIntro.videoUrl),
+      playback: normalizePlayback(normalized.islandIntro.playback, DEFAULT_SECTION_PLAYBACK),
     };
   }
-  if (normalized.hero?.videoUrl) {
-    normalized.hero = {
-      ...normalized.hero,
-      videoUrl: normalizeAssetUrl(normalized.hero.videoUrl),
-    };
-  }
+
   if (Array.isArray(normalized.galleryItems)) {
     normalized.galleryItems = normalized.galleryItems.map((item: GalleryItem) => ({
       ...item,

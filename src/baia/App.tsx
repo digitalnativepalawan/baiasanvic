@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Compass, ShieldCheck, Heart, ArrowRight, Plane, HelpCircle, Landmark, Star, ExternalLink, RefreshCw, Trash2, Calendar, ArrowUp, Instagram, Facebook } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Navbar from "./components/Navbar";
@@ -15,45 +15,103 @@ import Testimonials from "./components/Testimonials";
 import AdminGate from "./components/AdminGate";
 import RoomCard from "./components/RoomCard";
 import Newsletter from "./components/Newsletter";
-import { useSite } from "./context/SiteContext";
+import { useSite, MediaPlayback, DEFAULT_HERO_PLAYBACK, DEFAULT_SECTION_PLAYBACK } from "./context/SiteContext";
 import { Reservation, RoomTier } from "./types";
 
-// YouTube URL → embed src helper. Returns null if not a valid YouTube URL.
-function youtubeEmbedSrc(url: string | undefined, opts: { loop?: boolean } = {}): string | null {
+// Build a YouTube embed URL honoring admin playback flags.
+function youtubeEmbedSrc(url: string | undefined, pb: MediaPlayback): string | null {
   if (!url) return null;
   const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
   if (!m) return null;
   const id = m[1];
-  const loop = opts.loop ? `&loop=1&playlist=${id}` : "";
-  return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1${loop}`;
+  const p = new URLSearchParams();
+  p.set("autoplay", pb.autoplay ? "1" : "0");
+  // Browsers only allow autoplay when muted. Force mute when autoplaying.
+  p.set("mute", pb.muted || pb.autoplay ? "1" : "0");
+  p.set("controls", pb.controls ? "1" : "0");
+  if (pb.loop) { p.set("loop", "1"); p.set("playlist", id); }
+  p.set("modestbranding", "1");
+  p.set("rel", "0");
+  p.set("playsinline", "1");
+  return `https://www.youtube.com/embed/${id}?${p.toString()}`;
 }
 
 // Renders a media slot with priority: youtube > video > image.
+// - playback: admin-controlled sound/loop/autoplay/controls/poster.
+// - lazy: only mount the heavy media (video/iframe) when scrolled into view.
 function MediaFrame({
-  image, videoUrl, youtubeUrl, alt, className, loop = true,
+  image, videoUrl, youtubeUrl, alt, className,
+  playback, lazy = false,
 }: {
-  image: string; videoUrl?: string; youtubeUrl?: string; alt: string; className?: string; loop?: boolean;
+  image: string;
+  videoUrl?: string;
+  youtubeUrl?: string;
+  alt: string;
+  className?: string;
+  playback?: MediaPlayback;
+  lazy?: boolean;
 }) {
-  const yt = youtubeEmbedSrc(youtubeUrl, { loop });
-  if (yt) {
-    return (
-      <iframe
-        src={yt}
-        title={alt}
-        className={className}
-        allow="autoplay; encrypted-media; picture-in-picture"
-        allowFullScreen
-        frameBorder={0}
-      />
-    );
+  const pb: MediaPlayback = playback ?? DEFAULT_SECTION_PLAYBACK;
+  const poster = pb.posterUrl || image;
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(!lazy);
+  useEffect(() => {
+    if (!lazy || inView) return;
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") { setInView(true); return; }
+    const obs = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) { setInView(true); obs.disconnect(); }
+    }, { rootMargin: "300px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [lazy, inView]);
+
+  // No video source — just an image.
+  if (!youtubeUrl && !videoUrl) {
+    return <img src={image} alt={alt} className={className} referrerPolicy="no-referrer" loading="lazy" />;
   }
-  if (videoUrl) {
-    return (
-      <video src={videoUrl} className={className} autoPlay muted loop={loop} playsInline preload="metadata" />
-    );
-  }
-  return <img src={image} alt={alt} className={className} referrerPolicy="no-referrer" />;
+
+  const yt = youtubeUrl ? youtubeEmbedSrc(youtubeUrl, pb) : null;
+
+  return (
+    <div ref={rootRef} className={className} style={{ position: "relative", background: "#000", overflow: "hidden" }}>
+      {(!inView || (!yt && !videoUrl)) && poster && (
+        <img
+          src={poster}
+          alt={alt}
+          className="absolute inset-0 w-full h-full object-cover"
+          referrerPolicy="no-referrer"
+        />
+      )}
+      {inView && yt && (
+        <iframe
+          src={yt}
+          title={alt}
+          className="absolute inset-0 w-full h-full"
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+          frameBorder={0}
+        />
+      )}
+      {inView && !yt && videoUrl && (
+        <video
+          key={`${videoUrl}|${pb.autoplay}|${pb.muted}|${pb.loop}|${pb.controls}`}
+          src={videoUrl}
+          className="absolute inset-0 w-full h-full object-cover"
+          autoPlay={pb.autoplay && pb.muted}
+          muted={pb.muted}
+          loop={pb.loop}
+          controls={pb.controls}
+          playsInline
+          poster={poster || undefined}
+          preload={pb.autoplay ? "auto" : "metadata"}
+        />
+      )}
+    </div>
+  );
 }
+
 
 export default function App() {
   const { hero, philosophy, islandIntro, footer, logo, rooms } = useSite();
@@ -151,13 +209,15 @@ export default function App() {
             image={hero.backgroundImage}
             videoUrl={hero.videoUrl}
             youtubeUrl={hero.youtubeUrl}
+            playback={hero.playback}
             alt="Baia Resort hero"
-            className="w-full h-full object-cover object-center animate-fade-in pointer-events-none"
+            className="w-full h-full object-cover object-center animate-fade-in"
           />
           {/* Custom cinematic dark overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-transparent to-black/50" />
-          <div className="absolute inset-0 bg-black/10 mix-blend-overlay" />
+          <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-transparent to-black/50 pointer-events-none" />
+          <div className="absolute inset-0 bg-black/10 mix-blend-overlay pointer-events-none" />
         </div>
+
 
         {/* Content Centering Area */}
         <div className="max-w-7xl mx-auto px-6 lg:px-12 flex-1 flex flex-col justify-center relative z-10 w-full pt-16">
@@ -232,11 +292,14 @@ export default function App() {
                 image={philosophy.image}
                 videoUrl={philosophy.videoUrl}
                 youtubeUrl={philosophy.youtubeUrl}
+                playback={philosophy.playback}
+                lazy
                 alt={philosophy.badgeText}
                 className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/50 to-transparent pointer-events-none" />
             </div>
+
             {/* Visual bronze floating badge */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -271,9 +334,12 @@ export default function App() {
                 image={islandIntro.image}
                 videoUrl={islandIntro.videoUrl}
                 youtubeUrl={islandIntro.youtubeUrl}
+                playback={islandIntro.playback}
+                lazy
                 alt={islandIntro.title}
                 className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
               />
+
               <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/40 to-transparent pointer-events-none" />
             </div>
           </motion.div>
