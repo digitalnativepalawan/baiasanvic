@@ -1,37 +1,40 @@
 /**
- * Admin gate using a simple passkey (client-side only).
- * NOTE: this is not real security — the passkey is visible in the JS bundle,
- * and Supabase RLS still requires an authenticated admin session for writes.
+ * Admin gate using a simple passkey.
+ * Verified both client-side (for UI unlock) and server-side (for uploads/saves).
  */
 
 import { useState } from "react";
 import { motion } from "motion/react";
 import { X, ShieldCheck, LogOut } from "lucide-react";
 import AdminPanel from "./AdminPanel";
+import { useSite } from "../context/SiteContext";
 
 const ADMIN_PASSKEY = "5309";
 
 export default function AdminGate({ onClose }: { onClose: () => void }) {
-  const [unlocked, setUnlocked] = useState(false);
+  const { adminPasskey, setAdminPasskey } = useSite();
   const [passkey, setPasskey] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const unlocked = !!adminPasskey;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (passkey === ADMIN_PASSKEY) {
-      setUnlocked(true);
+      setAdminPasskey(passkey);
       setError(null);
     } else {
       setError("Incorrect passkey.");
     }
   };
 
+  const lock = () => setAdminPasskey(null);
+
   if (unlocked) {
     return (
       <>
         <AdminPanel isOpen={true} onClose={onClose} />
         <button
-          onClick={() => setUnlocked(false)}
+          onClick={lock}
           className="fixed bottom-6 left-6 z-[60] bg-luxury-900 border border-luxury-700 text-luxury-200 hover:text-gold-300 hover:border-gold-500 rounded-sm px-4 py-2 text-[10px] tracking-widest uppercase font-sans font-semibold flex items-center gap-2 cursor-pointer"
           title="Lock admin"
         >
