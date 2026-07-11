@@ -152,7 +152,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   // just receives a string it can drop into an <img src>.
   const handleImageUpload = async (
     file: File,
-    callback: (url: string) => void
+    callback: (url: string) => void,
+    opts: { allowVideo?: boolean } = {}
   ) => {
     setIsUploading(true);
     setUploadProgress(5);
