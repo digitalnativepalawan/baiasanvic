@@ -575,7 +575,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                 <span>Choose Local File</span>
                               </button>
                               <input
-                                type="file"
+                                type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                 ref={heroFileRef}
                                 accept="image/*"
                                 onChange={(e) => {
@@ -707,7 +707,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                   <span>Choose Logo File</span>
                                 </button>
                                 <input
-                                  type="file"
+                                  type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                   ref={logoFileRef}
                                   accept="image/*"
                                   onChange={(e) => {
@@ -1173,7 +1173,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                   <span>Choose File</span>
                                 </button>
                                 <input
-                                  type="file"
+                                  type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                   ref={editingGalleryId === "new" ? newGalleryFileRef : editGalleryFileRef}
                                   accept="image/*"
                                   onChange={(e) => {
@@ -1516,7 +1516,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                           <span>Choose New File</span>
                                         </button>
                                         <input
-                                          type="file"
+                                          type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                           ref={(el) => { roomFileRefs.current[room.id] = el; }}
                                           accept="image/*,video/*"
                                           onChange={(e) => {
@@ -1582,7 +1582,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                           <span>Upload Image/Video</span>
                                         </button>
                                         <input
-                                          type="file"
+                                          type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                           ref={(el) => { roomAddMediaFileRefs.current[room.id] = el; }}
                                           accept="image/*,video/*"
                                           onChange={(e) => {
@@ -1786,7 +1786,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                           <span>Choose New File</span>
                                         </button>
                                         <input
-                                          type="file"
+                                          type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                                           ref={(el) => { activityFileRefs.current[act.id] = el; }}
                                           accept="image/*"
                                           onChange={(e) => {
