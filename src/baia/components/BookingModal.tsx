@@ -467,11 +467,13 @@ export default function BookingModal({ isOpen, onClose, initialDates, onSubmitte
 
                     <button
                       type="submit"
-                      className="bg-gold-500 hover:bg-gold-600 active:bg-gold-700 text-white px-8 py-3.5 text-[11px] tracking-widest font-sans font-bold hover:shadow-lg transition-all uppercase flex items-center justify-center space-x-2 cursor-pointer"
+                      disabled={isProcessing}
+                      className="bg-gold-500 hover:bg-gold-600 active:bg-gold-700 disabled:opacity-60 text-white px-8 py-3.5 text-[11px] tracking-widest font-sans font-bold hover:shadow-lg transition-all uppercase flex items-center justify-center space-x-2 cursor-pointer"
                     >
-                      <span>Proceed to Payment</span>
+                      <span>{isProcessing ? "Submitting…" : "Submit Inquiry"}</span>
                       <ArrowRight size={14} />
                     </button>
+
                   </div>
                 </form>
 
