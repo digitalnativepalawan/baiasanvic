@@ -267,13 +267,14 @@ export default function App() {
             className="lg:col-span-7 order-2 lg:order-1 relative group"
           >
             <div className="aspect-[4/3] overflow-hidden bg-luxury-950 shadow-2xl relative rounded-sm max-w-2xl mx-auto">
-              <img
-                src="/src/assets/images/baia_luxury_room_1783731990599.jpg"
-                alt="Baia Luxury Wooden Room Suite"
+              <MediaFrame
+                image={islandIntro.image}
+                videoUrl={islandIntro.videoUrl}
+                youtubeUrl={islandIntro.youtubeUrl}
+                alt={islandIntro.title}
                 className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/40 to-transparent pointer-events-none" />
             </div>
           </motion.div>
 
@@ -286,20 +287,20 @@ export default function App() {
             className="lg:col-span-5 order-1 lg:order-2 space-y-6"
           >
             <span className="text-[10px] tracking-[0.3em] font-sans text-gold-300 font-semibold uppercase">
-              THE ISLAND
+              {islandIntro.eyebrow}
             </span>
             <h2 className="text-3xl md:text-5xl font-serif text-luxury-100 tracking-wide uppercase leading-tight font-light">
-              Palawan as it should be
+              {islandIntro.title}
             </h2>
             <p className="text-sm text-luxury-300 font-sans font-light leading-relaxed max-w-md pt-1">
-              Unspoiled. Untamed. Unforgettable. Discover a slower pace of life surrounded by raw natural beauty, turquoise saltwater tidal pools, and warm Filipino island hospitality.
+              {islandIntro.subtitle}
             </p>
             <div className="pt-4 flex flex-col space-y-4">
               <button
                 onClick={() => scrollToSection("experiences")}
                 className="text-[11px] font-sans font-bold text-luxury-100 uppercase tracking-[0.25em] border-b border-luxury-500 hover:border-gold-300 hover:text-gold-300 pb-2.5 transition-all cursor-pointer self-start flex items-center space-x-1"
               >
-                <span>EXPLORE CURATED EXPERIENCES</span>
+                <span>{islandIntro.ctaLabel}</span>
               </button>
             </div>
           </motion.div>
