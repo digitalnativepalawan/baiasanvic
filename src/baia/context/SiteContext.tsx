@@ -290,6 +290,7 @@ const DEFAULT_HERO: HeroData = {
   backgroundImage: "/src/assets/images/baia_hero_sunset_1783731965243.jpg",
   videoUrl: "",
   youtubeUrl: "",
+  playback: { ...DEFAULT_HERO_PLAYBACK },
 };
 
 const DEFAULT_PHILOSOPHY: PhilosophyData = {
@@ -301,6 +302,7 @@ const DEFAULT_PHILOSOPHY: PhilosophyData = {
   youtubeUrl: "",
   badgeTitle: "THE EXPERIENCE",
   badgeText: "Quiet luxury on the shorelines of San Vicente.",
+  playback: { ...DEFAULT_SECTION_PLAYBACK },
 };
 
 const DEFAULT_ISLAND_INTRO: IslandIntroData = {
@@ -311,7 +313,9 @@ const DEFAULT_ISLAND_INTRO: IslandIntroData = {
   image: "/src/assets/images/baia_luxury_room_1783731990599.jpg",
   videoUrl: "",
   youtubeUrl: "",
+  playback: { ...DEFAULT_SECTION_PLAYBACK },
 };
+
 
 const DEFAULT_LOGO: LogoData = {
   text: "BAIA",
