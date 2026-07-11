@@ -197,8 +197,89 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBook }) => {
           </button>
         </div>
       </div>
+
+      {lightboxOpen && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-luxury-950/95 backdrop-blur-md p-4 sm:p-8 animate-fade-in">
+          <div className="absolute inset-0 cursor-zoom-out" onClick={() => setLightboxOpen(false)} />
+
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 md:top-6 md:right-6 text-luxury-300 hover:text-gold-300 transition-colors p-2 bg-luxury-950/70 hover:bg-luxury-900 rounded-full z-30 border border-luxury-800/50 cursor-pointer"
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
+
+          <div className="relative z-10 w-full max-w-6xl flex flex-col items-center">
+            <div className="relative w-full flex items-center justify-center">
+              {mediaList.length > 1 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); stepPrev(); }}
+                  className="absolute left-2 md:-left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-luxury-950/70 hover:bg-luxury-900 border border-luxury-800/50 text-luxury-200 hover:text-gold-300 transition-all z-20 cursor-pointer"
+                  aria-label="Previous"
+                >
+                  <ChevronLeft size={22} />
+                </button>
+              )}
+
+              {isVideo(currentMediaUrl) ? (
+                <video src={currentMediaUrl} autoPlay muted loop playsInline className="max-h-[80vh] max-w-full object-contain" />
+              ) : (
+                <img
+                  src={currentMediaUrl}
+                  alt={`${room.name} - image ${activeMediaIndex + 1}`}
+                  referrerPolicy="no-referrer"
+                  className="max-h-[80vh] max-w-full object-contain select-none"
+                />
+              )}
+
+              {mediaList.length > 1 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); stepNext(); }}
+                  className="absolute right-2 md:-right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-luxury-950/70 hover:bg-luxury-900 border border-luxury-800/50 text-luxury-200 hover:text-gold-300 transition-all z-20 cursor-pointer"
+                  aria-label="Next"
+                >
+                  <ChevronRight size={22} />
+                </button>
+              )}
+            </div>
+
+            <div className="mt-6 flex flex-col items-center space-y-4">
+              <div className="text-center">
+                <span className="text-[10px] tracking-[0.3em] text-gold-300 uppercase font-sans font-semibold block mb-2">
+                  {room.size} · {room.capacity}
+                </span>
+                <h3 className="text-lg md:text-2xl font-serif text-luxury-100 uppercase tracking-wide">
+                  {room.name}
+                </h3>
+              </div>
+
+              {mediaList.length > 1 && (
+                <div className="flex items-center space-x-2">
+                  {mediaList.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={(e) => { e.stopPropagation(); setActiveMediaIndex(idx); }}
+                      className={`h-1.5 rounded-full transition-all ${
+                        idx === activeMediaIndex ? "w-6 bg-gold-300" : "w-1.5 bg-luxury-500/50 hover:bg-luxury-300"
+                      }`}
+                      aria-label={`Go to image ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <span className="text-[10px] tracking-widest text-luxury-500 font-sans uppercase">
+                {activeMediaIndex + 1} of {mediaList.length}
+              </span>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
+
 };
 
 export default RoomCard;
