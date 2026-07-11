@@ -1,24 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SiteProvider } from "@/baia/context/SiteContext";
+import App from "@/baia/App";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+// The BAIA site is a client-side SPA (uses window/document/motion effects).
+// Render it client-only to avoid SSR crashes.
 export const Route = createFileRoute("/")({
-  component: Index,
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "BAIA — Beachfront Boutique Lodge" },
+      { name: "description", content: "A barefoot luxury retreat on Palawan — beachfront villas, island excursions, and slow living on Penanindigan Beach." },
+      { property: "og:title", content: "BAIA — Beachfront Boutique Lodge" },
+      { property: "og:description", content: "A barefoot luxury retreat on Palawan — beachfront villas, island excursions, and slow living on Penanindigan Beach." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Page,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Page() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <SiteProvider>
+      <App />
+    </SiteProvider>
   );
 }
