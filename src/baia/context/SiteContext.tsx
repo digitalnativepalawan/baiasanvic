@@ -371,61 +371,86 @@ const DEFAULT_GALLERY: GalleryItem[] = [
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
 
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [hero, setHero] = useState<HeroData>(() => {
-    const saved = localStorage.getItem("baia_custom_hero");
-    return saved ? JSON.parse(saved) : DEFAULT_HERO;
-  });
+  const [hero, setHero] = useState<HeroData>(DEFAULT_HERO);
+  const [logo, setLogo] = useState<LogoData>(DEFAULT_LOGO);
+  const [header, setHeader] = useState<HeaderData>(DEFAULT_HEADER);
+  const [footer, setFooter] = useState<FooterData>(DEFAULT_FOOTER);
+  const [theme, setTheme] = useState<ThemeData>(DEFAULT_THEME);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(DEFAULT_GALLERY);
+  const [rooms, setRooms] = useState<RoomTier[]>(DEFAULT_ROOMS);
+  const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
+  const [loaded, setLoaded] = useState(false);
+  const isAdminRef = useRef(false);
 
-  const [logo, setLogo] = useState<LogoData>(() => {
-    const saved = localStorage.getItem("baia_custom_logo");
-    return saved ? { ...DEFAULT_LOGO, ...JSON.parse(saved) } : DEFAULT_LOGO;
-  });
-
-  const [header, setHeader] = useState<HeaderData>(() => {
-    const saved = localStorage.getItem("baia_custom_header");
-    return saved ? JSON.parse(saved) : DEFAULT_HEADER;
-  });
-
-  const [footer, setFooter] = useState<FooterData>(() => {
-    const saved = localStorage.getItem("baia_custom_footer");
-    return saved ? { ...DEFAULT_FOOTER, ...JSON.parse(saved) } : DEFAULT_FOOTER;
-  });
-
-  const [theme, setTheme] = useState<ThemeData>(() => {
-    const saved = localStorage.getItem("baia_custom_theme");
-    return saved ? { ...DEFAULT_THEME, ...JSON.parse(saved) } : DEFAULT_THEME;
-  });
-
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(() => {
-    const saved = localStorage.getItem("baia_custom_gallery");
-    return saved ? JSON.parse(saved) : DEFAULT_GALLERY;
-  });
-
-  const [rooms, setRooms] = useState<RoomTier[]>(() => {
-    const saved = localStorage.getItem("baia_custom_rooms_v3");
-    return saved ? JSON.parse(saved) : DEFAULT_ROOMS;
-  });
-
-  const [activities, setActivities] = useState<Activity[]>(() => {
-    const saved = localStorage.getItem("baia_custom_activities");
-    return saved ? JSON.parse(saved) : DEFAULT_ACTIVITIES;
-  });
-
-  // Sync state changes to localStorage
+  // Load site state from Supabase on mount, and track admin session for save gating
   useEffect(() => {
-    localStorage.setItem("baia_custom_hero", JSON.stringify(hero));
-  }, [hero]);
+    let cancelled = false;
 
-  useEffect(() => {
-    localStorage.setItem("baia_custom_logo", JSON.stringify(logo));
-  }, [logo]);
+    (async () => {
+      const { data, error } = await supabase
+        .from("site_state")
+        .select("data")
+        .eq("key", "default")
+        .maybeSingle();
+      if (!cancelled && !error && data?.data) {
+        const d: any = data.data;
+        if (d.hero) setHero({ ...DEFAULT_HERO, ...d.hero });
+        if (d.logo) setLogo({ ...DEFAULT_LOGO, ...d.logo });
+        if (d.header) setHeader({ ...DEFAULT_HEADER, ...d.header });
+        if (d.footer) setFooter({ ...DEFAULT_FOOTER, ...d.footer });
+        if (d.theme) setTheme({ ...DEFAULT_THEME, ...d.theme });
+        if (Array.isArray(d.galleryItems)) setGalleryItems(d.galleryItems);
+        if (Array.isArray(d.rooms)) setRooms(d.rooms);
+        if (Array.isArray(d.activities)) setActivities(d.activities);
+      }
+      if (!cancelled) setLoaded(true);
+    })();
 
+    // Check admin role on session changes so save gating stays accurate
+    const refreshAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { isAdminRef.current = false; return; }
+      const { data: role } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      isAdminRef.current = !!role;
+    };
+    refreshAdmin();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      refreshAdmin();
+    });
+
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Debounced save to Supabase when signed-in admin edits content
   useEffect(() => {
-    localStorage.setItem("baia_custom_theme", JSON.stringify(theme));
-  }, [theme]);
+    if (!loaded) return;
+    const timer = setTimeout(async () => {
+      if (!isAdminRef.current) return;
+      await supabase
+        .from("site_state")
+        .upsert(
+          {
+            key: "default",
+            data: { hero, logo, header, footer, theme, galleryItems, rooms, activities } as any,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "key" }
+        );
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [loaded, hero, logo, header, footer, theme, galleryItems, rooms, activities]);
 
   // Load Google Fonts and apply CSS custom properties dynamically
   useEffect(() => {
+    if (typeof document === "undefined") return;
     const selectedFonts = [theme.heroFont, theme.sectionsFont, theme.headerFont, theme.footerFont];
     const uniqueFonts = Array.from(new Set(selectedFonts));
 
@@ -451,7 +476,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (fontQueries.length > 0) {
       const linkId = "dynamic-google-fonts";
-      let link = document.getElementById(linkId) as HTMLLinkElement;
+      let link = document.getElementById(linkId) as HTMLLinkElement | null;
       if (!link) {
         link = document.createElement("link");
         link.id = linkId;
@@ -469,15 +494,14 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return isSerif(fontName) ? "Georgia, serif" : "ui-sans-serif, system-ui, sans-serif";
     };
 
-    // Apply variables to style tag
     const styleId = "dynamic-theme-styles";
-    let style = document.getElementById(styleId) as HTMLStyleElement;
+    let style = document.getElementById(styleId) as HTMLStyleElement | null;
     if (!style) {
       style = document.createElement("style");
       style.id = styleId;
       document.head.appendChild(style);
     }
-    
+
     style.innerHTML = `
       :root {
         --font-hero: "${theme.heroFont}", ${getFallback(theme.heroFont)};
@@ -485,7 +509,6 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         --font-header: "${theme.headerFont}", ${getFallback(theme.headerFont)};
         --font-footer: "${theme.footerFont}", ${getFallback(theme.footerFont)};
 
-        /* Dynamic Tailwind Colors */
         --gold-50: ${theme.colors.gold50};
         --gold-100: ${theme.colors.gold100};
         --gold-200: ${theme.colors.gold200};
@@ -511,40 +534,12 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         --luxury-950: ${theme.colors.luxury950};
       }
 
-      /* Apply specific override components */
-      #hero-title, #hero-subtitle {
-        font-family: var(--font-hero) !important;
-      }
-      
-      #header, #header *, #navbar-container, #navbar-container * {
-        font-family: var(--font-header) !important;
-      }
-
-      #footer, #footer * {
-        font-family: var(--font-footer) !important;
-      }
+      #hero-title, #hero-subtitle { font-family: var(--font-hero) !important; }
+      #header, #header *, #navbar-container, #navbar-container * { font-family: var(--font-header) !important; }
+      #footer, #footer * { font-family: var(--font-footer) !important; }
     `;
   }, [theme]);
 
-  useEffect(() => {
-    localStorage.setItem("baia_custom_header", JSON.stringify(header));
-  }, [header]);
-
-  useEffect(() => {
-    localStorage.setItem("baia_custom_footer", JSON.stringify(footer));
-  }, [footer]);
-
-  useEffect(() => {
-    localStorage.setItem("baia_custom_gallery", JSON.stringify(galleryItems));
-  }, [galleryItems]);
-
-  useEffect(() => {
-    localStorage.setItem("baia_custom_rooms_v3", JSON.stringify(rooms));
-  }, [rooms]);
-
-  useEffect(() => {
-    localStorage.setItem("baia_custom_activities", JSON.stringify(activities));
-  }, [activities]);
 
   const updateHero = (data: Partial<HeroData>) => {
     setHero((prev) => ({ ...prev, ...data }));
