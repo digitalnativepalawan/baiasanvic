@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: var(--font-hero, "Cormorant Garamond"), Georgia, serif;
+  --font-sans: var(--font-sections, "Inter"), ui-sans-serif, system-ui, sans-serif;
+  
+  --color-gold-50: var(--gold-50, #f9f8f4);
+  --color-gold-100: var(--gold-100, #e5e3d8);
+  --color-gold-200: var(--gold-200, #c9c5b9);
+  --color-gold-300: var(--gold-300, #5a5a40);
+  --color-gold-400: var(--gold-400, #4e4e37);
+  --color-gold-500: var(--gold-500, #5a5a40);
+  --color-gold-600: var(--gold-600, #444430);
+  --color-gold-700: var(--gold-700, #333324);
+  --color-gold-800: var(--gold-800, #222218);
+  --color-gold-900: var(--gold-900, #11110c);
+  --color-gold-950: var(--gold-950, #080806);
+  
+  --color-luxury-50: var(--luxury-50, #1a1a1a);
+  --color-luxury-100: var(--luxury-100, #2d2d2d);
+  --color-luxury-200: var(--luxury-200, #3e3c35);
+  --color-luxury-300: var(--luxury-300, #54524a);
+  --color-luxury-400: var(--luxury-400, #6c6a60);
+  --color-luxury-500: var(--luxury-500, #8f8b7b);
+  --color-luxury-600: var(--luxury-600, #b5b09e);
+  --color-luxury-700: var(--luxury-700, #c9c5b9);
+  --color-luxury-800: var(--luxury-800, #e5e2d9);
+  --color-luxury-900: var(--luxury-900, #edebe4);
+  --color-luxury-950: var(--luxury-950, #f9f8f6);
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-luxury-950 text-luxury-200 antialiased selection:bg-gold-500 selection:text-white;
+  }
+  
+  h1, h2, h3, h4 {
+    @apply font-serif;
+  }
+}
+
+/* Custom scrollbar for an elegant feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f0eb;
+}
+::-webkit-scrollbar-thumb {
+  background: #c9c5b9;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5a40;
+}
+
