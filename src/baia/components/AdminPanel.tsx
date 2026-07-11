@@ -763,7 +763,19 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                             <p className="mt-2 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">Plays muted &amp; looped as background.</p>
                           </div>
                         </div>
+                        <PlaybackControls
+                          label="Hero"
+                          playback={hero.playback}
+                          fallback={DEFAULT_HERO_PLAYBACK}
+                          onChange={(pb) => updateHero({ playback: pb })}
+                          onUploadPoster={(f) => handleImageUpload(f, (url) => {
+                            const cur = { ...DEFAULT_HERO_PLAYBACK, ...(hero.playback || {}) };
+                            updateHero({ playback: { ...cur, posterUrl: url } });
+                            triggerSuccess("Hero poster uploaded.");
+                          })}
+                        />
                       </div>
+
 
                       {/* Hero Copy Content */}
                       <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4 text-left">
