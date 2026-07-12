@@ -829,6 +829,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         galleryItems,
         rooms,
         activities,
+        testimonials,
         updateHero,
         updatePhilosophy,
         updateIslandIntro,
