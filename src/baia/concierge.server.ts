@@ -53,7 +53,12 @@ export const conciergeChat = createServerFn({ method: "POST" })
     // Resolve model for the chosen provider.
     let effective = cfg;
     if (cfg.provider === "ollama") {
-      const model = await resolveOllamaModel(cfg.ollamaBaseUrl, cfg.ollamaModel);
+      // If the owner typed an explicit model name (set from the admin panel,
+      // e.g. when auto-detect is blocked on an HTTPS admin page), trust it —
+      // the server can't always reach the admin's localhost to verify.
+      const model = cfg.ollamaModel?.trim()
+        ? cfg.ollamaModel.trim()
+        : await resolveOllamaModel(cfg.ollamaBaseUrl, cfg.ollamaModel);
       if (!model) {
         return {
           reply:

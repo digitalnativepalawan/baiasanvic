@@ -317,6 +317,21 @@ export default function ConciergeSettings() {
                   {refreshingModels ? "…" : "Refresh"}
                 </button>
               </div>
+              <div className="flex flex-col space-y-1.5">
+                <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase">
+                  Model name (if not auto-detected)
+                </label>
+                <input
+                  value={cfg.ollamaModel}
+                  onChange={(e) => update({ ollamaModel: e.target.value })}
+                  placeholder="e.g. qwen2.5:3b"
+                  className="bg-luxury-900 border border-luxury-800 rounded-sm px-3 py-2 text-xs text-luxury-100 focus:outline-none focus:border-gold-300 font-mono"
+                />
+                <p className="text-[10px] text-luxury-500 font-sans">
+                  Type the exact name from <code className="text-luxury-200">ollama list</code> when
+                  auto-detect is blocked (e.g. on an HTTPS admin page). Leave blank for "Auto".
+                </p>
+              </div>
 
               {/* Status messaging */}
               {ollamaResult?.status === "ok" && (
