@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { RoomTier, Activity, Testimonial } from "../types";
-import { ROOMS as DEFAULT_ROOMS, ACTIVITIES as DEFAULT_ACTIVITIES } from "../data";
+import { ROOMS as DEFAULT_ROOMS, ACTIVITIES as DEFAULT_ACTIVITIES, TESTIMONIALS as DEFAULT_TESTIMONIALS } from "../data";
 import { supabase } from "@/integrations/supabase/client";
 import { saveSiteState } from "../admin.functions";
 
@@ -258,6 +258,7 @@ interface SiteContextType {
   galleryItems: GalleryItem[];
   rooms: RoomTier[];
   activities: Activity[];
+  testimonials: Testimonial[];
   updateHero: (data: Partial<HeroData>) => void;
   updatePhilosophy: (data: Partial<PhilosophyData>) => void;
   updateIslandIntro: (data: Partial<IslandIntroData>) => void;
@@ -277,6 +278,10 @@ interface SiteContextType {
   updateActivity: (id: string, data: Partial<Activity>) => void;
   addActivity: (activity: Omit<Activity, "id">) => void;
   deleteActivity: (id: string) => void;
+  // Testimonials Management
+  updateTestimonial: (id: string, data: Partial<Testimonial>) => void;
+  addTestimonial: (testimonial: Omit<Testimonial, "id">) => void;
+  deleteTestimonial: (id: string) => void;
   // General Image Updater (helper for raw asset overrides)
   resetToDefault: () => void;
   // Admin passkey (in-memory; set by AdminGate on unlock)
@@ -532,6 +537,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(DEFAULT_GALLERY);
   const [rooms, setRooms] = useState<RoomTier[]>(DEFAULT_ROOMS);
   const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(DEFAULT_TESTIMONIALS);
   const [loaded, setLoaded] = useState(false);
   const [adminPasskey, setAdminPasskey] = useState<string | null>(null);
   const adminPasskeyRef = useRef<string | null>(null);
@@ -559,6 +565,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (Array.isArray(d.galleryItems)) setGalleryItems(d.galleryItems);
         if (Array.isArray(d.rooms)) setRooms(d.rooms);
         if (Array.isArray(d.activities)) setActivities(d.activities);
+        if (Array.isArray(d.testimonials)) setTestimonials(d.testimonials);
       }
       if (!cancelled) setLoaded(true);
     })();
@@ -578,7 +585,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await saveSiteState({
           data: {
             passkey,
-            state: { hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities },
+            state: { hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities, testimonials },
           },
         });
       } catch (err) {
@@ -586,7 +593,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }, 600);
     return () => clearTimeout(timer);
-  }, [loaded, adminPasskey, hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities]);
+  }, [loaded, adminPasskey, hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities, testimonials]);
 
   // Load Google Fonts and apply CSS custom properties dynamically
   useEffect(() => {
@@ -758,6 +765,25 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActivities((prev) => [...prev, newAct]);
   };
 
+  // Testimonials
+  const updateTestimonial = (id: string, data: Partial<Testimonial>) => {
+    setTestimonials((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...data } : t))
+    );
+  };
+
+  const addTestimonial = (testimonial: Omit<Testimonial, "id">) => {
+    const newT: Testimonial = {
+      ...testimonial,
+      id: "t_" + Date.now()
+    };
+    setTestimonials((prev) => [...prev, newT]);
+  };
+
+  const deleteTestimonial = (id: string) => {
+    setTestimonials((prev) => prev.filter((t) => t.id !== id));
+  };
+
   const deleteActivity = (id: string) => {
     setActivities((prev) => prev.filter((act) => act.id !== id));
   };
@@ -785,6 +811,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setGalleryItems(DEFAULT_GALLERY);
       setRooms(DEFAULT_ROOMS);
       setActivities(DEFAULT_ACTIVITIES);
+      setTestimonials(DEFAULT_TESTIMONIALS);
 
     }
   };
@@ -802,6 +829,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         galleryItems,
         rooms,
         activities,
+        testimonials,
         updateHero,
         updatePhilosophy,
         updateIslandIntro,
@@ -818,6 +846,9 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateActivity,
         addActivity,
         deleteActivity,
+        updateTestimonial,
+        addTestimonial,
+        deleteTestimonial,
         resetToDefault,
         adminPasskey,
         setAdminPasskey,
