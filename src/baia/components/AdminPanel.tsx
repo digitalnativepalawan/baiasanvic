@@ -172,11 +172,13 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     deleteActivity,
     resetToDefault,
     adminPasskey,
+    setAdminPasskey,
   } = useSite();
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passkeyInput, setPasskeyInput] = useState("");
-  const [authError, setAuthError] = useState("");
+  // Single source of truth: the outer AdminGate already verified the
+  // passkey and stored it in shared context. We trust that here so the
+  // operator logs in only once. Saves/uploads still re-check on the server.
+  const isAuthenticated = !!adminPasskey;
   const [activeTab, setActiveTab] = useState<AdminTab>("hero_logo");
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -216,16 +218,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     }
   }, [successMsg]);
 
-  // Handle Authentication
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passkeyInput === "5309") {
-      setIsAuthenticated(true);
-      setAuthError("");
-    } else {
-      setAuthError("Invalid passkey. Access denied.");
-    }
-  };
+  // Login is handled by AdminGate (single passkey). No second gate here.
 
   const triggerSuccess = (msg: string) => {
     setSuccessMsg(msg);
@@ -450,8 +443,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 {isAuthenticated && (
                   <button
                     onClick={() => {
-                      setIsAuthenticated(false);
-                      setPasskeyInput("");
+                      // Real lock: drop the verified passkey so the outer
+                      // AdminGate reappears.
+                      setAdminPasskey(null);
                     }}
                     className="text-[10px] tracking-widest font-sans border border-luxury-800 text-luxury-400 hover:text-white px-3 py-1.5 rounded uppercase hover:bg-luxury-900 transition-colors"
                   >
@@ -469,65 +463,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             </div>
 
             {/* Content Area */}
-            {!isAuthenticated ? (
-              /* LOGIN STATE */
-              <div className="flex-1 flex flex-col justify-center items-center px-8 text-center bg-luxury-950">
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="max-w-md w-full bg-luxury-900 border border-luxury-800 p-8 rounded-sm shadow-xl space-y-6"
-                >
-                  <div className="flex justify-center">
-                    <div className="p-4 bg-gold-500/10 border border-gold-500/20 rounded-full text-gold-300 animate-pulse">
-                      <Lock size={32} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-xl font-serif text-luxury-100 uppercase tracking-widest">
-                      Enter Security Passkey
-                    </h3>
-                    <p className="text-xs text-luxury-400 font-sans font-light mt-1.5">
-                      Access to database settings, logo dimensions, and site assets requires authorization.
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="relative text-left">
-                      <label className="text-[10px] tracking-widest text-gold-300 font-sans font-semibold uppercase block mb-1.5">
-                        Passkey Credentials
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="••••"
-                        value={passkeyInput}
-                        onChange={(e) => setPasskeyInput(e.target.value)}
-                        className="w-full bg-luxury-950 border border-luxury-800 focus:border-gold-300 text-center tracking-[0.5em] font-sans font-bold text-luxury-100 placeholder:text-luxury-700 placeholder:tracking-normal py-3 px-4 focus:outline-none transition-colors rounded-sm text-lg"
-                        autoFocus
-                      />
-                    </div>
-
-                    {authError && (
-                      <p className="text-xs text-red-400 font-sans text-center font-medium">
-                        {authError}
-                      </p>
-                    )}
-
-                    <button
-                      type="submit"
-                      className="w-full bg-gold-500 text-luxury-950 text-xs tracking-[0.25em] font-sans font-bold py-3.5 hover:bg-gold-400 transition-all cursor-pointer rounded-sm uppercase"
-                    >
-                      Authenticate Console
-                    </button>
-                  </form>
-                  <p className="text-[9px] text-luxury-500 tracking-wider font-sans font-light">
-                    Tip: Passkey is 5309
-                  </p>
-                </motion.div>
-              </div>
-            ) : (
-              /* AUTHORIZED CONSOLE STATE */
-              <div className="flex-1 flex overflow-hidden">
+            {/* Single login handled by AdminGate; passkey already verified. */}
+            <div className="flex-1 flex overflow-hidden">
                 {/* Admin Tabs Sidebar */}
                 <div className="w-56 border-r border-luxury-900 bg-luxury-950/80 flex flex-col justify-between py-6">
                   <div className="space-y-1 px-3">
@@ -2764,7 +2701,6 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   )}
                 </div>
               </div>
-            )}
 
             {/* Uploading progress notification widget */}
             <AnimatePresence>
