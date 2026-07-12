@@ -1,12 +1,16 @@
 /**
  * Admin-facing server functions for the concierge. These run server-side so
  * the OpenRouter key is never exposed to the browser bundle. The admin panel
- * calls these to load config, save config, and fetch the model dropdowns.
+ * calls these to load config, save config, and list OpenRouter models.
+ *
+ * Ollama model discovery is intentionally NOT server-side: the server runs in
+ * a Cloudflare Worker and cannot reach the admin's localhost. The admin panel
+ * fetches Ollama's /api/tags directly from the browser via
+ * `listOllamaModelsBrowser` in concierge.discovery.ts.
  */
 import { createServerFn } from "@tanstack/react-start";
-import type { ConciergeConfig, ModelCatalog } from "./concierge.types";
+import type { ConciergeConfig } from "./concierge.types";
 import { loadConciergeConfig, saveConciergeConfig } from "./concierge.config.server";
-import { listOllamaModels } from "./concierge.discovery";
 
 export const getConciergeConfig = createServerFn({ method: "GET" }).handler(
   async (): Promise<ConciergeConfig> => {
@@ -21,38 +25,38 @@ export const saveConciergeSettings = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// Returns available models for the admin dropdowns (no key required to list).
-export const getConciergeModels = createServerFn({ method: "GET" }).handler(
-  async (): Promise<ModelCatalog> => {
-    let ollama: string[] = [];
-    try {
-      ollama = await listOllamaModels("http://localhost:11434");
-    } catch {
-      ollama = [];
-    }
-
-    let openrouter: string[] = [];
+/**
+ * Fetch the live list of OpenRouter model ids. Runs server-side to sidestep
+ * CORS and keep the endpoint under our control. Free models (":free") are
+ * sorted to the top so the admin can spot them first.
+ */
+export const getOpenRouterModels = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ models: string[]; error?: string }> => {
     try {
       const res = await fetch("https://openrouter.ai/api/v1/models", {
         headers: { Accept: "application/json" },
       });
-      if (res.ok) {
-        const json = (await res.json()) as {
-          data?: { id: string; pricing?: { prompt?: string } }[];
-        };
-        openrouter = (json.data ?? [])
-          .map((m) => m.id)
-          // Flag free models with a prefix so the dropdown can highlight them.
-          .sort((a, b) => {
-            const af = a.includes(":free") ? 0 : 1;
-            const bf = b.includes(":free") ? 0 : 1;
-            return af - bf;
-          });
+      if (!res.ok) {
+        return { models: [], error: `OpenRouter ${res.status}` };
       }
-    } catch {
-      openrouter = [];
+      const json = (await res.json()) as {
+        data?: { id: string }[];
+      };
+      const models = (json.data ?? [])
+        .map((m) => m.id)
+        .filter(Boolean)
+        .sort((a, b) => {
+          const af = a.includes(":free") ? 0 : 1;
+          const bf = b.includes(":free") ? 0 : 1;
+          if (af !== bf) return af - bf;
+          return a.localeCompare(b);
+        });
+      return { models };
+    } catch (err) {
+      return {
+        models: [],
+        error: err instanceof Error ? err.message : "Failed to fetch OpenRouter models",
+      };
     }
-
-    return { openrouter, ollama };
   },
 );
