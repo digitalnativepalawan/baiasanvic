@@ -557,6 +557,19 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     </button>
 
                     <button
+                      onClick={() => setActiveTab("testimonials")}
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-sm font-sans text-xs tracking-wider uppercase transition-all text-left ${
+                        activeTab === "testimonials"
+                          ? "bg-gold-500/10 text-gold-300 border-l-2 border-gold-300 font-medium"
+                          : "text-luxury-400 hover:text-luxury-100 hover:bg-luxury-900/50"
+                      }`}
+                    >
+                      <MessageSquare size={14} />
+                      <span>Guest Journal</span>
+                    </button>
+
+
+                    <button
                       onClick={() => setActiveTab("system")}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-sm font-sans text-xs tracking-wider uppercase transition-all text-left ${
                         activeTab === "system"
