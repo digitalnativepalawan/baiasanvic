@@ -537,6 +537,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(DEFAULT_GALLERY);
   const [rooms, setRooms] = useState<RoomTier[]>(DEFAULT_ROOMS);
   const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(DEFAULT_TESTIMONIALS);
   const [loaded, setLoaded] = useState(false);
   const [adminPasskey, setAdminPasskey] = useState<string | null>(null);
   const adminPasskeyRef = useRef<string | null>(null);
