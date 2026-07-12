@@ -113,6 +113,7 @@ export default function Testimonials() {
             <ChevronRight size={16} />
           </button>
         </div>
+        )}
       </div>
     </section>
   );
