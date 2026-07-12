@@ -811,6 +811,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setGalleryItems(DEFAULT_GALLERY);
       setRooms(DEFAULT_ROOMS);
       setActivities(DEFAULT_ACTIVITIES);
+      setTestimonials(DEFAULT_TESTIMONIALS);
 
     }
   };
