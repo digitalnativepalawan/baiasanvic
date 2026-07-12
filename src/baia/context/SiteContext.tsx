@@ -593,7 +593,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }, 600);
     return () => clearTimeout(timer);
-  }, [loaded, adminPasskey, hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities]);
+  }, [loaded, adminPasskey, hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities, testimonials]);
 
   // Load Google Fonts and apply CSS custom properties dynamically
   useEffect(() => {
