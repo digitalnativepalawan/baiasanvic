@@ -585,7 +585,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await saveSiteState({
           data: {
             passkey,
-            state: { hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities },
+            state: { hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities, testimonials },
           },
         });
       } catch (err) {
