@@ -30,6 +30,27 @@ function toOpenAiMessages(
   return [sys, ...rest];
 }
 
+// Retry a model call a few times — OpenRouter/OpenAI free tiers occasionally
+// return an empty body on a single request. We retry on empty replies (and on
+// 5xx / transient network errors) before surfacing the fallback to the guest.
+async function withRetry<T>(fn: () => Promise<T>, tries = 3): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      // Don't retry missing-key / 4xx auth errors — those won't fix themselves.
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("API key not configured") || /OpenRouter 4\d\d/.test(msg)) {
+        throw err;
+      }
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 async function callOpenRouter(
   cfg: ConciergeConfig,
   messages: ChatMessage[],
@@ -98,7 +119,7 @@ export async function runModel(
 ): Promise<string> {
   const messages = toOpenAiMessages(system, history);
   if (cfg.provider === "ollama") {
-    return callOllama(cfg, messages);
+    return withRetry(() => callOllama(cfg, messages));
   }
-  return callOpenRouter(cfg, messages);
+  return withRetry(() => callOpenRouter(cfg, messages));
 }
