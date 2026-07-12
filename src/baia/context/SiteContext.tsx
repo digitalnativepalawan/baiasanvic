@@ -765,6 +765,25 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActivities((prev) => [...prev, newAct]);
   };
 
+  // Testimonials
+  const updateTestimonial = (id: string, data: Partial<Testimonial>) => {
+    setTestimonials((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...data } : t))
+    );
+  };
+
+  const addTestimonial = (testimonial: Omit<Testimonial, "id">) => {
+    const newT: Testimonial = {
+      ...testimonial,
+      id: "t_" + Date.now()
+    };
+    setTestimonials((prev) => [...prev, newT]);
+  };
+
+  const deleteTestimonial = (id: string) => {
+    setTestimonials((prev) => prev.filter((t) => t.id !== id));
+  };
+
   const deleteActivity = (id: string) => {
     setActivities((prev) => prev.filter((act) => act.id !== id));
   };
