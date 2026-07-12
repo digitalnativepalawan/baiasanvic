@@ -15,8 +15,13 @@ export const Route = createFileRoute("/api/site-assets/$")({
           return new Response("Not found", { status: 404 });
         }
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data, error } = await supabaseAdmin.storage
+        const { createClient } = await import("@supabase/supabase-js");
+        const supabase = createClient(
+          process.env.SUPABASE_URL!,
+          process.env.SUPABASE_PUBLISHABLE_KEY!,
+          { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+        );
+        const { data, error } = await supabase.storage
           .from("site-assets")
           .download(objectPath);
 
