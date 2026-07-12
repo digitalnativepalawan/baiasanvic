@@ -565,6 +565,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (Array.isArray(d.galleryItems)) setGalleryItems(d.galleryItems);
         if (Array.isArray(d.rooms)) setRooms(d.rooms);
         if (Array.isArray(d.activities)) setActivities(d.activities);
+        if (Array.isArray(d.testimonials)) setTestimonials(d.testimonials);
       }
       if (!cancelled) setLoaded(true);
     })();
