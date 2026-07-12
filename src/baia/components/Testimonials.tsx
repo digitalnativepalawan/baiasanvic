@@ -6,20 +6,24 @@
 import { useState } from "react";
 import { Quote, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { TESTIMONIALS } from "../data";
+import { useSite } from "../context/SiteContext";
 
 export default function Testimonials() {
+  const { testimonials } = useSite();
   const [activeIndex, setActiveIndex] = useState(0);
+  const safeIndex = testimonials.length ? activeIndex % testimonials.length : 0;
 
   const handleNext = () => {
-    setActiveIndex((prev) => (prev + 1) % TESTIMONIALS.length);
+    if (!testimonials.length) return;
+    setActiveIndex((prev) => (prev + 1) % testimonials.length);
   };
 
   const handlePrev = () => {
-    setActiveIndex((prev) => (prev - 1 + TESTIMONIALS.length) % TESTIMONIALS.length);
+    if (!testimonials.length) return;
+    setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
-  const current = TESTIMONIALS[activeIndex];
+  const current = testimonials[safeIndex];
 
   return (
     <section id="testimonials" className="py-24 bg-luxury-950 border-t border-b border-luxury-900/60 relative overflow-hidden">
