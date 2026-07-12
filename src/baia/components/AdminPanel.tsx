@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   X, Lock, Eye, Check, RefreshCw, Upload, Image as ImageIcon, 
   Trash2, Plus, Edit2, Sliders, Menu, FileText, Download, Shield,
-  Layers, Coffee, Home, HelpCircle, Save, Info, Palette
+  Layers, Coffee, Home, HelpCircle, Save, Info, Palette, MessageSquare, Star
 } from "lucide-react";
 import { useSite, GalleryItem, DEFAULT_THEME, MediaPlayback, DEFAULT_HERO_PLAYBACK, DEFAULT_SECTION_PLAYBACK } from "../context/SiteContext";
-import { RoomTier, Activity } from "../types";
+import { RoomTier, Activity, Testimonial } from "../types";
 import { uploadSiteAsset } from "../admin.functions";
 import ConciergeSettings from "./ConciergeSettings";
 
