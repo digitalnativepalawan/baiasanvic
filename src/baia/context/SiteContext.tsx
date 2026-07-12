@@ -258,6 +258,7 @@ interface SiteContextType {
   galleryItems: GalleryItem[];
   rooms: RoomTier[];
   activities: Activity[];
+  testimonials: Testimonial[];
   updateHero: (data: Partial<HeroData>) => void;
   updatePhilosophy: (data: Partial<PhilosophyData>) => void;
   updateIslandIntro: (data: Partial<IslandIntroData>) => void;
@@ -277,6 +278,10 @@ interface SiteContextType {
   updateActivity: (id: string, data: Partial<Activity>) => void;
   addActivity: (activity: Omit<Activity, "id">) => void;
   deleteActivity: (id: string) => void;
+  // Testimonials Management
+  updateTestimonial: (id: string, data: Partial<Testimonial>) => void;
+  addTestimonial: (testimonial: Omit<Testimonial, "id">) => void;
+  deleteTestimonial: (id: string) => void;
   // General Image Updater (helper for raw asset overrides)
   resetToDefault: () => void;
   // Admin passkey (in-memory; set by AdminGate on unlock)
