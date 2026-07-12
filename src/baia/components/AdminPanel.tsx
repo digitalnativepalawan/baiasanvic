@@ -2685,8 +2685,215 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     </div>
                   )}
 
+                  {/* -------------------- TAB: TESTIMONIALS (GUEST JOURNAL) -------------------- */}
+                  {activeTab === "testimonials" && (
+                    <div className="space-y-8 text-left">
+                      <div>
+                        <h3 className="text-xl font-serif text-luxury-100 uppercase tracking-wider mb-1">
+                          Guest Journal Testimonials
+                        </h3>
+                        <p className="text-xs text-luxury-400 font-sans mb-6">
+                          Add, edit, or remove the "Postcards from Paradise" testimonials that rotate in the guest journal carousel.
+                        </p>
+                      </div>
+
+                      {/* Add new testimonial */}
+                      <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4">
+                        <h4 className="text-sm tracking-widest text-gold-300 font-sans uppercase font-bold flex items-center space-x-2">
+                          <Plus size={14} />
+                          <span>Add New Testimonial</span>
+                        </h4>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">
+                              Guest Name
+                            </label>
+                            <input
+                              type="text"
+                              value={newTestimonial.guestName}
+                              onChange={(e) => setNewTestimonial({ ...newTestimonial, guestName: e.target.value })}
+                              placeholder="e.g. Clarissa & Robert"
+                              className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">
+                              Location
+                            </label>
+                            <input
+                              type="text"
+                              value={newTestimonial.location}
+                              onChange={(e) => setNewTestimonial({ ...newTestimonial, location: e.target.value })}
+                              placeholder="e.g. Stockholm, Sweden"
+                              className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">
+                              Stay Date
+                            </label>
+                            <input
+                              type="text"
+                              value={newTestimonial.stayDate}
+                              onChange={(e) => setNewTestimonial({ ...newTestimonial, stayDate: e.target.value })}
+                              placeholder="e.g. March 2026"
+                              className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">
+                              Rating (1–5)
+                            </label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={5}
+                              value={newTestimonial.rating}
+                              onChange={(e) => setNewTestimonial({ ...newTestimonial, rating: Math.min(5, Math.max(1, Number(e.target.value) || 1)) })}
+                              className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">
+                            Testimonial Text
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={newTestimonial.text}
+                            onChange={(e) => setNewTestimonial({ ...newTestimonial, text: e.target.value })}
+                            placeholder="Guest's review in their own words..."
+                            className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none font-sans"
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={!newTestimonial.guestName.trim() || !newTestimonial.text.trim()}
+                          onClick={() => {
+                            addTestimonial({ ...newTestimonial });
+                            setNewTestimonial({ guestName: "", location: "", text: "", rating: 5, stayDate: "" });
+                            triggerSuccess("Testimonial added.");
+                          }}
+                          className="bg-gold-500 hover:bg-gold-600 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2 text-[10px] tracking-widest font-sans font-bold uppercase cursor-pointer flex items-center space-x-1.5 rounded"
+                        >
+                          <Plus size={12} />
+                          <span>Add Testimonial</span>
+                        </button>
+                      </div>
+
+                      {/* Existing testimonials */}
+                      <div className="space-y-4">
+                        <div className="border-b border-luxury-900 pb-2">
+                          <h4 className="text-sm tracking-widest text-gold-300 font-sans uppercase font-bold">
+                            All Testimonials ({testimonials.length})
+                          </h4>
+                        </div>
+
+                        {testimonials.length === 0 && (
+                          <p className="text-xs text-luxury-500 font-sans">No testimonials yet — add your first one above.</p>
+                        )}
+
+                        {testimonials.map((t) => (
+                          <div key={t.id} className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4">
+                            <div className="flex justify-between items-start gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center space-x-1 mb-1">
+                                  {[...Array(t.rating)].map((_, i) => (
+                                    <Star key={i} size={10} className="fill-gold-400 text-gold-400" />
+                                  ))}
+                                </div>
+                                <h5 className="text-xs font-serif text-luxury-100 uppercase font-bold truncate">{t.guestName || "Untitled"}</h5>
+                                <p className="text-[10px] text-gold-400 font-sans truncate">{t.location} // {t.stayDate}</p>
+                                <p className="text-[11px] text-luxury-400 font-sans mt-2 line-clamp-2 italic">"{t.text}"</p>
+                              </div>
+                              <div className="flex flex-col space-y-1.5 flex-shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingTestimonialId(editingTestimonialId === t.id ? null : t.id)}
+                                  className="text-[10px] tracking-widest font-sans uppercase bg-luxury-900 text-luxury-300 hover:text-white px-3 py-1.5 rounded cursor-pointer flex items-center space-x-1"
+                                >
+                                  <Edit2 size={10} />
+                                  <span>{editingTestimonialId === t.id ? "Close" : "Edit"}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (window.confirm(`Delete testimonial from ${t.guestName}?`)) {
+                                      deleteTestimonial(t.id);
+                                      triggerSuccess("Testimonial deleted.");
+                                    }
+                                  }}
+                                  className="text-[10px] tracking-widest font-sans uppercase bg-red-950 text-red-300 hover:text-red-100 hover:bg-red-900 px-3 py-1.5 rounded cursor-pointer flex items-center space-x-1"
+                                >
+                                  <Trash2 size={10} />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {editingTestimonialId === t.id && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4 border-t border-luxury-900">
+                                <div>
+                                  <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Guest Name</label>
+                                  <input
+                                    type="text"
+                                    value={t.guestName}
+                                    onChange={(e) => updateTestimonial(t.id, { guestName: e.target.value })}
+                                    className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Location</label>
+                                  <input
+                                    type="text"
+                                    value={t.location}
+                                    onChange={(e) => updateTestimonial(t.id, { location: e.target.value })}
+                                    className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Stay Date</label>
+                                  <input
+                                    type="text"
+                                    value={t.stayDate}
+                                    onChange={(e) => updateTestimonial(t.id, { stayDate: e.target.value })}
+                                    className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Rating (1–5)</label>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={5}
+                                    value={t.rating}
+                                    onChange={(e) => updateTestimonial(t.id, { rating: Math.min(5, Math.max(1, Number(e.target.value) || 1)) })}
+                                    className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none"
+                                  />
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Testimonial Text</label>
+                                  <textarea
+                                    rows={4}
+                                    value={t.text}
+                                    onChange={(e) => updateTestimonial(t.id, { text: e.target.value })}
+                                    className="w-full bg-luxury-900 border border-luxury-800 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none font-sans"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* -------------------- TAB: SYSTEM SETTINGS -------------------- */}
                   {activeTab === "concierge" && <ConciergeSettings />}
+
 
                   {activeTab === "system" && (
                     <div className="space-y-8 text-left">
