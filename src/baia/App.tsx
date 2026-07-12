@@ -13,6 +13,7 @@ import Activities from "./components/Activities";
 import IslandPerspectives from "./components/IslandPerspectives";
 import Testimonials from "./components/Testimonials";
 import AdminGate from "./components/AdminGate";
+import ConciergeWidget from "./components/ConciergeWidget";
 import RoomCard from "./components/RoomCard";
 import Newsletter from "./components/Newsletter";
 import { useSite, MediaPlayback, DEFAULT_HERO_PLAYBACK, DEFAULT_SECTION_PLAYBACK } from "./context/SiteContext";
@@ -117,6 +118,7 @@ export default function App() {
   const { hero, philosophy, islandIntro, footer, logo, rooms } = useSite();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isConciergeOpen, setIsConciergeOpen] = useState(false);
   const [activeReservationData, setActiveReservationData] = useState<{
     checkIn: string;
     checkOut: string;
@@ -416,7 +418,7 @@ export default function App() {
       </section>
 
       {/* 5. EXPERIENCES SECTION */}
-      <Activities onBookClick={handleOpenStandardBooking} />
+      <Activities onBookClick={() => setIsConciergeOpen(true)} />
 
       {/* 5.5. GALLERY SECTION */}
       <IslandPerspectives />
@@ -707,8 +709,10 @@ export default function App() {
         {isAdminOpen && (
           <AdminGate onClose={() => setIsAdminOpen(false)} />
         )}
-
       </AnimatePresence>
+
+      {/* Floating AI concierge chat */}
+      <ConciergeWidget open={isConciergeOpen} onClose={() => setIsConciergeOpen(false)} />
 
       {/* Minimalist Floating Back to Top Button */}
       <AnimatePresence>
