@@ -4,64 +4,104 @@
  * Lets the resort owner:
  *  - enable/disable the concierge
  *  - choose provider: OpenRouter (their own key) or local Ollama
- *  - pick a model from a dropdown that auto-populates from the live service
- *    (OpenRouter /api/v1/models flagged :free; Ollama /api/tags shows installed)
+ *  - pick a model from a dropdown:
+ *      * OpenRouter — live list from https://openrouter.ai/api/v1/models
+ *        (fetched via a server fn to avoid CORS; free models flagged).
+ *      * Ollama — fetched DIRECTLY FROM THE BROWSER against the admin's own
+ *        machine (the server can't reach the admin's localhost).
  *  - edit the persona + extra knowledge
  *
- * The OpenRouter key is sent only to the server function, never stored in the
- * browser or in the public `site_state`.
+ * The OpenRouter key is only sent to the server function; it is never stored
+ * in the browser bundle or in the public `site_state`.
  */
-import { useState, useEffect } from "react";
-import { Coffee, Save, Check, Loader2, AlertTriangle, Info } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Save, Check, Loader2, AlertTriangle, Info } from "lucide-react";
 import {
   getConciergeConfig,
   saveConciergeSettings,
-  getConciergeModels,
+  getOpenRouterModels,
 } from "../concierge.admin.functions";
-import type { ConciergeConfig, ModelCatalog } from "../concierge.types";
-
-const DEFAULT_PERSONA =
-  "You are BAIA's friendly AI concierge for BAIA Beachfront Boutique Lodge, a barefoot-luxury retreat in San Vicente, Palawan. " +
-  "Speak in a warm, calm, elegant tone that matches a high-end island resort. " +
-  "Help guests with rooms, experiences, the area, bookings, and FAQs using ONLY the knowledge provided.";
+import {
+  listOllamaModelsBrowser,
+  type OllamaBrowserResult,
+} from "../concierge.discovery";
+import type { ConciergeConfig } from "../concierge.types";
 
 export default function ConciergeSettings() {
   const [cfg, setCfg] = useState<ConciergeConfig | null>(null);
-  const [catalog, setCatalog] = useState<ModelCatalog>({ openrouter: [], ollama: [] });
+  const [openrouterModels, setOpenrouterModels] = useState<string[]>([]);
+  const [openrouterError, setOpenrouterError] = useState<string | null>(null);
+  const [ollamaResult, setOllamaResult] = useState<OllamaBrowserResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshingModels, setRefreshingModels] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showKey, setShowKey] = useState(false);
 
+  const refreshOpenRouter = useCallback(async () => {
+    try {
+      const res = await getOpenRouterModels();
+      setOpenrouterModels(res.models);
+      setOpenrouterError(res.error ?? null);
+    } catch (e) {
+      setOpenrouterModels([]);
+      setOpenrouterError(e instanceof Error ? e.message : "Failed to fetch models");
+    }
+  }, []);
+
+  const refreshOllama = useCallback(async (baseUrl: string) => {
+    const result = await listOllamaModelsBrowser(baseUrl);
+    setOllamaResult(result);
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
-        const [c, m] = await Promise.all([getConciergeConfig(), getConciergeModels()]);
+        const c = await getConciergeConfig();
         setCfg(c);
-        setCatalog(m);
+        // Kick off the appropriate discovery for the loaded provider.
+        if (c.provider === "openrouter") {
+          void refreshOpenRouter();
+        } else {
+          void refreshOllama(c.ollamaBaseUrl || "http://localhost:11434");
+        }
       } catch (e) {
         console.error("Failed to load concierge settings", e);
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [refreshOpenRouter, refreshOllama]);
 
-  const refreshModels = async () => {
+  const refreshCurrent = async () => {
+    if (!cfg) return;
+    setRefreshingModels(true);
     try {
-      const m = await getConciergeModels();
-      setCatalog(m);
-    } catch {
-      /* ignore */
+      if (cfg.provider === "openrouter") {
+        await refreshOpenRouter();
+      } else {
+        await refreshOllama(cfg.ollamaBaseUrl || "http://localhost:11434");
+      }
+    } finally {
+      setRefreshingModels(false);
     }
   };
 
   const update = (patch: Partial<ConciergeConfig>) => {
     if (!cfg) return;
-    setCfg({ ...cfg, ...patch });
+    const next = { ...cfg, ...patch };
+    setCfg(next);
     setDirty(true);
     setSaved(false);
+    // If provider just switched, trigger the right discovery.
+    if (patch.provider && patch.provider !== cfg.provider) {
+      if (patch.provider === "openrouter") {
+        void refreshOpenRouter();
+      } else {
+        void refreshOllama(next.ollamaBaseUrl || "http://localhost:11434");
+      }
+    }
   };
 
   const save = async () => {
@@ -86,7 +126,8 @@ export default function ConciergeSettings() {
     );
   }
 
-  const ollamaReady = cfg.provider === "ollama" && catalog.ollama.length > 0;
+  const ollamaModels = ollamaResult?.status === "ok" ? ollamaResult.models : [];
+  const ollamaReady = cfg.provider === "ollama" && ollamaModels.length > 0;
   const openrouterReady = cfg.provider === "openrouter" && !!cfg.openrouterApiKey;
 
   return (
@@ -195,13 +236,13 @@ export default function ConciergeSettings() {
                   onChange={(e) => update({ openrouterModel: e.target.value })}
                   className="flex-1 bg-luxury-900 border border-luxury-800 rounded-sm px-3 py-2 text-xs text-luxury-100 focus:outline-none focus:border-gold-300"
                 >
-                  {cfg.openrouterModel && !catalog.openrouter.includes(cfg.openrouterModel) && (
+                  {cfg.openrouterModel && !openrouterModels.includes(cfg.openrouterModel) && (
                     <option value={cfg.openrouterModel}>{cfg.openrouterModel} (current)</option>
                   )}
-                  {catalog.openrouter.length === 0 && (
+                  {openrouterModels.length === 0 && (
                     <option value="">No models fetched</option>
                   )}
-                  {catalog.openrouter.map((m) => (
+                  {openrouterModels.map((m) => (
                     <option key={m} value={m}>
                       {m}
                       {m.includes(":free") ? " · FREE" : ""}
@@ -209,15 +250,23 @@ export default function ConciergeSettings() {
                   ))}
                 </select>
                 <button
-                  onClick={refreshModels}
-                  className="px-3 py-2 border border-luxury-800 text-luxury-300 rounded-sm text-[10px] uppercase tracking-wider hover:border-gold-300 cursor-pointer"
+                  onClick={refreshCurrent}
+                  disabled={refreshingModels}
+                  className="px-3 py-2 border border-luxury-800 text-luxury-300 rounded-sm text-[10px] uppercase tracking-wider hover:border-gold-300 cursor-pointer disabled:opacity-40"
                 >
-                  Refresh
+                  {refreshingModels ? "…" : "Refresh"}
                 </button>
               </div>
-              <p className="text-[10px] text-luxury-500 font-sans">
-                Free models are flagged ·FREE. List is fetched live from OpenRouter — no hardcoded options.
-              </p>
+              {openrouterError ? (
+                <p className="text-[10px] text-amber-400 font-sans">
+                  Couldn't fetch OpenRouter models: {openrouterError}
+                </p>
+              ) : (
+                <p className="text-[10px] text-luxury-500 font-sans">
+                  {openrouterModels.length} models available. Free ones are flagged ·FREE and
+                  sorted to the top.
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -227,7 +276,7 @@ export default function ConciergeSettings() {
           <div className="space-y-4 border-t border-luxury-900 pt-4">
             <div className="flex flex-col space-y-1.5">
               <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase">
-                Ollama Base URL
+                Ollama Base URL (on your device)
               </label>
               <input
                 value={cfg.ollamaBaseUrl}
@@ -235,10 +284,14 @@ export default function ConciergeSettings() {
                 placeholder="http://localhost:11434"
                 className="bg-luxury-900 border border-luxury-800 rounded-sm px-3 py-2 text-xs text-luxury-100 focus:outline-none focus:border-gold-300 font-mono"
               />
+              <p className="text-[10px] text-luxury-500 font-sans">
+                The admin panel fetches models directly from your browser — the server can't
+                see your localhost.
+              </p>
             </div>
             <div className="flex flex-col space-y-1.5">
               <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase">
-                Model (auto-detected from device)
+                Model (auto-detected from your device)
               </label>
               <div className="flex gap-2">
                 <select
@@ -247,31 +300,57 @@ export default function ConciergeSettings() {
                   className="flex-1 bg-luxury-900 border border-luxury-800 rounded-sm px-3 py-2 text-xs text-luxury-100 focus:outline-none focus:border-gold-300"
                 >
                   <option value="">Auto (pick best available)</option>
-                  {catalog.ollama.map((m) => (
+                  {cfg.ollamaModel && !ollamaModels.includes(cfg.ollamaModel) && (
+                    <option value={cfg.ollamaModel}>{cfg.ollamaModel} (saved)</option>
+                  )}
+                  {ollamaModels.map((m) => (
                     <option key={m} value={m}>
                       {m}
                     </option>
                   ))}
                 </select>
                 <button
-                  onClick={refreshModels}
-                  className="px-3 py-2 border border-luxury-800 text-luxury-300 rounded-sm text-[10px] uppercase tracking-wider hover:border-gold-300 cursor-pointer"
+                  onClick={refreshCurrent}
+                  disabled={refreshingModels}
+                  className="px-3 py-2 border border-luxury-800 text-luxury-300 rounded-sm text-[10px] uppercase tracking-wider hover:border-gold-300 cursor-pointer disabled:opacity-40"
                 >
-                  Refresh
+                  {refreshingModels ? "…" : "Refresh"}
                 </button>
               </div>
-              {catalog.ollama.length === 0 ? (
-                <p className="text-[10px] text-amber-400 font-sans">
-                  No Ollama models detected at that URL. Is Ollama running on this device?
-                </p>
-              ) : (
-                <p className="text-[10px] text-luxury-500 font-sans">
-                  Detected: {catalog.ollama.join(", ")}
+
+              {/* Status messaging */}
+              {ollamaResult?.status === "ok" && (
+                <p className="text-[10px] text-emerald-400 font-sans">
+                  Detected {ollamaResult.models.length}: {ollamaResult.models.join(", ")}
                 </p>
               )}
+              {ollamaResult?.status === "empty" && (
+                <p className="text-[10px] text-amber-400 font-sans">
+                  Ollama is reachable but has no models installed. Run e.g.{" "}
+                  <code className="text-luxury-200">ollama pull llama3.1</code>.
+                </p>
+              )}
+              {ollamaResult?.status === "cors_or_down" && (
+                <div className="flex items-start gap-2 text-[10px] text-amber-400 font-sans bg-amber-500/5 border border-amber-500/20 p-2 rounded">
+                  <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+                  <span>{ollamaResult.message}</span>
+                </div>
+              )}
+              {ollamaResult?.status === "mixed_content" && (
+                <div className="flex items-start gap-2 text-[10px] text-amber-400 font-sans bg-amber-500/5 border border-amber-500/20 p-2 rounded">
+                  <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+                  <span>{ollamaResult.message}</span>
+                </div>
+              )}
+              {ollamaResult?.status === "http_error" && (
+                <p className="text-[10px] text-amber-400 font-sans">
+                  Ollama returned HTTP {ollamaResult.code}. Check the base URL.
+                </p>
+              )}
+
               <p className="text-[10px] text-luxury-500 font-sans">
-                Note: Ollama runs on a device with the model installed. For the live hosted site,
-                OpenRouter is the always-works choice.
+                Note: Ollama runs on a device with the model installed. For the live hosted
+                site, OpenRouter is the always-works choice.
               </p>
             </div>
           </div>
