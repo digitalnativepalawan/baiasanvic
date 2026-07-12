@@ -77,7 +77,72 @@ function policyChunkText(): string {
   ].join("\n");
 }
 
-/** Static chunks built once from site data. */
+// ---------------------------------------------------------------------------
+// Owner-authored knowledge base.
+//
+// Add more topics over time by appending a { id, label, text } entry to
+// OWNER_KNOWLEDGE below — the concierge will pick them up automatically via
+// retrieveRelevant(). Keep ids unique. Prices stay out of here by design
+// (the bot never quotes rates). The admin panel's "Extra knowledge" box is
+// still appended on top of all of this at request time.
+// ---------------------------------------------------------------------------
+function diningChunkText(): string {
+  return [
+    "FOOD & DINING",
+    "BAIA has an on-site restaurant serving Filipino and Western dishes, with fresh seafood from the day's catch.",
+    "Breakfast is available for guests (continental and cooked options).",
+    "In-villa or beachfront private dining can be arranged for special occasions — just ask the concierge.",
+    "We accommodate vegetarian, vegan, and most dietary needs if told in advance. Fresh fruit and coconut water are daily staples.",
+  ].join("\n");
+}
+
+function transfersChunkText(): string {
+  return [
+    "TRANSFERS & GETTING HERE",
+    "We can arrange a private van transfer from Puerto Princesa International Airport (PPS) — about 2.5 to 3 hours by road to San Vicente.",
+    "Flights to PPS run daily from Manila and Cebu.",
+    "For island guests, our outrigger picks you up right on BAIA's shoreline. Tell us your flight time and we'll coordinate the pickup.",
+  ].join("\n");
+}
+
+function stayChunkText(): string {
+  return [
+    "STAY DETAILS",
+    "Standard check-in is 2:00 PM; check-out is 12:00 PM. Early check-in or late check-out can be requested and is subject to availability — we'll confirm by email. We can safely hold luggage if you arrive early.",
+    "What's included: daily housekeeping, WiFi in common areas, beach loungers, use of the beachfront shala, and the complimentary sunrise vinyasa & sound healing session. Government taxes are included in the quoted rate.",
+    "WiFi is free in the restaurant and common areas; signal in the villas is fair but lighter — this is a place to unplug. Mobile signal (Globe/Smart) reaches most of the property.",
+    "We don't take payment online. After your inquiry we confirm availability and send bank-transfer / PayPal details, or you may pay cash on arrival. A deposit may be requested to hold peak-season dates.",
+    "Best time to visit: Palawan's dry season is roughly November to May (sunniest, calmest seas). June to October is greener with occasional rain; boat trips still run but check the weather. Pack reef-safe sunscreen, light clothing, reef shoes, and a light jacket for breezy evenings.",
+  ].join("\n");
+}
+
+function familyChunkText(): string {
+  return [
+    "FAMILIES & KIDS",
+    "Family-friendly and great for couples seeking privacy. Rollaway beds available in the Comfort Cottage (sleeps 3); the Deluxe Beachfront Suite sleeps 4 with a sofa bed.",
+    "We can provide a crib on request. Kid-friendly meals can be prepared.",
+    "The beach is gentle but always supervise children near the water.",
+  ].join("\n");
+}
+
+function townChunkText(): string {
+  return [
+    "NEARBY TOWN & OFF-SITE",
+    "San Vicente town (10 min drive) has a small ATM, sari-sari stores, and a few local eateries.",
+    "Port Barton (30–40 min by boat) has casual beachfront restaurants — we're happy to point you to our favorites.",
+  ].join("\n");
+}
+
+// Topics the owner authors over time. Append new entries here (unique id!).
+const OWNER_TOPICS: { id: string; label: string; text: string }[] = [
+  { id: "dining", label: "Food & dining", text: diningChunkText() },
+  { id: "transfers", label: "Transfers & getting here", text: transfersChunkText() },
+  { id: "stay", label: "Stay details", text: stayChunkText() },
+  { id: "family", label: "Families & kids", text: familyChunkText() },
+  { id: "town", label: "Nearby town", text: townChunkText() },
+];
+
+/** Static chunks built once from site data + owner-authored topics. */
 export function buildStaticChunks(): KnowledgeChunk[] {
   return [
     { id: "about", label: "About BAIA", text: aboutChunkText() },
@@ -85,5 +150,6 @@ export function buildStaticChunks(): KnowledgeChunk[] {
     { id: "experiences", label: "Experiences & nearby", text: experienceChunkText() },
     { id: "booking", label: "Booking & contact", text: bookingChunkText() },
     { id: "policies", label: "Policies & FAQ", text: policyChunkText() },
+    ...OWNER_TOPICS.map((t) => ({ id: t.id, label: t.label, text: t.text })),
   ];
 }
