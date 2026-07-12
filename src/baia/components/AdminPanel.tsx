@@ -204,6 +204,14 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
+  const [editingTestimonialId, setEditingTestimonialId] = useState<string | null>(null);
+  const [newTestimonial, setNewTestimonial] = useState<Omit<Testimonial, "id">>({
+    guestName: "",
+    location: "",
+    text: "",
+    rating: 5,
+    stayDate: "",
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const heroFileRef = useRef<HTMLInputElement>(null);
