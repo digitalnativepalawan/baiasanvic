@@ -436,30 +436,26 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             className="relative w-full max-w-4xl bg-luxury-950 border-l border-luxury-900 h-full flex flex-col shadow-2xl z-10 text-luxury-100"
           >
             {/* Header */}
-            <div className="p-6 border-b border-luxury-900 flex justify-between items-center bg-luxury-950">
-              <div className="flex items-center space-x-3">
-                <span className="p-2 bg-gold-500/10 border border-gold-500/20 rounded text-gold-300">
+            <div className="p-4 sm:p-6 border-b border-luxury-900 flex justify-between items-center gap-3 bg-luxury-950">
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <span className="p-2 bg-gold-500/10 border border-gold-500/20 rounded text-gold-300 shrink-0">
                   <Shield size={18} />
                 </span>
-                <div>
-                  <h2 className="text-lg font-serif tracking-wider uppercase font-bold text-luxury-100">
+                <div className="min-w-0">
+                  <h2 className="text-sm sm:text-lg font-serif tracking-wider uppercase font-bold text-luxury-100 truncate">
                     BAIA RESORT ADMIN CONTROL
                   </h2>
-                  <p className="text-[10px] text-gold-400 font-sans tracking-widest uppercase">
+                  <p className="text-[9px] sm:text-[10px] text-gold-400 font-sans tracking-widest uppercase truncate">
                     Core Configurator // Passkey Verified
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 shrink-0">
                 {isAuthenticated && (
                   <button
-                    onClick={() => {
-                      // Real lock: drop the verified passkey so the outer
-                      // AdminGate reappears.
-                      setAdminPasskey(null);
-                    }}
-                    className="text-[10px] tracking-widest font-sans border border-luxury-800 text-luxury-400 hover:text-white px-3 py-1.5 rounded uppercase hover:bg-luxury-900 transition-colors"
+                    onClick={() => setAdminPasskey(null)}
+                    className="hidden sm:inline-block text-[10px] tracking-widest font-sans border border-luxury-800 text-luxury-400 hover:text-white px-3 py-1.5 rounded uppercase hover:bg-luxury-900 transition-colors"
                   >
                     Lock Console
                   </button>
@@ -476,13 +472,15 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
             {/* Content Area */}
             {/* Single login handled by AdminGate; passkey already verified. */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Admin Tabs Sidebar */}
-                <div className="w-56 border-r border-luxury-900 bg-luxury-950/80 flex flex-col justify-between py-6">
-                  <div className="space-y-1 px-3">
-                    <span className="text-[9px] tracking-[0.25em] text-luxury-500 font-sans font-semibold uppercase block px-3 mb-3">
+                <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-luxury-900 bg-luxury-950/80 flex flex-col justify-between py-4 md:py-6 shrink-0">
+
+                  <div className="grid grid-cols-2 md:block gap-1 md:space-y-1 px-3">
+                    <span className="col-span-2 text-[9px] tracking-[0.25em] text-luxury-500 font-sans font-semibold uppercase block px-3 mb-2 md:mb-3">
                       Navigations
                     </span>
+
 
                     <button
                       onClick={() => setActiveTab("hero_logo")}
@@ -594,7 +592,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   </div>
 
                   {/* Status Indicator */}
-                  <div className="px-6 space-y-1">
+                  <div className="hidden md:block px-6 space-y-1">
                     <div className="flex items-center space-x-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 block animate-pulse" />
                       <span className="text-[9px] tracking-widest text-emerald-400 font-sans uppercase font-bold">
@@ -608,7 +606,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 </div>
 
                 {/* Edit Form Area */}
-                <div className="flex-1 bg-luxury-900/30 overflow-y-auto p-8 relative">
+                <div className="flex-1 bg-luxury-900/30 overflow-y-auto p-4 sm:p-6 md:p-8 relative min-w-0">
+
                   {/* Success Banner */}
                   <AnimatePresence>
                     {successMsg && (
