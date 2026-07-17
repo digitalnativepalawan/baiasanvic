@@ -476,10 +476,11 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 {/* Admin Tabs Sidebar */}
                 <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-luxury-900 bg-luxury-950/80 flex flex-col justify-between py-4 md:py-6 shrink-0">
 
-                  <div className="space-y-1 px-3">
-                    <span className="text-[9px] tracking-[0.25em] text-luxury-500 font-sans font-semibold uppercase block px-3 mb-3">
+                  <div className="grid grid-cols-2 md:block gap-1 md:space-y-1 px-3">
+                    <span className="col-span-2 text-[9px] tracking-[0.25em] text-luxury-500 font-sans font-semibold uppercase block px-3 mb-2 md:mb-3">
                       Navigations
                     </span>
+
 
                     <button
                       onClick={() => setActiveTab("hero_logo")}
