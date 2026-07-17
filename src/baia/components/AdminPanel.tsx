@@ -592,7 +592,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   </div>
 
                   {/* Status Indicator */}
-                  <div className="px-6 space-y-1">
+                  <div className="hidden md:block px-6 space-y-1">
                     <div className="flex items-center space-x-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 block animate-pulse" />
                       <span className="text-[9px] tracking-widest text-emerald-400 font-sans uppercase font-bold">
@@ -606,7 +606,8 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 </div>
 
                 {/* Edit Form Area */}
-                <div className="flex-1 bg-luxury-900/30 overflow-y-auto p-8 relative">
+                <div className="flex-1 bg-luxury-900/30 overflow-y-auto p-4 sm:p-6 md:p-8 relative min-w-0">
+
                   {/* Success Banner */}
                   <AnimatePresence>
                     {successMsg && (
