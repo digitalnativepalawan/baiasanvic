@@ -472,9 +472,10 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
             {/* Content Area */}
             {/* Single login handled by AdminGate; passkey already verified. */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Admin Tabs Sidebar */}
-                <div className="w-56 border-r border-luxury-900 bg-luxury-950/80 flex flex-col justify-between py-6">
+                <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-luxury-900 bg-luxury-950/80 flex flex-col justify-between py-4 md:py-6 shrink-0">
+
                   <div className="space-y-1 px-3">
                     <span className="text-[9px] tracking-[0.25em] text-luxury-500 font-sans font-semibold uppercase block px-3 mb-3">
                       Navigations
