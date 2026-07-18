@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSiteAssetsSplatRouteImport } from './routes/api/site-assets/$'
+import { Route as ApiOpsGuestLeadRouteImport } from './routes/api/ops/guest-lead'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,30 +23,39 @@ const ApiSiteAssetsSplatRoute = ApiSiteAssetsSplatRouteImport.update({
   path: '/api/site-assets/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOpsGuestLeadRoute = ApiOpsGuestLeadRouteImport.update({
+  id: '/api/ops/guest-lead',
+  path: '/api/ops/guest-lead',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/ops/guest-lead': typeof ApiOpsGuestLeadRoute
   '/api/site-assets/$': typeof ApiSiteAssetsSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/ops/guest-lead': typeof ApiOpsGuestLeadRoute
   '/api/site-assets/$': typeof ApiSiteAssetsSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/ops/guest-lead': typeof ApiOpsGuestLeadRoute
   '/api/site-assets/$': typeof ApiSiteAssetsSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/site-assets/$'
+  fullPaths: '/' | '/api/ops/guest-lead' | '/api/site-assets/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/site-assets/$'
-  id: '__root__' | '/' | '/api/site-assets/$'
+  to: '/' | '/api/ops/guest-lead' | '/api/site-assets/$'
+  id: '__root__' | '/' | '/api/ops/guest-lead' | '/api/site-assets/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiOpsGuestLeadRoute: typeof ApiOpsGuestLeadRoute
   ApiSiteAssetsSplatRoute: typeof ApiSiteAssetsSplatRoute
 }
 
@@ -65,11 +75,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSiteAssetsSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ops/guest-lead': {
+      id: '/api/ops/guest-lead'
+      path: '/api/ops/guest-lead'
+      fullPath: '/api/ops/guest-lead'
+      preLoaderRoute: typeof ApiOpsGuestLeadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiOpsGuestLeadRoute: ApiOpsGuestLeadRoute,
   ApiSiteAssetsSplatRoute: ApiSiteAssetsSplatRoute,
 }
 export const routeTree = rootRouteImport
