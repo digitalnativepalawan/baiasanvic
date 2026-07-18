@@ -256,46 +256,58 @@ export default function App() {
         </div>
       </header>
 
-      {/* 2. PHILOSOPHY SECTION — full-bleed cinematic quote */}
+      {/* 2. PHILOSOPHY SECTION — light, editorial, uniform with the site */}
       <section
         id="philosophy"
-        className="relative min-h-screen w-full flex items-center justify-center text-center overflow-hidden"
+        className="relative bg-luxury-950 border-t border-luxury-900/70 py-24 md:py-32 lg:py-40 overflow-hidden"
       >
-        {/* Full-bleed media background */}
-        <div className="absolute inset-0 bg-luxury-950">
-          <MediaFrame
-            image={philosophy.image}
-            videoUrl={philosophy.videoUrl}
-            youtubeUrl={philosophy.youtubeUrl}
-            playback={philosophy.playback}
-            lazy
-            alt={philosophy.title}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          {/* Cinematic dark overlays for legibility and mood */}
-          <div className="absolute inset-0 bg-luxury-50/50 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-t from-luxury-50 via-luxury-50/40 to-luxury-50/70 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-r from-luxury-50/40 via-transparent to-luxury-50/40 pointer-events-none" />
-        </div>
+        {/* Soft ambient light for cinematic depth without breaking the light theme */}
+        <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[720px] h-[720px] rounded-full bg-gold-300/10 blur-[140px]" />
+        <div className="pointer-events-none absolute bottom-0 right-0 w-[420px] h-[420px] rounded-full bg-luxury-800/10 blur-[120px]" />
 
-        {/* Centered quote text */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-120px" }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          className="relative z-10 max-w-4xl px-6 lg:px-12 space-y-6"
-        >
-          <span className="text-[10px] tracking-[0.3em] font-sans text-gold-100 font-semibold uppercase block">
-            {philosophy.eyebrow}
-          </span>
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-luxury-950 tracking-wide uppercase leading-tight font-light drop-shadow-lg">
-            {philosophy.title}
-          </h2>
-          <p className="text-sm md:text-base text-luxury-800 font-sans font-light leading-relaxed max-w-2xl mx-auto pt-2">
-            {philosophy.subtitle}
-          </p>
-        </motion.div>
+        <div className="relative max-w-5xl mx-auto px-6 lg:px-12 grid gap-12 lg:gap-16 items-center">
+          {/* Copy block */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-120px" }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="text-center space-y-6"
+          >
+            <span className="text-[10px] tracking-[0.3em] font-sans text-gold-500 font-semibold uppercase block">
+              {philosophy.eyebrow}
+            </span>
+            <div className="mx-auto h-px w-16 bg-gold-500/50" />
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-luxury-100 tracking-wide uppercase leading-[1.1] font-light">
+              {philosophy.title}
+            </h2>
+            <p className="text-sm md:text-base text-luxury-300 font-sans font-light leading-relaxed max-w-2xl mx-auto">
+              {philosophy.subtitle}
+            </p>
+          </motion.div>
+
+          {/* Optional cinematic media frame — only rendered when admin provides media */}
+          {(philosophy.image || philosophy.videoUrl || philosophy.youtubeUrl) && (
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 1.1, ease: "easeOut", delay: 0.1 }}
+              className="relative mx-auto w-full max-w-4xl aspect-[16/9] overflow-hidden rounded-sm border border-luxury-900/70 shadow-2xl"
+            >
+              <MediaFrame
+                image={philosophy.image}
+                videoUrl={philosophy.videoUrl}
+                youtubeUrl={philosophy.youtubeUrl}
+                playback={philosophy.playback}
+                lazy
+                alt={philosophy.title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-gold-500/10" />
+            </motion.div>
+          )}
+        </div>
       </section>
 
       {/* 3. THE STAY SECTION */}
