@@ -272,9 +272,10 @@ export default function App() {
             alt={philosophy.title}
             className="absolute inset-0 w-full h-full object-cover"
           />
-          {/* Cinematic overlays for legibility */}
-          <div className="absolute inset-0 bg-luxury-950/40 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-luxury-950/20 to-luxury-950/60 pointer-events-none" />
+          {/* Cinematic overlays for legibility and mood */}
+          <div className="absolute inset-0 bg-luxury-950/60 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-luxury-950/40 to-luxury-950/80 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-luxury-950/30 via-transparent to-luxury-950/30 pointer-events-none" />
         </div>
 
         {/* Centered quote text */}
@@ -288,7 +289,7 @@ export default function App() {
           <span className="text-[10px] tracking-[0.3em] font-sans text-gold-300 font-semibold uppercase block">
             {philosophy.eyebrow}
           </span>
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-luxury-100 tracking-wide uppercase leading-tight font-light">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-luxury-100 tracking-wide uppercase leading-tight font-light drop-shadow-lg">
             {philosophy.title}
           </h2>
           <p className="text-sm md:text-base text-luxury-300 font-sans font-light leading-relaxed max-w-2xl mx-auto pt-2">
