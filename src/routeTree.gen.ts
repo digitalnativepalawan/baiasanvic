@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSiteAssetsSplatRouteImport } from './routes/api/site-assets/$'
-import { Route as ApiOpsSelfTestRouteImport } from './routes/api/ops/self-test'
 import { Route as ApiOpsGuestLeadRouteImport } from './routes/api/ops/guest-lead'
 
 const IndexRoute = IndexRouteImport.update({
@@ -24,11 +23,6 @@ const ApiSiteAssetsSplatRoute = ApiSiteAssetsSplatRouteImport.update({
   path: '/api/site-assets/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiOpsSelfTestRoute = ApiOpsSelfTestRouteImport.update({
-  id: '/api/ops/self-test',
-  path: '/api/ops/self-test',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiOpsGuestLeadRoute = ApiOpsGuestLeadRouteImport.update({
   id: '/api/ops/guest-lead',
   path: '/api/ops/guest-lead',
@@ -38,43 +32,30 @@ const ApiOpsGuestLeadRoute = ApiOpsGuestLeadRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/ops/guest-lead': typeof ApiOpsGuestLeadRoute
-  '/api/ops/self-test': typeof ApiOpsSelfTestRoute
   '/api/site-assets/$': typeof ApiSiteAssetsSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/ops/guest-lead': typeof ApiOpsGuestLeadRoute
-  '/api/ops/self-test': typeof ApiOpsSelfTestRoute
   '/api/site-assets/$': typeof ApiSiteAssetsSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/ops/guest-lead': typeof ApiOpsGuestLeadRoute
-  '/api/ops/self-test': typeof ApiOpsSelfTestRoute
   '/api/site-assets/$': typeof ApiSiteAssetsSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/api/ops/guest-lead'
-    | '/api/ops/self-test'
-    | '/api/site-assets/$'
+  fullPaths: '/' | '/api/ops/guest-lead' | '/api/site-assets/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/ops/guest-lead' | '/api/ops/self-test' | '/api/site-assets/$'
-  id:
-    | '__root__'
-    | '/'
-    | '/api/ops/guest-lead'
-    | '/api/ops/self-test'
-    | '/api/site-assets/$'
+  to: '/' | '/api/ops/guest-lead' | '/api/site-assets/$'
+  id: '__root__' | '/' | '/api/ops/guest-lead' | '/api/site-assets/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiOpsGuestLeadRoute: typeof ApiOpsGuestLeadRoute
-  ApiOpsSelfTestRoute: typeof ApiOpsSelfTestRoute
   ApiSiteAssetsSplatRoute: typeof ApiSiteAssetsSplatRoute
 }
 
@@ -94,13 +75,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSiteAssetsSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/ops/self-test': {
-      id: '/api/ops/self-test'
-      path: '/api/ops/self-test'
-      fullPath: '/api/ops/self-test'
-      preLoaderRoute: typeof ApiOpsSelfTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/ops/guest-lead': {
       id: '/api/ops/guest-lead'
       path: '/api/ops/guest-lead'
@@ -114,19 +88,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiOpsGuestLeadRoute: ApiOpsGuestLeadRoute,
-  ApiOpsSelfTestRoute: ApiOpsSelfTestRoute,
   ApiSiteAssetsSplatRoute: ApiSiteAssetsSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
