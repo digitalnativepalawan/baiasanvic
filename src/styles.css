@@ -76,3 +76,119 @@
   .ken-burns-a, .ken-burns-b, .ken-burns-c { animation: none; }
 }
 
+/* =====================================================================
+ * EDITORIAL DESIGN TOKENS — ocean / sand / moss color washes, glass
+ * panels, ghost numerals, hover-lift, editorial rule, easings.
+ * Layered on top of the existing luxury/gold system without replacing it.
+ * ===================================================================== */
+@theme {
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-editorial-in: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --color-ocean-50:  #0a1620;
+  --color-ocean-100: #0f2233;
+  --color-ocean-200: #143047;
+  --color-ocean-300: #1e4a6b;
+  --color-ocean-400: #2f6a91;
+  --color-ocean-500: #4a8bb2;
+
+  --color-sand-50:  #1a1610;
+  --color-sand-100: #2a2418;
+  --color-sand-200: #3c3524;
+  --color-sand-300: #6b5f42;
+  --color-sand-400: #a89670;
+  --color-sand-500: #d8c39a;
+
+  --color-moss-50:  #0f1712;
+  --color-moss-100: #17231b;
+  --color-moss-200: #22332a;
+  --color-moss-300: #3a5745;
+  --color-moss-400: #628068;
+  --color-moss-500: #8ba892;
+}
+
+/* Section color washes — subtle radial gradients, absolutely positioned. */
+@utility wash-ocean {
+  background:
+    radial-gradient(60% 40% at 20% 0%, color-mix(in oklab, var(--color-ocean-400) 14%, transparent) 0%, transparent 60%),
+    radial-gradient(50% 40% at 90% 100%, color-mix(in oklab, var(--color-ocean-300) 10%, transparent) 0%, transparent 65%);
+}
+@utility wash-sand {
+  background:
+    radial-gradient(55% 45% at 80% 10%, color-mix(in oklab, var(--color-sand-400) 12%, transparent) 0%, transparent 60%),
+    radial-gradient(45% 40% at 10% 90%, color-mix(in oklab, var(--color-sand-300) 10%, transparent) 0%, transparent 65%);
+}
+@utility wash-moss {
+  background:
+    radial-gradient(55% 45% at 15% 15%, color-mix(in oklab, var(--color-moss-400) 12%, transparent) 0%, transparent 60%),
+    radial-gradient(50% 45% at 85% 90%, color-mix(in oklab, var(--color-moss-300) 10%, transparent) 0%, transparent 65%);
+}
+
+/* Small caps eyebrow */
+@utility eyebrow {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-gold-300);
+}
+
+/* Display heading — editorial scale */
+@utility display-heading {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.05;
+  color: var(--color-luxury-100);
+  font-size: clamp(2rem, 5vw, 3.75rem);
+}
+
+/* Thin gold editorial rule */
+@utility editorial-rule {
+  display: block;
+  height: 1px;
+  width: 4rem;
+  background: linear-gradient(to right, var(--color-gold-400), transparent);
+}
+
+/* Frosted glass panel */
+@utility glass-panel {
+  background: color-mix(in oklab, var(--color-luxury-50) 55%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--color-gold-400) 18%, transparent);
+  box-shadow:
+    0 30px 60px -30px color-mix(in oklab, black 60%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 6%, transparent);
+}
+
+/* Oversized ghost numeral */
+@utility ghost-numeral {
+  position: absolute;
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(8rem, 18vw, 16rem);
+  line-height: 0.85;
+  color: color-mix(in oklab, var(--color-gold-500) 8%, transparent);
+  letter-spacing: -0.03em;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+/* Organic hover lift — used on cards, buttons, media frames */
+@utility hover-lift {
+  transition:
+    transform 700ms var(--ease-editorial),
+    box-shadow 700ms var(--ease-editorial),
+    border-color 500ms var(--ease-editorial);
+  will-change: transform;
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 40px 60px -35px color-mix(in oklab, black 70%, transparent);
+  }
+}
+
+

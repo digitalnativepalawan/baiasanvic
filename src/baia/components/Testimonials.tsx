@@ -26,94 +26,100 @@ export default function Testimonials() {
   const current = testimonials[safeIndex];
 
   return (
-    <section id="testimonials" className="py-24 bg-luxury-950 border-t border-b border-luxury-900/60 relative overflow-hidden">
-      {/* Visual embellishment */}
-      <div className="absolute top-1/2 left-10 -translate-y-1/2 text-luxury-900/10 pointer-events-none select-none">
-        <Quote size={300} />
-      </div>
+    <section id="testimonials" className="py-28 md:py-36 bg-luxury-950 border-t border-b border-luxury-900/60 relative overflow-hidden">
+      <div className="wash-moss absolute inset-0 pointer-events-none opacity-70" />
+      <span aria-hidden className="ghost-numeral right-4 top-8 md:right-10 md:top-12">05</span>
 
-      <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-        <span className="text-[10px] tracking-[0.3em] font-sans text-gold-300 font-semibold uppercase block mb-3">
-          GUEST JOURNAL
-        </span>
-        <h2 className="text-3xl md:text-4xl font-serif text-luxury-100 tracking-wide uppercase mb-12">
-          Postcards from Paradise
-        </h2>
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center z-10">
+        {/* Left rail: title + stacked controls */}
+        <div className="lg:col-span-4 space-y-8">
+          <div className="space-y-5">
+            <span className="eyebrow">GUEST JOURNAL</span>
+            <span className="editorial-rule" />
+            <h2 className="display-heading text-3xl md:text-4xl lg:text-5xl">
+              Postcards<br />from Paradise
+            </h2>
+            <p className="text-sm text-luxury-400 font-sans font-light leading-relaxed max-w-sm">
+              Voices from travelers who traded the noise of the world for the sound of the sea.
+            </p>
+          </div>
 
-        {/* Carousel Container */}
-        <div id="testimonial-carousel" className="relative min-h-[250px] flex items-center justify-center">
-          {current ? (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={current.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.4 }}
-                className="space-y-6"
-              >
-                {/* Star Rating */}
-                <div className="flex justify-center space-x-1">
-                  {[...Array(current.rating)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-gold-400 text-gold-400" />
-                  ))}
-                </div>
-
-                {/* Review Text */}
-                <blockquote className="text-lg md:text-xl font-serif text-luxury-100 italic leading-relaxed max-w-2xl mx-auto">
-                  "{current.text}"
-                </blockquote>
-
-                {/* Guest Details */}
-                <div className="pt-2">
-                  <cite className="not-italic text-sm font-serif font-bold text-gold-300 tracking-wider">
-                    {current.guestName}
-                  </cite>
-                  <p className="text-[10px] tracking-widest text-luxury-400 font-sans uppercase mt-1">
-                    {current.location} — Stayed {current.stayDate}
-                  </p>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          ) : (
-            <p className="text-xs tracking-widest text-luxury-500 font-sans uppercase">No testimonials yet.</p>
+          {testimonials.length > 1 && (
+            <div className="flex flex-col space-y-5">
+              <div className="flex space-x-3">
+                <button
+                  onClick={handlePrev}
+                  className="hover-lift p-3 border border-luxury-800 hover:border-gold-300 rounded-full text-luxury-400 hover:text-gold-500 cursor-pointer bg-luxury-950/40"
+                  aria-label="Previous testimonial"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="hover-lift p-3 border border-luxury-800 hover:border-gold-300 rounded-full text-luxury-400 hover:text-gold-500 cursor-pointer bg-luxury-950/40"
+                  aria-label="Next testimonial"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+              <div className="flex space-x-2">
+                {testimonials.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveIndex(i)}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${
+                      safeIndex === i ? "bg-gold-400 w-8" : "bg-luxury-800 w-2 hover:bg-luxury-700"
+                    }`}
+                    aria-label={`Go to testimonial ${i + 1}`}
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] tracking-[0.3em] text-luxury-500 font-sans uppercase">
+                {String(safeIndex + 1).padStart(2, "0")} / {String(testimonials.length).padStart(2, "0")}
+              </span>
+            </div>
           )}
         </div>
 
-        {/* Controls */}
-        {testimonials.length > 1 && (
-        <div id="testimonial-controls" className="flex justify-center items-center space-x-6 mt-10">
-          <button
-            onClick={handlePrev}
-            className="p-2 border border-luxury-800 hover:border-gold-300 rounded-full text-luxury-400 hover:text-gold-500 transition-all cursor-pointer"
-            aria-label="Previous testimonial"
-          >
-            <ChevronLeft size={16} />
-          </button>
+        {/* Floating glass quote panel — pulled left into the rail on lg */}
+        <div className="lg:col-span-8 relative lg:-ml-12">
+          <div className="glass-panel rounded-sm p-8 md:p-14 lg:p-16 relative min-h-[320px] flex items-center">
+            <Quote size={80} className="absolute -top-6 -left-4 md:-top-8 md:-left-6 text-gold-500/20" />
+            {current ? (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={current.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                  className="space-y-6 relative"
+                >
+                  <div className="flex space-x-1">
+                    {[...Array(current.rating)].map((_, i) => (
+                      <Star key={i} size={14} className="fill-gold-400 text-gold-400" />
+                    ))}
+                  </div>
 
-          {/* Dots Indicator */}
-          <div className="flex space-x-2">
-            {testimonials.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveIndex(i)}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                  safeIndex === i ? "bg-gold-400 w-3" : "bg-luxury-800"
-                }`}
-                aria-label={`Go to testimonial ${i + 1}`}
-              />
-            ))}
+                  <blockquote className="text-xl md:text-2xl lg:text-3xl font-serif text-luxury-100 italic leading-[1.4] font-light">
+                    &ldquo;{current.text}&rdquo;
+                  </blockquote>
+
+                  <div className="pt-4 border-t border-luxury-800/60">
+                    <cite className="not-italic text-sm font-serif font-bold text-gold-300 tracking-wider">
+                      {current.guestName}
+                    </cite>
+                    <p className="text-[10px] tracking-[0.25em] text-luxury-400 font-sans uppercase mt-1">
+                      {current.location} — Stayed {current.stayDate}
+                    </p>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            ) : (
+              <p className="text-xs tracking-widest text-luxury-500 font-sans uppercase">No testimonials yet.</p>
+            )}
           </div>
-
-          <button
-            onClick={handleNext}
-            className="p-2 border border-luxury-800 hover:border-gold-300 rounded-full text-luxury-400 hover:text-gold-500 transition-all cursor-pointer"
-            aria-label="Next testimonial"
-          >
-            <ChevronRight size={16} />
-          </button>
         </div>
-        )}
       </div>
     </section>
   );
