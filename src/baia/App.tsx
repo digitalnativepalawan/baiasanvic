@@ -241,7 +241,7 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
-              className="text-sm md:text-base text-luxury-100 max-w-md leading-relaxed font-sans font-light tracking-wide pt-2 whitespace-pre-line"
+              className="text-sm md:text-base text-luxury-800 max-w-md leading-relaxed font-sans font-light tracking-wide pt-2 whitespace-pre-line"
             >
               {hero.subtitle}
             </motion.p>
