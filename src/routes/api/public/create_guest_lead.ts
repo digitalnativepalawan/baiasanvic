@@ -3,27 +3,31 @@ import { createFileRoute } from "@tanstack/react-router";
 /**
  * Public endpoint for Onyx to create a guest lead in `public.booking_inquiries`.
  * Auth: shared secret via `x-onyx-secret` header (matches ONYX_WEBHOOK_SECRET).
- * Method: POST with JSON body. All fields optional except we default status=pending.
+ * Method: POST with JSON object body. Server forces channel/resort_id/status
+ * and never accepts a caller-supplied price. Duplicate (resort_id,
+ * idempotency_key) returns the existing row instead of erroring.
  */
 
+const RESORT_ID = "baia-san-vicente";
+const CHANNEL = "onyx_agent";
+const STATUS = "pending";
+
 type LeadBody = {
-  guest_name?: string | null;
-  guest_email?: string | null;
-  phone?: string | null;
-  check_in?: string | null;
-  check_out?: string | null;
-  guests_count?: number | null;
-  children_count?: number | null;
-  total_nights?: number | null;
-  total_price?: number | null;
-  room_tier_id?: string | null;
-  room_tier_name?: string | null;
-  room_preference?: string | null;
-  special_requests?: string | null;
-  notes?: string | null;
-  transport_needed?: boolean | null;
-  idempotency_key?: string | null;
-  channel?: string | null;
+  guest_name?: unknown;
+  guest_email?: unknown;
+  phone?: unknown;
+  check_in?: unknown;
+  check_out?: unknown;
+  guests_count?: unknown;
+  children_count?: unknown;
+  total_nights?: unknown;
+  room_tier_id?: unknown;
+  room_tier_name?: unknown;
+  room_preference?: unknown;
+  special_requests?: unknown;
+  notes?: unknown;
+  transport_needed?: unknown;
+  idempotency_key?: unknown;
 };
 
 function timingSafeEqualStr(a: string, b: string): boolean {
@@ -33,69 +37,117 @@ function timingSafeEqualStr(a: string, b: string): boolean {
   return out === 0;
 }
 
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
 export const Route = createFileRoute("/api/public/create_guest_lead")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const expected = process.env.ONYX_WEBHOOK_SECRET;
         if (!expected) {
-          return new Response("Server not configured", { status: 500 });
+          return Response.json({ error: "Server not configured" }, { status: 500 });
         }
         const provided = request.headers.get("x-onyx-secret") ?? "";
         if (!timingSafeEqualStr(provided, expected)) {
-          return new Response("Unauthorized", { status: 401 });
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        let body: LeadBody;
+        let parsed: unknown;
         try {
-          body = (await request.json()) as LeadBody;
+          parsed = await request.json();
         } catch {
-          return new Response("Invalid JSON", { status: 400 });
+          return Response.json({ error: "Invalid JSON" }, { status: 400 });
+        }
+        if (!isPlainObject(parsed)) {
+          return Response.json({ error: "Body must be a JSON object" }, { status: 400 });
+        }
+        const body = parsed as LeadBody;
+
+        const idempotency_key =
+          typeof body.idempotency_key === "string" ? body.idempotency_key.trim() : "";
+        if (!idempotency_key) {
+          return Response.json(
+            { error: "idempotency_key is required" },
+            { status: 400 },
+          );
         }
 
         const row: Record<string, unknown> = {
-          status: "pending",
-          channel: body.channel ?? "onyx",
+          resort_id: RESORT_ID,
+          channel: CHANNEL,
+          status: STATUS,
+          idempotency_key,
         };
-        const passthrough: (keyof LeadBody)[] = [
+        const stringFields = [
           "guest_name",
           "guest_email",
           "phone",
           "check_in",
           "check_out",
-          "guests_count",
-          "children_count",
-          "total_nights",
-          "total_price",
           "room_tier_id",
           "room_tier_name",
           "room_preference",
           "special_requests",
           "notes",
-          "transport_needed",
-          "idempotency_key",
-        ];
-        for (const k of passthrough) {
+        ] as const;
+        for (const k of stringFields) {
           const v = body[k];
-          if (v !== undefined && v !== null) row[k] = v;
+          if (typeof v === "string" && v.length > 0) row[k] = v;
+        }
+        const numberFields = ["guests_count", "children_count", "total_nights"] as const;
+        for (const k of numberFields) {
+          const v = body[k];
+          if (typeof v === "number" && Number.isFinite(v)) row[k] = v;
+        }
+        if (typeof body.transport_needed === "boolean") {
+          row.transport_needed = body.transport_needed;
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
         const { data, error } = await supabaseAdmin
           .from("booking_inquiries")
           .insert(row)
-          .select("id, reference, status, created_at")
+          .select("id, reference, status")
           .single();
 
-        if (error) {
-          console.error("[create_guest_lead] insert failed", error);
-          return Response.json({ error: error.message }, { status: 500 });
+        if (!error && data) {
+          return Response.json(
+            { ok: true, id: data.id, reference: data.reference, status: data.status },
+            { status: 201 },
+          );
         }
 
-        return Response.json(
-          { ok: true, id: data.id, reference: data.reference, status: data.status },
-          { status: 201 },
-        );
+        // Handle duplicate (resort_id, idempotency_key) by returning the existing row.
+        const isUniqueViolation =
+          !!error &&
+          ((error as { code?: string }).code === "23505" ||
+            /duplicate key|unique/i.test(error.message ?? ""));
+        if (isUniqueViolation) {
+          const { data: existing, error: fetchErr } = await supabaseAdmin
+            .from("booking_inquiries")
+            .select("id, reference, status")
+            .eq("resort_id", RESORT_ID)
+            .eq("idempotency_key", idempotency_key)
+            .maybeSingle();
+          if (!fetchErr && existing) {
+            return Response.json(
+              {
+                ok: true,
+                duplicate: true,
+                id: existing.id,
+                reference: existing.reference,
+                status: existing.status,
+              },
+              { status: 200 },
+            );
+          }
+        }
+
+        console.error("[create_guest_lead] insert failed", error);
+        return Response.json({ error: "Failed to create lead" }, { status: 500 });
       },
     },
   },
