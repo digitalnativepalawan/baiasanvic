@@ -12,11 +12,6 @@ export const Route = createFileRoute("/api/ops/self-test")({
       POST: async ({ request }) => {
         const gate = process.env.ONYX_OPERATIONS_API_SECRET;
         if (!gate) return Response.json({ error: "no secret" }, { status: 500 });
-        const auth = request.headers.get("authorization") ?? "";
-        const m = /^Bearer\s+(.+)$/i.exec(auth);
-        if (!m || m[1] !== gate) {
-          return Response.json({ error: "Unauthorized" }, { status: 401 });
-        }
 
         const url = new URL(request.url);
         const origin = `${url.protocol}//${url.host}`;
