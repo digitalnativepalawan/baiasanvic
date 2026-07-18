@@ -256,44 +256,46 @@ export default function App() {
         </div>
       </header>
 
-      {/* 2. PHILOSOPHY SECTION — light, editorial, uniform with the site */}
+      {/* 2. PHILOSOPHY SECTION — asymmetric editorial: glass copy panel layered over media edge */}
       <section
         id="philosophy"
         className="relative bg-luxury-950 border-t border-luxury-900/70 py-24 md:py-32 lg:py-40 overflow-hidden"
       >
-        {/* Soft ambient light for cinematic depth without breaking the light theme */}
-        <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[720px] h-[720px] rounded-full bg-gold-300/10 blur-[140px]" />
+        <div className="wash-ocean absolute inset-0 pointer-events-none opacity-80" />
+        <span aria-hidden className="ghost-numeral left-4 top-6 md:left-10 md:top-10">01</span>
+
+        <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[720px] h-[720px] rounded-full bg-gold-300/8 blur-[140px]" />
         <div className="pointer-events-none absolute bottom-0 right-0 w-[420px] h-[420px] rounded-full bg-luxury-800/10 blur-[120px]" />
 
-        <div className="relative max-w-5xl mx-auto px-6 lg:px-12 grid gap-12 lg:gap-16 items-center">
-          {/* Copy block */}
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-0 items-center z-10">
+          {/* Copy — glass panel layering over media edge on lg */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-120px" }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="text-center space-y-6"
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:col-span-5 lg:-mr-28 relative z-20"
           >
-            <span className="text-[10px] tracking-[0.3em] font-sans text-gold-500 font-semibold uppercase block">
-              {philosophy.eyebrow}
-            </span>
-            <div className="mx-auto h-px w-16 bg-gold-500/50" />
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-luxury-100 tracking-wide uppercase leading-[1.1] font-light">
-              {philosophy.title}
-            </h2>
-            <p className="text-sm md:text-base text-luxury-300 font-sans font-light leading-relaxed max-w-2xl mx-auto">
-              {philosophy.subtitle}
-            </p>
+            <div className="glass-panel rounded-sm p-8 md:p-12 lg:p-14 space-y-6">
+              <span className="eyebrow">{philosophy.eyebrow}</span>
+              <span className="editorial-rule" />
+              <h2 className="display-heading text-3xl md:text-5xl lg:text-[3.5rem]">
+                {philosophy.title}
+              </h2>
+              <p className="text-sm md:text-base text-luxury-300 font-sans font-light leading-relaxed">
+                {philosophy.subtitle}
+              </p>
+            </div>
           </motion.div>
 
-          {/* Optional cinematic media frame — only rendered when admin provides media */}
-          {(philosophy.image || philosophy.videoUrl || philosophy.youtubeUrl) && (
+          {/* Media */}
+          {(philosophy.image || philosophy.videoUrl || philosophy.youtubeUrl) ? (
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 1.1, ease: "easeOut", delay: 0.1 }}
-              className="relative mx-auto w-full max-w-4xl aspect-[16/9] overflow-hidden rounded-sm border border-luxury-900/70 shadow-2xl"
+              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+              className="lg:col-span-7 relative w-full aspect-[4/5] md:aspect-[16/11] overflow-hidden rounded-sm border border-luxury-900/70 shadow-2xl hover-lift"
             >
               <MediaFrame
                 image={philosophy.image}
@@ -305,53 +307,71 @@ export default function App() {
                 className="absolute inset-0 w-full h-full object-cover"
               />
               <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-gold-500/10" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-luxury-950/60 via-transparent to-transparent lg:block hidden" />
             </motion.div>
+          ) : (
+            <div className="lg:col-span-7" />
           )}
         </div>
       </section>
 
-      {/* 3. THE STAY SECTION */}
+      {/* 3. THE STAY SECTION — split header, staggered cards, floating glass amenities */}
       <section
         id="stay"
-        className="py-32 bg-luxury-900 border-t border-b border-luxury-800/40 text-left relative overflow-hidden"
+        className="py-28 md:py-36 bg-luxury-900 border-t border-b border-luxury-800/40 text-left relative overflow-hidden"
       >
-        {/* The Stay Showcase */}
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="max-w-3xl mb-16 space-y-4">
-            <span className="text-[10px] tracking-[0.3em] font-sans text-gold-300 font-semibold uppercase block">
-              ACCOMMODATIONS
-            </span>
-            <h3 className="text-3xl md:text-5xl font-serif text-white uppercase tracking-wider font-light">
-              The Stay
-            </h3>
-            <p className="text-sm md:text-base text-luxury-300 font-sans font-light leading-relaxed max-w-2xl">
-              Four private, single-level villas built in a tropical-minimalist style — calm, timber, and open to the breeze.
-            </p>
+        <div className="wash-sand absolute inset-0 pointer-events-none opacity-70" />
+        <span aria-hidden className="ghost-numeral right-4 top-6 md:right-10 md:top-10">02</span>
+
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-12 z-10">
+          {/* Split header — title left, intro dropped low-right */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 mb-16 md:mb-20 items-end">
+            <div className="lg:col-span-6 space-y-5">
+              <span className="eyebrow">ACCOMMODATIONS</span>
+              <span className="editorial-rule" />
+              <h3 className="display-heading text-4xl md:text-5xl lg:text-6xl">
+                The Stay
+              </h3>
+            </div>
+            <div className="lg:col-span-5 lg:col-start-8 lg:pb-4">
+              <p className="text-sm md:text-base text-luxury-300 font-sans font-light leading-relaxed">
+                Four private, single-level villas built in a tropical-minimalist style — calm, timber, and open to the breeze.
+              </p>
+            </div>
           </div>
 
-          {/* Rooms Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            {rooms.map((room: RoomTier) => (
-              <RoomCard
-                key={room.id}
-                room={room}
-                onBook={(r) => handleCheckAvailability({
-                  checkIn: "",
-                  checkOut: "",
-                  guests: r.capacity.includes("3") ? 3 : r.capacity.includes("4") ? 4 : 2
-                })}
-              />
+          {/* Rooms Grid — right column drops on md+ for editorial rhythm */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12">
+            {rooms.map((room: RoomTier, idx: number) => (
+              <div key={room.id} className={idx % 2 === 1 ? "md:mt-20" : ""}>
+                <RoomCard
+                  room={room}
+                  onBook={(r) => handleCheckAvailability({
+                    checkIn: "",
+                    checkOut: "",
+                    guests: r.capacity.includes("3") ? 3 : r.capacity.includes("4") ? 4 : 2
+                  })}
+                />
+              </div>
             ))}
           </div>
 
-          {/* Complimentary amenities statement */}
-          <div className="mt-12 p-6 bg-luxury-950/20 border border-luxury-900 rounded-sm text-center">
-            <p className="text-xs text-luxury-400 font-sans font-light leading-relaxed">
-              Every room at BAIA Resort includes <span className="text-gold-300 font-medium">air conditioning</span>, a <span className="text-gold-300 font-medium">flat-screen TV</span>, a <span className="text-gold-300 font-medium">private bathroom</span>, and <span className="text-gold-300 font-medium">hot water</span> for your complete convenience and absolute barefoot comfort.
+          {/* Floating glass amenities panel */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            className="glass-panel mt-16 md:mt-24 mx-auto max-w-4xl p-8 md:p-10 rounded-sm text-center"
+          >
+            <span className="eyebrow block mb-4">EVERY VILLA INCLUDES</span>
+            <p className="text-sm md:text-base text-luxury-200 font-sans font-light leading-relaxed">
+              <span className="text-gold-300 font-medium">Air conditioning</span> · <span className="text-gold-300 font-medium">Flat-screen TV</span> · <span className="text-gold-300 font-medium">Private bathroom</span> · <span className="text-gold-300 font-medium">Hot water</span> — for complete convenience and absolute barefoot comfort.
             </p>
-          </div>
+          </motion.div>
         </div>
       </section>
+
 
       {/* 4. BOOKING AVAILABILITY BAR (EMBEDDED) */}
       <section id="booking-bar-anchor" className="relative -mt-16 z-20 px-6">
