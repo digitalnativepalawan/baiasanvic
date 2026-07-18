@@ -495,6 +495,26 @@ const normalizeLoadedSiteState = (data: any) => {
       playback: normalizePlayback(normalized.philosophy.playback, DEFAULT_SECTION_PLAYBACK),
     };
   }
+
+  // One-time cinematic migration: if the hero has no video but the philosophy
+  // section has one, move it to the hero so the site opens with a cinematic scene.
+  if (normalized.hero && normalized.philosophy) {
+    const heroHasVideo = !!(normalized.hero.videoUrl || normalized.hero.youtubeUrl);
+    const philHasVideo = !!(normalized.philosophy.videoUrl || normalized.philosophy.youtubeUrl);
+    if (!heroHasVideo && philHasVideo) {
+      normalized.hero = {
+        ...normalized.hero,
+        videoUrl: normalized.philosophy.videoUrl as string | undefined,
+        youtubeUrl: normalized.philosophy.youtubeUrl as string | undefined,
+      };
+      normalized.philosophy = {
+        ...normalized.philosophy,
+        videoUrl: "",
+        youtubeUrl: "",
+      };
+    }
+  }
+
   if (normalized.islandIntro) {
     normalized.islandIntro = {
       ...normalized.islandIntro,
