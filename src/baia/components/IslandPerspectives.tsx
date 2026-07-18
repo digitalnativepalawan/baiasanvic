@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ChevronLeft, ChevronRight, MapPin, Maximize2 } from "lucide-react";
 import { useSite, GalleryItem } from "../context/SiteContext";
+import { SectionStamp } from "./Editorial";
 
 export default function IslandPerspectives() {
   const { galleryItems } = useSite();
@@ -47,31 +48,46 @@ export default function IslandPerspectives() {
   };
 
   return (
-    <section id="gallery" className="py-32 bg-luxury-950 border-t border-luxury-900 text-left relative overflow-hidden">
-      {/* Section wash + ghost numeral */}
-      <div className="wash-ocean absolute inset-0 pointer-events-none opacity-70" />
-      <span aria-hidden className="ghost-numeral left-4 top-6 md:left-10 md:top-10">04</span>
-
-      {/* Background Ambience */}
+    <section
+      id="gallery"
+      className="py-28 md:py-40 lg:py-48 bg-luxury-950 border-t border-luxury-900 text-left relative overflow-hidden"
+    >
+      {/* Deep oceanic wash + ambient light pools */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ocean-900/[0.06] via-transparent to-moss-900/[0.05]" />
       <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-gold-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-luxury-800/10 rounded-full blur-[150px] pointer-events-none" />
+      <span aria-hidden className="ghost-numeral -top-10 right-6">
+        04
+      </span>
 
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-12 z-10">
-        {/* Split header — title left, intro right & dropped */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 mb-16 md:mb-20 items-end">
-          <div className="lg:col-span-7 space-y-5">
-            <span className="eyebrow">VISUAL JOURNAL</span>
-            <span className="editorial-rule" />
-            <h2 className="display-heading text-4xl md:text-5xl lg:text-6xl">
-              Island<br />Perspectives
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+        {/* Asymmetric split header — title left, intro dropped low-right */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-16 lg:mb-24 items-end">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-7 space-y-5"
+          >
+            <span className="eyebrow text-gold-300 block">VISUAL JOURNAL</span>
+            <SectionStamp label="Field notes & frames" />
+            <h2 className="display-heading text-4xl md:text-6xl lg:text-7xl text-luxury-100">
+              Island Perspectives
             </h2>
-          </div>
-          <div className="lg:col-span-5 lg:pb-3">
-            <p className="text-sm md:text-base text-luxury-400 font-sans font-light leading-relaxed">
-              A curated visual story of Palawan&apos;s natural wonders and our oceanfront sanctuaries, captured by local navigators and beloved guests. Click on any frame to step inside.
-            </p>
-          </div>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+            className="lg:col-span-4 lg:col-start-9 text-sm md:text-base text-luxury-400 font-sans font-light leading-loose tracking-wide"
+          >
+            A curated visual story of Palawan&apos;s natural wonders and our oceanfront sanctuaries,
+            captured by local navigators and beloved guests. Click on any frame to step inside.
+          </motion.p>
         </div>
+
 
 
         {/* Cinematic Bento Grid — asymmetric heights + staggered reveal + Ken Burns drift */}
