@@ -16,52 +16,76 @@ export type Database = {
     Tables: {
       booking_inquiries: {
         Row: {
-          check_in: string
-          check_out: string
+          channel: string
+          check_in: string | null
+          check_out: string | null
+          children_count: number | null
           created_at: string
-          guest_email: string
-          guest_name: string
+          guest_email: string | null
+          guest_name: string | null
           guests_count: number
           id: string
+          idempotency_key: string | null
+          notes: string | null
+          phone: string | null
           reference: string
+          resort_id: string
+          room_preference: string | null
           room_tier_id: string | null
           room_tier_name: string | null
           special_requests: string | null
           status: string
           total_nights: number
           total_price: number
+          transport_needed: boolean | null
         }
         Insert: {
-          check_in: string
-          check_out: string
+          channel?: string
+          check_in?: string | null
+          check_out?: string | null
+          children_count?: number | null
           created_at?: string
-          guest_email: string
-          guest_name: string
+          guest_email?: string | null
+          guest_name?: string | null
           guests_count?: number
           id?: string
+          idempotency_key?: string | null
+          notes?: string | null
+          phone?: string | null
           reference?: string
+          resort_id?: string
+          room_preference?: string | null
           room_tier_id?: string | null
           room_tier_name?: string | null
           special_requests?: string | null
           status?: string
           total_nights?: number
           total_price?: number
+          transport_needed?: boolean | null
         }
         Update: {
-          check_in?: string
-          check_out?: string
+          channel?: string
+          check_in?: string | null
+          check_out?: string | null
+          children_count?: number | null
           created_at?: string
-          guest_email?: string
-          guest_name?: string
+          guest_email?: string | null
+          guest_name?: string | null
           guests_count?: number
           id?: string
+          idempotency_key?: string | null
+          notes?: string | null
+          phone?: string | null
           reference?: string
+          resort_id?: string
+          room_preference?: string | null
           room_tier_id?: string | null
           room_tier_name?: string | null
           special_requests?: string | null
           status?: string
           total_nights?: number
           total_price?: number
+          transport_needed?: boolean | null
         }
         Relationships: []
       }
