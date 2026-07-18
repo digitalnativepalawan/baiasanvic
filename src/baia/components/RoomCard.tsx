@@ -86,9 +86,10 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBook }) => {
             <img
               src={currentMediaUrl}
               alt={`${room.name} - slide ${activeMediaIndex + 1}`}
-              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+              className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
               referrerPolicy="no-referrer"
             />
+
           )}
         </button>
         <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/80 via-transparent to-transparent pointer-events-none" />
