@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * Public endpoint for Onyx to create a guest lead in `public.booking_inquiries`.
- * Auth: shared secret via `x-onyx-secret` header (matches ONYX_WEBHOOK_SECRET).
- * Method: POST with JSON object body. Server forces channel/resort_id/status
- * and never accepts a caller-supplied price. Duplicate (resort_id,
+ * Onyx operations endpoint: create a guest lead in `public.booking_inquiries`.
+ * Auth: `Authorization: Bearer <ONYX_OPERATIONS_API_SECRET>`.
+ * Method: POST with a JSON object body. Server forces resort_id/channel/status
+ * and never accepts caller-supplied price. Duplicate (resort_id,
  * idempotency_key) returns the existing row instead of erroring.
  */
 
@@ -41,16 +41,18 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-export const Route = createFileRoute("/api/public/create_guest_lead")({
+export const Route = createFileRoute("/api/ops/guest-lead")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected = process.env.ONYX_WEBHOOK_SECRET;
+        const expected = process.env.ONYX_OPERATIONS_API_SECRET;
         if (!expected) {
           return Response.json({ error: "Server not configured" }, { status: 500 });
         }
-        const provided = request.headers.get("x-onyx-secret") ?? "";
-        if (!timingSafeEqualStr(provided, expected)) {
+        const authHeader = request.headers.get("authorization") ?? "";
+        const match = /^Bearer\s+(.+)$/i.exec(authHeader);
+        const provided = match ? match[1] : "";
+        if (!provided || !timingSafeEqualStr(provided, expected)) {
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -120,7 +122,6 @@ export const Route = createFileRoute("/api/public/create_guest_lead")({
           );
         }
 
-        // Handle duplicate (resort_id, idempotency_key) by returning the existing row.
         const isUniqueViolation =
           !!error &&
           ((error as { code?: string }).code === "23505" ||
@@ -146,7 +147,7 @@ export const Route = createFileRoute("/api/public/create_guest_lead")({
           }
         }
 
-        console.error("[create_guest_lead] insert failed", error);
+        console.error("[ops/guest-lead] insert failed", error);
         return Response.json({ error: "Failed to create lead" }, { status: 500 });
       },
     },
