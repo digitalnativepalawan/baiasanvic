@@ -286,7 +286,7 @@ export default function App() {
           transition={{ duration: 1.2, ease: "easeOut" }}
           className="relative z-10 max-w-4xl px-6 lg:px-12 space-y-6"
         >
-          <span className="text-[10px] tracking-[0.3em] font-sans text-gold-300 font-semibold uppercase block">
+          <span className="text-[10px] tracking-[0.3em] font-sans text-gold-100 font-semibold uppercase block">
             {philosophy.eyebrow}
           </span>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-luxury-950 tracking-wide uppercase leading-tight font-light drop-shadow-lg">
