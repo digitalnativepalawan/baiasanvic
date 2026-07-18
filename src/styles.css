@@ -52,3 +52,27 @@
 ::-webkit-scrollbar-track { background: #f1f0eb; }
 ::-webkit-scrollbar-thumb { background: #c9c5b9; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #5a5a40; }
+
+/* Cinematic Ken Burns — slow, subtle, continuous drift for gallery frames */
+@keyframes ken-burns-a {
+  0%   { transform: scale(1.02) translate3d(0, 0, 0); }
+  50%  { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+  100% { transform: scale(1.02) translate3d(0, 0, 0); }
+}
+@keyframes ken-burns-b {
+  0%   { transform: scale(1.05) translate3d(0, 0, 0); }
+  50%  { transform: scale(1.14) translate3d(1.5%, -1.2%, 0); }
+  100% { transform: scale(1.05) translate3d(0, 0, 0); }
+}
+@keyframes ken-burns-c {
+  0%   { transform: scale(1.03) translate3d(0, 0, 0); }
+  50%  { transform: scale(1.13) translate3d(-1%, 1.2%, 0); }
+  100% { transform: scale(1.03) translate3d(0, 0, 0); }
+}
+.ken-burns-a { animation: ken-burns-a 18s ease-in-out infinite; will-change: transform; }
+.ken-burns-b { animation: ken-burns-b 22s ease-in-out infinite; will-change: transform; }
+.ken-burns-c { animation: ken-burns-c 26s ease-in-out infinite; will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  .ken-burns-a, .ken-burns-b, .ken-burns-c { animation: none; }
+}
+
