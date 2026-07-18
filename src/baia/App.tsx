@@ -206,7 +206,7 @@ export default function App() {
         className="relative h-screen flex flex-col justify-between items-stretch text-left select-none overflow-hidden"
       >
         {/* Immersive background sunset palm photograph with dark overlay matching the image */}
-        <div className="absolute inset-0 bg-luxury-950/40 z-0">
+        <div className="absolute inset-0 bg-luxury-50/50 z-0">
           <MediaFrame
             image={hero.backgroundImage}
             videoUrl={hero.videoUrl}
@@ -216,7 +216,7 @@ export default function App() {
             className="w-full h-full object-cover object-center animate-fade-in"
           />
           {/* Custom cinematic dark overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-transparent to-black/50 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-luxury-50 via-transparent to-black/60 pointer-events-none" />
           <div className="absolute inset-0 bg-black/10 mix-blend-overlay pointer-events-none" />
         </div>
 
