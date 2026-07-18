@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Quote, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useSite } from "../context/SiteContext";
+import { SectionStamp, TideDivider } from "./Editorial";
 
 export default function Testimonials() {
   const { testimonials } = useSite();
@@ -26,97 +27,115 @@ export default function Testimonials() {
   const current = testimonials[safeIndex];
 
   return (
-    <section id="testimonials" className="py-28 md:py-36 bg-luxury-950 border-t border-b border-luxury-900/60 relative overflow-hidden">
-      <div className="wash-moss absolute inset-0 pointer-events-none opacity-70" />
-      <span aria-hidden className="ghost-numeral right-4 top-8 md:right-10 md:top-12">05</span>
+    <section
+      id="testimonials"
+      className="py-28 md:py-40 lg:py-48 bg-luxury-950 border-t border-b border-luxury-900/60 relative overflow-hidden"
+    >
+      {/* Deep oceanic band wash */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ocean-950/[0.06] via-ocean-900/[0.03] to-transparent" />
+      <span aria-hidden className="ghost-numeral -top-10 left-4">
+        05
+      </span>
+      <TideDivider className="absolute top-10 inset-x-0" />
 
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center z-10">
-        {/* Left rail: title + stacked controls */}
-        <div className="lg:col-span-4 space-y-8">
-          <div className="space-y-5">
-            <span className="eyebrow">GUEST JOURNAL</span>
-            <span className="editorial-rule" />
-            <h2 className="display-heading text-3xl md:text-4xl lg:text-5xl">
-              Postcards<br />from Paradise
+      {/* Visual embellishment */}
+      <div className="absolute bottom-8 right-8 text-luxury-900/10 pointer-events-none select-none">
+        <Quote size={300} />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-0 items-center">
+          {/* Left rail — header and navigation, anchored off-center */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-4 text-left space-y-6"
+          >
+            <span className="eyebrow text-gold-300 block">GUEST JOURNAL</span>
+            <SectionStamp label="Guest logbook" />
+            <h2 className="display-heading text-4xl md:text-5xl lg:text-6xl text-luxury-100">
+              Postcards from Paradise
             </h2>
-            <p className="text-sm text-luxury-400 font-sans font-light leading-relaxed max-w-sm">
-              Voices from travelers who traded the noise of the world for the sound of the sea.
-            </p>
-          </div>
 
-          {testimonials.length > 1 && (
-            <div className="flex flex-col space-y-5">
-              <div className="flex space-x-3">
+            {testimonials.length > 1 && (
+              <div id="testimonial-controls" className="flex items-center space-x-6 pt-4">
                 <button
                   onClick={handlePrev}
-                  className="hover-lift p-3 border border-luxury-800 hover:border-gold-300 rounded-full text-luxury-400 hover:text-gold-500 cursor-pointer bg-luxury-950/40"
+                  className="p-2 border border-luxury-800 hover:border-gold-300 rounded-full text-luxury-400 hover:text-gold-500 transition-all duration-500 ease-(--ease-lift) hover:-translate-y-0.5 cursor-pointer"
                   aria-label="Previous testimonial"
                 >
                   <ChevronLeft size={16} />
                 </button>
+
+                {/* Dots Indicator */}
+                <div className="flex space-x-2">
+                  {testimonials.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveIndex(i)}
+                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                        safeIndex === i ? "bg-gold-400 w-3" : "bg-luxury-800"
+                      }`}
+                      aria-label={`Go to testimonial ${i + 1}`}
+                    />
+                  ))}
+                </div>
+
                 <button
                   onClick={handleNext}
-                  className="hover-lift p-3 border border-luxury-800 hover:border-gold-300 rounded-full text-luxury-400 hover:text-gold-500 cursor-pointer bg-luxury-950/40"
+                  className="p-2 border border-luxury-800 hover:border-gold-300 rounded-full text-luxury-400 hover:text-gold-500 transition-all duration-500 ease-(--ease-lift) hover:-translate-y-0.5 cursor-pointer"
                   aria-label="Next testimonial"
                 >
                   <ChevronRight size={16} />
                 </button>
               </div>
-              <div className="flex space-x-2">
-                {testimonials.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveIndex(i)}
-                    className={`h-1.5 rounded-full transition-all duration-500 ${
-                      safeIndex === i ? "bg-gold-400 w-8" : "bg-luxury-800 w-2 hover:bg-luxury-700"
-                    }`}
-                    aria-label={`Go to testimonial ${i + 1}`}
-                  />
-                ))}
-              </div>
-              <span className="text-[10px] tracking-[0.3em] text-luxury-500 font-sans uppercase">
-                {String(safeIndex + 1).padStart(2, "0")} / {String(testimonials.length).padStart(2, "0")}
-              </span>
-            </div>
-          )}
-        </div>
+            )}
+          </motion.div>
 
-        {/* Floating glass quote panel — pulled left into the rail on lg */}
-        <div className="lg:col-span-8 relative lg:-ml-12">
-          <div className="glass-panel rounded-sm p-8 md:p-14 lg:p-16 relative min-h-[320px] flex items-center">
-            <Quote size={80} className="absolute -top-6 -left-4 md:-top-8 md:-left-6 text-gold-500/20" />
+          {/* Quote panel — floating glass block layered over the left rail's edge */}
+          <div
+            id="testimonial-carousel"
+            className="lg:col-span-8 lg:col-start-5 lg:-ml-12 relative min-h-[280px] flex items-center"
+          >
             {current ? (
               <AnimatePresence mode="wait">
                 <motion.div
                   key={current.id}
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                  className="space-y-6 relative"
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  className="glass-panel w-full p-8 md:p-12 lg:p-16 text-left space-y-6"
                 >
+                  {/* Star Rating */}
                   <div className="flex space-x-1">
                     {[...Array(current.rating)].map((_, i) => (
                       <Star key={i} size={14} className="fill-gold-400 text-gold-400" />
                     ))}
                   </div>
 
-                  <blockquote className="text-xl md:text-2xl lg:text-3xl font-serif text-luxury-100 italic leading-[1.4] font-light">
-                    &ldquo;{current.text}&rdquo;
+                  {/* Review Text */}
+                  <blockquote className="text-xl md:text-2xl lg:text-3xl font-serif text-luxury-100 italic leading-relaxed">
+                    "{current.text}"
                   </blockquote>
 
-                  <div className="pt-4 border-t border-luxury-800/60">
-                    <cite className="not-italic text-sm font-serif font-bold text-gold-300 tracking-wider">
+                  {/* Guest Details */}
+                  <div className="pt-2 border-t border-luxury-800/40">
+                    <cite className="not-italic text-sm font-serif font-bold text-gold-300 tracking-wider block pt-4">
                       {current.guestName}
                     </cite>
-                    <p className="text-[10px] tracking-[0.25em] text-luxury-400 font-sans uppercase mt-1">
+                    <p className="text-[10px] tracking-widest text-luxury-400 font-sans uppercase mt-1">
                       {current.location} — Stayed {current.stayDate}
                     </p>
                   </div>
                 </motion.div>
               </AnimatePresence>
             ) : (
-              <p className="text-xs tracking-widest text-luxury-500 font-sans uppercase">No testimonials yet.</p>
+              <p className="text-xs tracking-widest text-luxury-500 font-sans uppercase">
+                No testimonials yet.
+              </p>
             )}
           </div>
         </div>
