@@ -6,6 +6,7 @@
 import { Sparkles, Compass, Timer } from "lucide-react";
 import { motion } from "motion/react";
 import { useSite } from "../context/SiteContext";
+import { SectionStamp } from "./Editorial";
 
 interface ActivitiesProps {
   onBookClick: () => void;
@@ -14,46 +15,66 @@ interface ActivitiesProps {
 export default function Activities({ onBookClick }: ActivitiesProps) {
   const { activities } = useSite();
   return (
-    <section id="experiences" className="py-28 md:py-36 bg-luxury-900 border-t border-b border-luxury-800/60 text-left relative overflow-hidden">
-      <div className="wash-sand absolute inset-0 pointer-events-none opacity-70" />
-      <span aria-hidden className="ghost-numeral right-4 top-6 md:right-10 md:top-10">03</span>
+    <section
+      id="experiences"
+      className="py-28 md:py-40 lg:py-48 bg-luxury-900 border-t border-b border-luxury-800/60 text-left relative overflow-hidden"
+    >
+      {/* Muted-green structural wash */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-moss-800/[0.05] via-transparent to-sand-200/[0.05]" />
+      <span aria-hidden className="ghost-numeral -top-10 left-4">
+        03
+      </span>
 
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-12 z-10">
-        {/* Split Header — title left, intro dropped right */}
-        <div id="activities-title" className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 mb-16 md:mb-20 items-end">
-          <div className="lg:col-span-7 space-y-5">
-            <span className="eyebrow">CURATED ADVENTURES</span>
-            <span className="editorial-rule" />
-            <h2 className="display-heading text-4xl md:text-5xl lg:text-6xl">
-              Curated Experiences<br />&amp; Local Traditions
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+        {/* Asymmetric split header — display title left, intro dropped low-right */}
+        <div
+          id="activities-title"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-16 lg:mb-24 items-end"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-7 space-y-5"
+          >
+            <span className="eyebrow text-gold-300 block">CURATED ADVENTURES</span>
+            <SectionStamp label="Guided by locals" />
+            <h2 className="display-heading text-4xl md:text-6xl lg:text-7xl text-luxury-100">
+              Curated Experiences &<br />
+              Local Traditions
             </h2>
-          </div>
-          <div className="lg:col-span-5 lg:pb-3">
-            <p className="text-sm md:text-base text-luxury-400 leading-relaxed font-sans font-light">
-              At BAIA, we believe true luxury lies in deep connection. Let our expert local guides orchestrate unforgettable days customized to your desired flow—from riding world-class swells to floating through silent lagoons.
-            </p>
-          </div>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+            className="lg:col-span-4 lg:col-start-9 text-sm md:text-base text-luxury-400 leading-loose tracking-wide font-sans font-light"
+          >
+            At BAIA, we believe true luxury lies in deep connection. Let our expert local guides
+            orchestrate unforgettable days customized to your desired flow—from riding world-class
+            swells to floating through silent lagoons.
+          </motion.p>
         </div>
 
         {/* Experience Cards Grid — center card drops for editorial asymmetry */}
-        <div id="activities-grid" className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div id="activities-grid" className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
           {activities.map((act, index) => (
             <motion.div
               key={act.id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.8, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] }}
-              className={`hover-lift bg-luxury-950 border border-luxury-800 group overflow-hidden flex flex-col justify-between hover:border-gold-500/50 rounded-sm ${
-                index === 1 ? "md:mt-16" : ""
-              }`}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.9, delay: (index % 3) * 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className={`bg-luxury-950 border border-luxury-800 group overflow-hidden flex flex-col justify-between hover:border-gold-500/40 hover-lift rounded-sm ${index % 3 === 1 ? "md:mt-16" : ""}`}
             >
               <div>
                 <div className="aspect-[16/10] overflow-hidden bg-luxury-900 relative">
                   <img
                     src={act.imageUrl}
                     alt={act.title}
-                    className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-1000 ease-(--ease-editorial)"
                     referrerPolicy="no-referrer"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/50 via-transparent to-transparent pointer-events-none" />
@@ -105,27 +126,28 @@ export default function Activities({ onBookClick }: ActivitiesProps) {
           ))}
         </div>
 
-        {/* Glass concierge callout with lifted CTA */}
+        {/* Custom concierge callout — floating glass block, offset left on desktop */}
         <motion.div
           id="custom-concierge-callout"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="glass-panel mt-20 md:mt-24 p-8 lg:p-14 flex flex-col md:flex-row justify-between items-center gap-8 rounded-sm relative"
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-16 lg:mt-24 lg:mr-[10%] glass-panel p-8 lg:p-12 flex flex-col md:flex-row justify-between items-center gap-8"
         >
           <div className="text-left space-y-3 max-w-xl">
-            <span className="eyebrow">PRIVATE CONCIERGE</span>
-            <h3 className="text-2xl md:text-3xl font-serif text-luxury-100 uppercase tracking-wider font-light">
+            <h3 className="display-heading text-2xl md:text-3xl text-luxury-100">
               Dreaming of a bespoke itinerary?
             </h3>
-            <p className="text-xs md:text-sm text-luxury-300 leading-relaxed font-sans font-light">
-              From island sunset proposals on private sandbars to deep-sea fishing charters and bespoke health detox programs, our specialist concierge team is here to tailor-make every moment of your stay.
+            <p className="text-xs md:text-sm text-luxury-300 leading-loose font-sans font-light tracking-wide">
+              From island sunset proposals on private sandbars to deep-sea fishing charters and
+              bespoke health detox programs, our specialist concierge team is here to tailor-make
+              every moment of your stay.
             </p>
           </div>
           <button
             onClick={onBookClick}
-            className="hover-lift w-full md:w-auto bg-gold-500 hover:bg-gold-400 text-white px-8 py-4 text-[11px] tracking-widest font-sans font-bold uppercase flex items-center justify-center space-x-2 cursor-pointer rounded-sm"
+            className="w-full md:w-auto bg-gold-500 hover:bg-gold-600 text-white px-8 py-4 text-[11px] tracking-widest font-sans font-bold uppercase transition-all duration-500 ease-(--ease-lift) hover:-translate-y-1 hover:shadow-xl flex items-center justify-center space-x-2 cursor-pointer shrink-0"
           >
             <span>Consult our Concierge</span>
             <Sparkles size={12} />
