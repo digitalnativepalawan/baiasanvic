@@ -66,52 +66,83 @@ export default function IslandPerspectives() {
           </p>
         </div>
 
-        {/* Masonry Grid */}
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 [column-fill:_balance] box-border w-full">
-          {galleryItems.map((item, idx) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8, delay: idx * 0.1, ease: "easeOut" }}
-              className="break-inside-avoid mb-6 group relative cursor-pointer overflow-hidden rounded-sm border border-luxury-900 bg-luxury-900 shadow-lg"
-              onClick={() => setActiveId(item.id)}
-            >
-              <div className="relative overflow-hidden aspect-auto">
-                <img
-                  src={item.src}
-                  alt={item.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-                
-                {/* Visual Cover Layer on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-luxury-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out flex flex-col justify-end p-6" />
-
-                {/* Always visible minimal pill overlay */}
-                <div className="absolute top-4 left-4 bg-luxury-950/80 backdrop-blur-sm border border-luxury-800/50 px-2.5 py-1 rounded-full flex items-center space-x-1.5 text-[9px] tracking-widest text-gold-300 uppercase font-sans font-semibold">
-                  <MapPin size={9} />
-                  <span>{item.location.split(",")[0]}</span>
+        {/* Cinematic Bento Grid — asymmetric heights + staggered reveal + Ken Burns drift */}
+        <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-12 auto-rows-[110px] sm:auto-rows-[140px] md:auto-rows-[160px] lg:auto-rows-[180px] gap-3 md:gap-4 lg:gap-5">
+          {galleryItems.map((item, idx) => {
+            // Bento pattern — rotates through 6 distinct tile footprints for
+            // rhythm across all breakpoints. Mobile stays two-up but preserves
+            // tall/wide accents so the grid never feels like a static list.
+            const patterns = [
+              // [colSpanBase, colSpanMd, colSpanLg, rowSpanBase, rowSpanMd, rowSpanLg]
+              { cls: "col-span-2 md:col-span-4 lg:col-span-7 row-span-3 md:row-span-3 lg:row-span-3" },
+              { cls: "col-span-2 md:col-span-2 lg:col-span-5 row-span-2 md:row-span-3 lg:row-span-3" },
+              { cls: "col-span-1 md:col-span-2 lg:col-span-4 row-span-2 md:row-span-2 lg:row-span-2" },
+              { cls: "col-span-1 md:col-span-2 lg:col-span-4 row-span-2 md:row-span-2 lg:row-span-2" },
+              { cls: "col-span-2 md:col-span-2 lg:col-span-4 row-span-2 md:row-span-3 lg:row-span-3" },
+              { cls: "col-span-2 md:col-span-4 lg:col-span-8 row-span-3 md:row-span-2 lg:row-span-2" },
+            ];
+            const pattern = patterns[idx % patterns.length];
+            const kb = ["ken-burns-a", "ken-burns-b", "ken-burns-c"][idx % 3];
+            return (
+              <motion.button
+                key={item.id}
+                type="button"
+                initial={{ opacity: 0, y: 40, scale: 0.98 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.9, delay: (idx % 6) * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -4 }}
+                onClick={() => setActiveId(item.id)}
+                aria-label={`Open ${item.title}`}
+                className={`${pattern.cls} group relative cursor-pointer overflow-hidden rounded-sm border border-luxury-900 bg-luxury-900 shadow-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500`}
+              >
+                <div className="absolute inset-0 overflow-hidden">
+                  <img
+                    src={item.src}
+                    alt={item.title}
+                    referrerPolicy="no-referrer"
+                    loading="lazy"
+                    className={`w-full h-full object-cover ${kb} transition-transform duration-[1200ms] ease-out group-hover:scale-[1.18]`}
+                  />
                 </div>
 
-                <div className="absolute top-4 right-4 bg-luxury-950/80 backdrop-blur-sm border border-luxury-800/50 p-1.5 rounded-full text-gold-300 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100">
+                {/* Base cinematic vignette — always visible for legibility */}
+                <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/85 via-luxury-950/20 to-transparent pointer-events-none" />
+                {/* Strong reveal on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-luxury-950/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                {/* Location pill */}
+                <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-luxury-950/80 backdrop-blur-sm border border-luxury-800/50 px-2 py-0.5 rounded-full flex items-center space-x-1.5 text-[9px] tracking-widest text-gold-300 uppercase font-sans font-semibold">
+                  <MapPin size={9} />
+                  <span className="truncate max-w-[120px]">{item.location.split(",")[0]}</span>
+                </div>
+
+                {/* Expand icon */}
+                <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-luxury-950/80 backdrop-blur-sm border border-luxury-800/50 p-1.5 rounded-full text-gold-300 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100">
                   <Maximize2 size={12} />
                 </div>
 
-                {/* Overlay details that appear on hover */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 z-10 translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out">
-                  <span className="text-[9px] tracking-[0.25em] text-gold-300 font-sans uppercase font-bold block mb-1">
-                    {item.category} // {item.location}
+                {/* Title block — visible baseline, expands on hover */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 z-10">
+                  <span className="text-[9px] tracking-[0.25em] text-gold-300 font-sans uppercase font-bold block mb-1 opacity-90">
+                    {item.category}
                   </span>
-                  <h3 className="text-lg font-serif text-luxury-100 uppercase tracking-wide">
+                  <h3 className="text-sm md:text-base lg:text-lg font-serif text-luxury-100 uppercase tracking-wide leading-tight line-clamp-2">
                     {item.title}
                   </h3>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.button>
+            );
+          })}
         </div>
+
+        {/* Scroll affordance */}
+        <div className="mt-10 flex items-center justify-center gap-3 text-[10px] tracking-[0.3em] text-luxury-500 font-sans uppercase">
+          <span className="h-px w-8 bg-luxury-800" />
+          <span>Tap any frame to enter</span>
+          <span className="h-px w-8 bg-luxury-800" />
+        </div>
+
       </div>
 
       {/* Cinematic Lightbox Modal */}
