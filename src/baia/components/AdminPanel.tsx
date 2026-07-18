@@ -1081,6 +1081,23 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                 <input type="text" placeholder="https://youtube.com/watch?v=..." value={philosophy.youtubeUrl || ""} onChange={(e) => updatePhilosophy({ youtubeUrl: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
                               </div>
                             </div>
+                            {/* Helper to move an existing philosophy video to the hero */}
+                            {(philosophy.videoUrl || philosophy.youtubeUrl) && !(hero.videoUrl || hero.youtubeUrl) && (
+                              <div className="pt-2 border-t border-luxury-900">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    updateHero({ videoUrl: philosophy.videoUrl, youtubeUrl: philosophy.youtubeUrl });
+                                    updatePhilosophy({ videoUrl: "", youtubeUrl: "" });
+                                    triggerSuccess("Philosophy video moved to Hero section.");
+                                  }}
+                                  className="text-[10px] tracking-wider uppercase text-gold-300 hover:text-gold-200 border border-gold-300/30 hover:border-gold-300 px-3 py-1.5 rounded-sm transition-colors"
+                                >
+                                  Move this video to Hero
+                                </button>
+                                <p className="mt-1 text-[9px] text-luxury-500 font-sans">Use this if you want the site to open with this video.</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <PlaybackControls
