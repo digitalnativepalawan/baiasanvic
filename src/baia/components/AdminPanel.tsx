@@ -1033,16 +1033,13 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
                       {/* PHILOSOPHY */}
                       <div className="bg-luxury-950 border border-luxury-900 p-6 rounded-sm space-y-4 text-left">
-                        <h4 className="text-xs tracking-widest text-gold-300 font-sans uppercase font-bold">Philosophy Section</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Eyebrow / Tag</label>
-                            <input type="text" value={philosophy.eyebrow} onChange={(e) => updatePhilosophy({ eyebrow: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
-                          </div>
-                          <div>
-                            <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Badge Title</label>
-                            <input type="text" value={philosophy.badgeTitle} onChange={(e) => updatePhilosophy({ badgeTitle: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
-                          </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <h4 className="text-xs tracking-widest text-gold-300 font-sans uppercase font-bold">Philosophy Section</h4>
+                          <span className="text-[9px] text-luxury-500 font-sans uppercase tracking-wider">Full-bleed cinematic</span>
+                        </div>
+                        <div>
+                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Eyebrow / Tag</label>
+                          <input type="text" value={philosophy.eyebrow} onChange={(e) => updatePhilosophy({ eyebrow: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
                         </div>
                         <div>
                           <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Headline (Title)</label>
@@ -1052,10 +1049,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                           <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Body Copy</label>
                           <textarea rows={3} value={philosophy.subtitle} onChange={(e) => updatePhilosophy({ subtitle: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-2 px-3 text-xs text-luxury-100 rounded focus:outline-none font-sans leading-relaxed" />
                         </div>
-                        <div>
-                          <label className="text-[10px] tracking-wider text-luxury-400 font-sans uppercase block mb-1">Badge Body</label>
-                          <input type="text" value={philosophy.badgeText} onChange={(e) => updatePhilosophy({ badgeText: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
-                        </div>
+
 
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start pt-2 border-t border-luxury-900">
                           <div className="md:col-span-4">
@@ -1087,6 +1081,23 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                 <input type="text" placeholder="https://youtube.com/watch?v=..." value={philosophy.youtubeUrl || ""} onChange={(e) => updatePhilosophy({ youtubeUrl: e.target.value })} className="w-full bg-luxury-900 border border-luxury-800 focus:border-gold-300 py-1.5 px-3 text-xs text-luxury-100 rounded focus:outline-none" />
                               </div>
                             </div>
+                            {/* Helper to move an existing philosophy video to the hero */}
+                            {(philosophy.videoUrl || philosophy.youtubeUrl) && !(hero.videoUrl || hero.youtubeUrl) && (
+                              <div className="pt-2 border-t border-luxury-900">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    updateHero({ videoUrl: philosophy.videoUrl, youtubeUrl: philosophy.youtubeUrl });
+                                    updatePhilosophy({ videoUrl: "", youtubeUrl: "" });
+                                    triggerSuccess("Philosophy video moved to Hero section.");
+                                  }}
+                                  className="text-[10px] tracking-wider uppercase text-gold-300 hover:text-gold-200 border border-gold-300/30 hover:border-gold-300 px-3 py-1.5 rounded-sm transition-colors"
+                                >
+                                  Move this video to Hero
+                                </button>
+                                <p className="mt-1 text-[9px] text-luxury-500 font-sans">Use this if you want the site to open with this video.</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <PlaybackControls
