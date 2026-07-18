@@ -62,8 +62,9 @@ const RoomCard: React.FC<RoomCardProps> = ({ room, onBook }) => {
   return (
     <div 
       id={`room-card-${room.id}`}
-      className="group flex flex-col bg-luxury-950/40 border border-luxury-800/40 overflow-hidden hover:border-gold-500/30 transition-colors duration-500 rounded-sm"
+      className="group hover-lift flex flex-col bg-luxury-950/40 border border-luxury-800/40 overflow-hidden hover:border-gold-500/40 rounded-sm"
     >
+
       {/* Media Carousel Container */}
       <div className="aspect-[16/10] overflow-hidden relative bg-luxury-950 group/carousel">
         <button
