@@ -256,65 +256,45 @@ export default function App() {
         </div>
       </header>
 
-      {/* 2. PHILOSOPHY SECTION */}
+      {/* 2. PHILOSOPHY SECTION — full-bleed cinematic quote */}
       <section
         id="philosophy"
-        className="py-32 bg-luxury-950 text-left relative overflow-hidden"
+        className="relative min-h-screen w-full flex items-center justify-center text-center overflow-hidden"
       >
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-          {/* Left Text details with premium scroll-triggered fade-up */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-120px" }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            className="lg:col-span-5 space-y-6"
-          >
-            <span className="text-[10px] tracking-[0.3em] font-sans text-gold-300 font-semibold uppercase">
-              {philosophy.eyebrow}
-            </span>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-luxury-100 tracking-wide uppercase leading-tight font-light">
-              {philosophy.title}
-            </h2>
-            <p className="text-sm text-luxury-400 font-sans font-light leading-relaxed max-w-md pt-2">
-              {philosophy.subtitle}
-            </p>
-          </motion.div>
-
-          {/* Right Immersive Image side with premium scroll-triggered zoom-fade */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-120px" }}
-            transition={{ duration: 1.4, delay: 0.2, ease: "easeOut" }}
-            className="lg:col-span-7 relative group"
-          >
-            <div className="aspect-[16/10] overflow-hidden bg-luxury-900 shadow-2xl relative rounded-sm">
-              <MediaFrame
-                image={philosophy.image}
-                videoUrl={philosophy.videoUrl}
-                youtubeUrl={philosophy.youtubeUrl}
-                playback={philosophy.playback}
-                lazy
-                alt={philosophy.badgeText}
-                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-luxury-950/50 to-transparent pointer-events-none" />
-            </div>
-
-            {/* Visual bronze floating badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
-              className="absolute -bottom-8 -left-8 bg-luxury-900 border border-luxury-800 p-6 shadow-xl hidden md:block max-w-[200px] text-left"
-            >
-              <p className="text-[10px] tracking-widest text-gold-300 font-sans uppercase font-bold">{philosophy.badgeTitle}</p>
-              <p className="text-xs text-luxury-100 font-serif mt-1 leading-relaxed">{philosophy.badgeText}</p>
-            </motion.div>
-          </motion.div>
+        {/* Full-bleed media background */}
+        <div className="absolute inset-0 bg-luxury-950">
+          <MediaFrame
+            image={philosophy.image}
+            videoUrl={philosophy.videoUrl}
+            youtubeUrl={philosophy.youtubeUrl}
+            playback={philosophy.playback}
+            lazy
+            alt={philosophy.title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          {/* Cinematic overlays for legibility */}
+          <div className="absolute inset-0 bg-luxury-950/40 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-luxury-950 via-luxury-950/20 to-luxury-950/60 pointer-events-none" />
         </div>
+
+        {/* Centered quote text */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-120px" }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="relative z-10 max-w-4xl px-6 lg:px-12 space-y-6"
+        >
+          <span className="text-[10px] tracking-[0.3em] font-sans text-gold-300 font-semibold uppercase block">
+            {philosophy.eyebrow}
+          </span>
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-luxury-100 tracking-wide uppercase leading-tight font-light">
+            {philosophy.title}
+          </h2>
+          <p className="text-sm md:text-base text-luxury-300 font-sans font-light leading-relaxed max-w-2xl mx-auto pt-2">
+            {philosophy.subtitle}
+          </p>
+        </motion.div>
       </section>
 
       {/* 3. THE STAY SECTION */}
