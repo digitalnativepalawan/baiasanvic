@@ -16,6 +16,7 @@ import AdminGate from "./components/AdminGate";
 import ConciergeWidget from "./components/ConciergeWidget";
 import RoomCard from "./components/RoomCard";
 import Newsletter from "./components/Newsletter";
+import { SectionStamp, TideDivider } from "./components/Editorial";
 import { useSite, MediaPlayback, DEFAULT_HERO_PLAYBACK, DEFAULT_SECTION_PLAYBACK } from "./context/SiteContext";
 import { Reservation, RoomTier } from "./types";
 
