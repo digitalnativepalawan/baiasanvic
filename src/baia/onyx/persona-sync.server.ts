@@ -7,6 +7,17 @@
  *   3. Complete BAIA menu knowledge (no prices)
  *   4. Admin-editable persona text
  *   5. Admin-editable custom knowledge
+ *
+ * Sync uses the SAME base URL + auth resolution as the working Onyx chat
+ * client (src/baia/onyx/client.server.ts): it reads ONYX_BASE_URL /
+ * ONYX_API_KEY from the server environment and calls the Onyx REST API.
+ *
+ * The Onyx persona API (verified against onyx/server/features/persona/api.py):
+ *   - GET  {ONYX_BASE_URL}/persona/{id}      -> PersonaSnapshot
+ *   - PATCH {ONYX_BASE_URL}/persona/{id}      -> PersonaUpsertRequest
+ * There is NO /admin/persona/{id} route (admin_router only exposes
+ * /listed, /featured, /undelete, /upload-image, /label/{id}), and the
+ * update verb is PATCH (not PUT).
  */
 import { buildStaticChunks, buildMenuAnswer } from "../concierge.knowledge";
 import type { ConciergeConfig } from "../concierge.types";
@@ -78,16 +89,35 @@ export function buildOnyxSystemPrompt(cfg: ConciergeConfig): string {
 }
 
 /**
- * Sync the Onyx persona's system_prompt via the Onyx REST API.
- * The Onyx API requires PUT /admin/persona/{id} with the full persona object,
- * so we first GET the current persona, update just system_prompt, then PUT it back.
- * Server-only — never imported by browser code.
+ * Pull a list of `id` values out of a nested Onyx snapshot array.
+ * Onyx snapshot sub-objects (tools, document_sets, labels, hierarchy_nodes,
+ * attached_documents) carry `.id`; some arrays may be raw ids already.
  */
+function extractIds(arr: unknown, fallback: number[] | string[] = []): number[] | string[] {
+  if (!Array.isArray(arr)) return fallback;
+  const out: (number | string)[] = [];
+  for (const item of arr) {
+    if (item == null) continue;
+    if (typeof item === "object" && "id" in (item as Record<string, unknown>)) {
+      const id = (item as Record<string, unknown>).id;
+      if (typeof id === "number" || typeof id === "string") out.push(id);
+    } else if (typeof item === "number" || typeof item === "string") {
+      out.push(item);
+    }
+  }
+  return out as number[] | string[];
+}
+
 /**
  * Sync the Onyx persona's system_prompt via the Onyx REST API.
- * The Onyx API requires PUT /admin/persona/{id} with the full persona object,
- * so we first GET the current persona, update just system_prompt, then PUT it back.
- * Server-only — never imported by browser code.
+ *
+ * 1. GET  {baseUrl}/persona/{id}        -> current PersonaSnapshot
+ * 2. Map snapshot -> PersonaUpsertRequest (preserving every field)
+ * 3. Override ONLY system_prompt
+ * 4. PATCH {baseUrl}/persona/{id}        -> updated persona
+ *
+ * This preserves the attached create_guest_lead tool (via tool_ids) and all
+ * other persona configuration. Server-only — never imported by browser code.
  */
 export async function syncPersonaToOnyx(
   baseUrl: string,
@@ -95,21 +125,19 @@ export async function syncPersonaToOnyx(
   personaId: number,
   systemPrompt: string,
 ): Promise<{ ok: boolean; error?: string }> {
+  // Mirror the working chat client's base-URL handling exactly.
   const cleanBase = baseUrl.replace(/\/+$/, "");
+  const authHeader = `Bearer ${apiKey}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
-  
+
   try {
-    // Step 1: GET current persona to preserve all other fields
-    const getUrl = `${cleanBase}/admin/persona/${personaId}`;
-    const getRes = await fetch(getUrl, {
+    // Step 1: GET the current persona (correct Onyx route: /persona/{id}).
+    const getRes = await fetch(`${cleanBase}/persona/${personaId}`, {
       method: "GET",
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-      },
+      headers: { authorization: authHeader },
       signal: controller.signal,
     });
-    
     if (!getRes.ok) {
       const body = await getRes.text().catch(() => "");
       return {
@@ -117,32 +145,52 @@ export async function syncPersonaToOnyx(
         error: `GET persona failed: HTTP ${getRes.status}${body ? ` — ${body.slice(0, 200)}` : ""}`,
       };
     }
-    
-    const persona = await getRes.json();
-    
-    // Step 2: Update just the system_prompt field
-    persona.system_prompt = systemPrompt;
-    
-    // Step 3: PUT the full updated persona back
-    const putUrl = `${cleanBase}/admin/persona/${personaId}`;
-    const putRes = await fetch(putUrl, {
-      method: "PUT",
+    const p = (await getRes.json()) as Record<string, unknown>;
+
+    // Step 2+3: Build the upsert body from the snapshot, overriding only system_prompt.
+    // Required PersonaUpsertRequest fields: name, description, document_set_ids,
+    // tool_ids, system_prompt, task_prompt, datetime_aware.
+    const upsert: Record<string, unknown> = {
+      name: p.name,
+      description: p.description ?? "",
+      document_set_ids: extractIds(p.document_sets),
+      tool_ids: extractIds(p.tools),
+      system_prompt: systemPrompt,
+      task_prompt: p.task_prompt ?? "",
+      datetime_aware: p.datetime_aware ?? true,
+      // Optional fields — pass through to fully preserve the persona.
+      starter_messages: p.starter_messages ?? null,
+      user_file_ids: p.user_file_ids ?? null,
+      is_public: p.is_public ?? null,
+      is_featured: p.is_featured ?? null,
+      display_priority: p.display_priority ?? null,
+      icon_name: p.icon_name ?? null,
+      uploaded_image_id: p.uploaded_image_id ?? null,
+      label_ids: extractIds(p.labels),
+      groups: Array.isArray(p.groups) ? p.groups : null,
+      hierarchy_node_ids: extractIds(p.hierarchy_nodes),
+      document_ids: extractIds(p.attached_documents),
+      default_model_configuration_id: p.default_model_configuration_id ?? null,
+      replace_base_system_prompt: p.replace_base_system_prompt ?? false,
+    };
+
+    // Step 4: PATCH the persona back (correct Onyx verb: PATCH, not PUT).
+    const patchRes = await fetch(`${cleanBase}/persona/${personaId}`, {
+      method: "PATCH",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${apiKey}`,
+        authorization: authHeader,
       },
-      body: JSON.stringify(persona),
+      body: JSON.stringify(upsert),
       signal: controller.signal,
     });
-    
-    if (!putRes.ok) {
-      const body = await putRes.text().catch(() => "");
+    if (!patchRes.ok) {
+      const body = await patchRes.text().catch(() => "");
       return {
         ok: false,
-        error: `PUT persona failed: HTTP ${putRes.status}${body ? ` — ${body.slice(0, 200)}` : ""}`,
+        error: `PATCH persona failed: HTTP ${patchRes.status}${body ? ` — ${body.slice(0, 200)}` : ""}`,
       };
     }
-    
     return { ok: true };
   } catch (err) {
     return {
