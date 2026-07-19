@@ -76,30 +76,33 @@ export const conciergeChat = createServerFn({ method: "POST" })
           message: question,
           onyxSessionId: (data as { onyxSessionId?: string }).onyxSessionId,
         });
-        await logConciergeTurn(data.sessionId, "guest", question);
-        await logConciergeTurn(data.sessionId, "agent", onyxRes.reply);
-        // Bypass the Onyx brain's "we don't have a menu" dead-end: when the
-        // persona knowledge is incomplete and Onyx returns a no-knowledge
-        // fallback, answer from the BAIA menu knowledge we ship in-repo. This
-        // keeps Onyx as the primary brain for everything else while guaranteeing
-        // a useful, on-brand, no-price answer for dining questions.
-        const finalReply =
-          onyxRes.intent !== "booking_inquiry" && isNoKnowledgeFallback(onyxRes.reply)
-            ? buildMenuAnswer()
-            : onyxRes.reply;
-        return {
-          reply: finalReply,
-          intent: onyxRes.intent,
-          approvalRequired: onyxRes.approvalRequired,
-          onyxSessionId: onyxRes.onyxSessionId,
-          runId: onyxRes.runId,
-          actions: onyxRes.actions.map((a) => ({
-            name: a.name,
-            status: a.status,
-            evidenceJson: a.evidence ? JSON.stringify(a.evidence) : undefined,
-          })),
-          brain: "onyx",
-        };
+        // Fall through to the core fallback if Onyx returned an error result,
+        // an empty reply, or was otherwise not able to answer. This keeps the
+        // guest experience seamless when the Onyx tunnel is unreachable /
+        // returns 401/403/404/429/5xx / malformed output.
+        const onyxReply = (onyxRes.reply ?? "").trim();
+        if (!onyxRes.error && onyxReply.length > 0) {
+          await logConciergeTurn(data.sessionId, "guest", question);
+          await logConciergeTurn(data.sessionId, "agent", onyxReply);
+          const finalReply =
+            onyxRes.intent !== "booking_inquiry" && isNoKnowledgeFallback(onyxReply)
+              ? buildMenuAnswer()
+              : onyxReply;
+          return {
+            reply: finalReply,
+            intent: onyxRes.intent,
+            approvalRequired: onyxRes.approvalRequired,
+            onyxSessionId: onyxRes.onyxSessionId,
+            runId: onyxRes.runId,
+            actions: onyxRes.actions.map((a) => ({
+              name: a.name,
+              status: a.status,
+              evidenceJson: a.evidence ? JSON.stringify(a.evidence) : undefined,
+            })),
+            brain: "onyx",
+          };
+        }
+        console.warn("Onyx returned no usable reply, falling back to core:", onyxRes.error);
       } catch (err) {
         // Onyx unreachable — fall through to the existing core (no guest-facing break).
         console.error("Onyx brain failed, falling back to core:", err);
