@@ -113,7 +113,7 @@ async function onyxFetch(
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${cfg.apiKey}`,
+        authorization: cfg.apiKey,
       },
       body: JSON.stringify(body),
       signal: controller.signal,

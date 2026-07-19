@@ -127,7 +127,7 @@ export async function syncPersonaToOnyx(
 ): Promise<{ ok: boolean; error?: string }> {
   // Mirror the working chat client's base-URL handling exactly.
   const cleanBase = baseUrl.replace(/\/+$/, "");
-  const authHeader = `Bearer ${apiKey}`;
+  const authHeader = apiKey;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
 
