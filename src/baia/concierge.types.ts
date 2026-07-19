@@ -44,7 +44,12 @@ export interface ConciergeResponse {
   onyxSessionId?: string;
   runId?: string;
   actions?: Array<{ name: string; status: string; evidenceJson?: string }>;
-  brain?: "onyx" | "core";
+  // "deterministic" = answered from static approved knowledge, no LLM call.
+  // "onyx" / "core" (OpenRouter or Ollama) = optional LLM enhancers used only
+  // for questions the deterministic layer wasn't confident about.
+  // "fallback" = none of the above could answer; guest was pointed to email
+  // / Book Now.
+  brain?: "deterministic" | "onyx" | "core" | "fallback";
 }
 
 // What the admin panel fetches to populate the model dropdowns (client-side).

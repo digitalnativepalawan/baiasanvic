@@ -10,10 +10,58 @@ const STATIC_CHUNKS = buildStaticChunks();
 
 // Words we ignore when scoring (too generic to be useful).
 const STOPWORDS = new Set([
-  "the", "a", "an", "and", "or", "to", "of", "in", "on", "at", "for", "is",
-  "are", "i", "we", "you", "my", "our", "your", "with", "can", "do", "does",
-  "what", "when", "where", "how", "be", "it", "this", "that", "have", "has",
-  "want", "would", "could", "please", "hi", "hello", "hey", "thanks", "thank",
+  "the",
+  "a",
+  "an",
+  "and",
+  "or",
+  "to",
+  "of",
+  "in",
+  "on",
+  "at",
+  "for",
+  "is",
+  "are",
+  "i",
+  "we",
+  "you",
+  "my",
+  "our",
+  "your",
+  "with",
+  "can",
+  "do",
+  "does",
+  "what",
+  "when",
+  "where",
+  "how",
+  "be",
+  "it",
+  "this",
+  "that",
+  "have",
+  "has",
+  "want",
+  "would",
+  "could",
+  "please",
+  "hi",
+  "hello",
+  "hey",
+  "thanks",
+  "thank",
+  // Brand/domain words that appear throughout almost every chunk (the resort's
+  // own name, generic hospitality nouns) so they carry near-zero discriminative
+  // value for topic scoring and would otherwise drown out the actual topic
+  // keywords (e.g. "airport", "menu", "pets").
+  "baia",
+  "resort",
+  "guest",
+  "guests",
+  "get",
+  "from",
 ]);
 
 function tokenize(text: string): string[] {
@@ -33,30 +81,46 @@ const CHUNK_TOKEN_INDEX: { chunk: KnowledgeChunk; tokens: Map<string, number> }[
     return { chunk, tokens };
   });
 
-/**
- * Returns the most relevant chunks for a question, plus a relevance score.
- * Always returns at least the "about" + "booking" chunks as a safe baseline so
- * the agent can always point guests to book / contact even on vague questions.
- */
-export function retrieveRelevant(question: string, customKnowledge = ""): {
-  chunks: KnowledgeChunk[];
+export interface ScoredChunk {
+  chunk: KnowledgeChunk;
   score: number;
-} {
+}
+
+/**
+ * Score every static knowledge chunk against a question by keyword overlap,
+ * best match first. Exported so callers that need to know HOW confident a
+ * match is (not just the merged text) — e.g. the deterministic known-topic
+ * answerer — can apply their own confidence threshold instead of always
+ * sending everything to the model.
+ */
+export function scoreChunks(question: string): ScoredChunk[] {
   const qTokens = tokenize(question);
-  const scored = CHUNK_TOKEN_INDEX.map(({ chunk, tokens }) => {
+  return CHUNK_TOKEN_INDEX.map(({ chunk, tokens }) => {
     let score = 0;
     for (const qt of qTokens) {
       const hit = tokens.get(qt);
       if (hit) score += hit;
     }
     return { chunk, score };
-  });
+  }).sort((a, b) => b.score - a.score);
+}
+
+/**
+ * Returns the most relevant chunks for a question, plus a relevance score.
+ * Always returns at least the "about" + "booking" chunks as a safe baseline so
+ * the agent can always point guests to book / contact even on vague questions.
+ */
+export function retrieveRelevant(
+  question: string,
+  customKnowledge = "",
+): {
+  chunks: KnowledgeChunk[];
+  score: number;
+} {
+  const scored = scoreChunks(question);
 
   // Strong matches first; keep everything with a positive score.
-  const matched = scored
-    .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map((s) => s.chunk);
+  const matched = scored.filter((s) => s.score > 0).map((s) => s.chunk);
 
   // Baseline safety chunks.
   const baselineIds = new Set(["about", "booking"]);

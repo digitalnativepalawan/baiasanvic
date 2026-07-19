@@ -43,20 +43,7 @@ export interface GuardrailResult {
 // ---------------------------------------------------------------------------
 
 // Currency symbols / codes.
-const CURRENCY_TOKENS = [
-  "₱",
-  "₽",
-  "€",
-  "£",
-  "¥",
-  "php",
-  "usd",
-  "eur",
-  "gbp",
-  "aud",
-  "cad",
-  "sgd",
-];
+const CURRENCY_TOKENS = ["₱", "₽", "€", "£", "¥", "php", "usd", "eur", "gbp", "aud", "cad", "sgd"];
 
 // Phrases that strongly imply a monetary statement.
 const MONEY_PHRASES = [
@@ -110,6 +97,28 @@ export interface MoneyScan {
 }
 
 /**
+ * Lighter-weight money check for TRUSTED, owner-authored static text (e.g.
+ * concierge.knowledge.ts chunks), not raw model output. Flags only
+ * unambiguous money signals — currency symbols/codes and explicit price
+ * phrases — deliberately WITHOUT the bare-number-range heuristic in
+ * scanForMoney(), which produces false positives on ordinary content like
+ * "30–40 minutes away" or "2:00 PM to 12:00 PM". Model output must still go
+ * through the strict scanForMoney() above; use this only for content whose
+ * source we already control and have reviewed for prices.
+ */
+export function hasObviousMoneySignal(text: string): boolean {
+  if (!text || typeof text !== "string") return false;
+  const lower = text.toLowerCase();
+  for (const tok of CURRENCY_TOKENS) {
+    if (lower.includes(tok)) return true;
+  }
+  for (const ph of MONEY_PHRASES) {
+    if (lower.includes(ph)) return true;
+  }
+  return false;
+}
+
+/**
  * Detect probable monetary output in a guest-facing string.
  * Fails safe: when uncertain, treat as monetary.
  */
@@ -142,8 +151,7 @@ export function scanForMoney(text: string): MoneyScan {
 const RATE_QUESTION_RE =
   /\b(how much|price|prices|rate|rates|cost|costs|charging|fee|fees|discount|discounts|cheapest|cheaper|quote|quotation|per night|per person|refund|deposit|package|packages|how many php|php for|pesos|pay|paying|worth|what is the (?:price|cost|rate|fee|total))\b/i;
 
-const PLATFORM_COMPARE_RE =
-  /\b(booking\.com|agoda|airbnb|expedia|booking com)\b/i;
+const PLATFORM_COMPARE_RE = /\b(booking\.com|agoda|airbnb|expedia|booking com)\b/i;
 
 const BREAKFAST_PRICE_RE =
   /\b(breakfast.*(?:price|cost|much|rate)|price.*breakfast|how much.*breakfast|breakfast.*php|breakfast.*peso)\b/i;
@@ -186,7 +194,8 @@ export function detectIntent(message: string): IntentResult {
     );
 
   // Platform price comparison is also a rate question.
-  const platformQ = PLATFORM_COMPARE_RE.test(text) && /(cheaper|price|cost|rate|vs|versus|than)/i.test(text);
+  const platformQ =
+    PLATFORM_COMPARE_RE.test(text) && /(cheaper|price|cost|rate|vs|versus|than)/i.test(text);
 
   if (rateQ || platformQ) {
     return {
