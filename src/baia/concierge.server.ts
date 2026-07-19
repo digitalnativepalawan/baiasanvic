@@ -106,7 +106,10 @@ export const conciergeChat = createServerFn({ method: "POST" })
       }
     }
 
-    // Resolve model provider (OpenRouter / Ollama) — preserved as-is.
+    // ---------------- Core fallback (OpenRouter / Ollama direct) --------------
+    // Used when Onyx is not configured or unreachable. Preserves the no-price
+    // rule via detectIntent + sanitizeReply, the menu fallback via
+    // buildMenuAnswer, and guest-facing safety wording.
     let effective = cfg;
     if (cfg.provider === "ollama") {
       const model = cfg.ollamaModel?.trim()
@@ -128,38 +131,53 @@ export const conciergeChat = createServerFn({ method: "POST" })
       };
     }
 
-    // Build the knowledge bag from the existing retrieval (non-monetary only).
+    const intent = detectIntent(question);
+
+    // Rate/pricing questions: never call the model — return the approved reply.
+    if (intent.isRateQuestion) {
+      await logConciergeTurn(data.sessionId, "guest", question);
+      await logConciergeTurn(data.sessionId, "agent", APPROVED_RATE_RESPONSE);
+      return {
+        reply: APPROVED_RATE_RESPONSE,
+        intent: intent.intent,
+        approvalRequired: intent.approvalRequired,
+        databaseWriteDeferred: intent.databaseWriteDeferred,
+        sanitized: true,
+        brain: "core",
+      };
+    }
+
     const { chunks } = retrieveRelevant(question, cfg.customKnowledge);
     const knowledgeBlock = chunksToText(chunks);
-    void knowledgeBlock; // kept for prompt parity; core uses sanitized bag
-    const bag = recordsToBag([]);
+    const system = buildSystemPrompt(effective, knowledgeBlock);
 
-    // Provider wrapper (OpenRouter/Ollama) behind the core's interface.
-    const provider = createConciergeModelProvider(effective);
+    let raw: string;
+    try {
+      raw = await runModel(effective, system, history);
+    } catch (err) {
+      console.error("Core concierge model failed:", err);
+      return {
+        reply:
+          "Our concierge is having trouble right now. Please email hello@baiapalawan.com or use the Book Your Stay button and our team will help you directly.",
+        unavailable: true,
+      };
+    }
 
-    // Route through the reusable Resort Agent core.
-    const result = await runResortAgent(
-      {
-        resortId: BAIA_RESORT_ID,
-        channel: "website",
-        sessionId: data.sessionId,
-        messageId: `m_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        message: question,
-        guest: {},
-        knowledge: bag,
-        priorDetails: {},
-      },
-      { model: provider, knowledge: bag, actor: "baia-concierge" },
-    );
+    // Menu fallback: if the model returns a no-knowledge dead-end for a menu
+    // question, answer from the BAIA in-repo menu knowledge (no prices).
+    const replyForMenuCheck = isNoKnowledgeFallback(raw) ? buildMenuAnswer() : raw;
+
+    const guarded = sanitizeReply(replyForMenuCheck, intent.intent);
 
     await logConciergeTurn(data.sessionId, "guest", question);
-    await logConciergeTurn(data.sessionId, "agent", result.reply);
+    await logConciergeTurn(data.sessionId, "agent", guarded.reply);
 
     return {
-      reply: result.reply,
-      intent: result.intent,
-      approvalRequired: result.approvalRequired,
-      databaseWriteDeferred: result.databaseWriteDeferred,
-      sanitized: result.approvalRequired,
+      reply: guarded.reply,
+      intent: guarded.intent,
+      approvalRequired: guarded.approvalRequired,
+      databaseWriteDeferred: guarded.databaseWriteDeferred,
+      sanitized: guarded.sanitized,
+      brain: "core",
     };
   });
