@@ -109,11 +109,36 @@ function policyChunkText(): string {
 function diningChunkText(): string {
   return [
     "FOOD & DINING",
-    "BAIA has an on-site restaurant serving Filipino and Western dishes, with fresh seafood from the day's catch.",
-    "Breakfast is available for guests (continental and cooked options).",
+    "BAIA has an on-site restaurant called Baia Beach.",
+    "Cuisine categories served: Italian, Mediterranean, wood-fired pizza, fresh seafood, Filipino and local dishes, Asian, international, and grill or BBQ.",
+    "Representative dish types: wood-fired pizzas and pasta from the Italian kitchen; grilled seafood and BBQ platters featuring the daily catch; Filipino and local classics such as adobo, sinigang, grilled fish, and rice dishes; Asian plates including noodles, rice bowls, and curries; Mediterranean and international plates such as salads, grilled meats, and vegetable dishes.",
+    "Breakfast is available for guests (continental, full English/Irish, and Asian styles).",
+    "Vegetarian, vegan, and most dietary needs can be accommodated if told in advance. Fresh fruit and coconut water are daily staples.",
     "In-villa or beachfront private dining can be arranged for special occasions — just ask the concierge.",
-    "We accommodate vegetarian, vegan, and most dietary needs if told in advance. Fresh fruit and coconut water are daily staples.",
+    "Menu items and exact dishes are subject to daily availability; the BAIA team confirms current selections. Prices and daily availability are never quoted — the team confirms both directly.",
   ].join("\n");
+}
+
+/**
+ * Guest-facing answer for dining/menu questions. Used when the Onyx brain
+ * cannot answer from its own knowledge (its persona knowledge may be
+ * incomplete) so the concierge never falls back to a "we don't have a menu"
+ * dead end. Built only from the owner-supplied cuisine categories — no prices,
+ * and availability is explicitly flagged as live-check-required.
+ */
+export function buildMenuAnswer(): string {
+  return [
+    "BAIA's on-site restaurant, Baia Beach, serves a mix of cuisines — Italian, Mediterranean, wood-fired pizza, fresh seafood, Filipino and local dishes, Asian, international, and grill or BBQ.",
+    "You'll find wood-fired pizzas and pasta, grilled seafood and BBQ platters from the daily catch, Filipino classics like adobo and sinigang, Asian noodle and rice bowls, and Mediterranean plates and salads. Breakfast runs continental, full English/Irish, and Asian styles, and vegetarian and most dietary needs can be handled with a little notice.",
+    "Exact dishes and today's availability change with the catch and the season, so the BAIA team confirms the current menu when you inquire — and they'll share pricing directly rather than quoting it here.",
+  ].join(" ");
+}
+
+/** True when an Onyx/agent reply is a non-answer that should be bypassed. */
+export function isNoKnowledgeFallback(reply: string): boolean {
+  return /we (don'?t|do not) have (a |the )?menu|provided details|knowledge base|don'?t have (that|any) (information|detail)/i.test(
+    reply,
+  );
 }
 
 function transfersChunkText(): string {

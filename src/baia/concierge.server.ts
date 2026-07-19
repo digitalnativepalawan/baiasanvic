@@ -20,6 +20,7 @@ import type { ConciergeConfig, ConciergeMessage, ConciergeResponse } from "./con
 import { loadConciergeConfig } from "./concierge.config.server";
 import { buildSystemPrompt } from "./concierge.prompt";
 import { retrieveRelevant, chunksToText } from "./concierge.retrieve";
+import { buildMenuAnswer, isNoKnowledgeFallback } from "./concierge.knowledge";
 import { resolveOllamaModel } from "./concierge.discovery";
 import { logConciergeTurn } from "./concierge.log.server";
 import { runResortAgent } from "../resort-agent/core/orchestrator";
@@ -78,8 +79,17 @@ export const conciergeChat = createServerFn({ method: "POST" })
         });
         await logConciergeTurn(data.sessionId, "guest", question);
         await logConciergeTurn(data.sessionId, "agent", onyxRes.reply);
+        // Bypass the Onyx brain's "we don't have a menu" dead-end: when the
+        // persona knowledge is incomplete and Onyx returns a no-knowledge
+        // fallback, answer from the BAIA menu knowledge we ship in-repo. This
+        // keeps Onyx as the primary brain for everything else while guaranteeing
+        // a useful, on-brand, no-price answer for dining questions.
+        const finalReply =
+          onyxRes.intent !== "booking_inquiry" && isNoKnowledgeFallback(onyxRes.reply)
+            ? buildMenuAnswer()
+            : onyxRes.reply;
         return {
-          reply: onyxRes.reply,
+          reply: finalReply,
           intent: onyxRes.intent,
           approvalRequired: onyxRes.approvalRequired,
           onyxSessionId: onyxRes.onyxSessionId,
