@@ -78,7 +78,15 @@ export function buildOnyxSystemPrompt(cfg: ConciergeConfig): string {
 }
 
 /**
- * PATCH the Onyx persona's system_prompt via the Onyx REST API.
+ * Sync the Onyx persona's system_prompt via the Onyx REST API.
+ * The Onyx API requires PUT /admin/persona/{id} with the full persona object,
+ * so we first GET the current persona, update just system_prompt, then PUT it back.
+ * Server-only — never imported by browser code.
+ */
+/**
+ * Sync the Onyx persona's system_prompt via the Onyx REST API.
+ * The Onyx API requires PUT /admin/persona/{id} with the full persona object,
+ * so we first GET the current persona, update just system_prompt, then PUT it back.
  * Server-only — never imported by browser code.
  */
 export async function syncPersonaToOnyx(
@@ -87,26 +95,54 @@ export async function syncPersonaToOnyx(
   personaId: number,
   systemPrompt: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  const url = `${baseUrl.replace(/\/+$/, "")}/persona/${personaId}`;
+  const cleanBase = baseUrl.replace(/\/+$/, "");
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
+  
   try {
-    const res = await fetch(url, {
-      method: "PATCH",
+    // Step 1: GET current persona to preserve all other fields
+    const getUrl = `${cleanBase}/admin/persona/${personaId}`;
+    const getRes = await fetch(getUrl, {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+      },
+      signal: controller.signal,
+    });
+    
+    if (!getRes.ok) {
+      const body = await getRes.text().catch(() => "");
+      return {
+        ok: false,
+        error: `GET persona failed: HTTP ${getRes.status}${body ? ` — ${body.slice(0, 200)}` : ""}`,
+      };
+    }
+    
+    const persona = await getRes.json();
+    
+    // Step 2: Update just the system_prompt field
+    persona.system_prompt = systemPrompt;
+    
+    // Step 3: PUT the full updated persona back
+    const putUrl = `${cleanBase}/admin/persona/${personaId}`;
+    const putRes = await fetch(putUrl, {
+      method: "PUT",
       headers: {
         "content-type": "application/json",
         authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ system_prompt: systemPrompt }),
+      body: JSON.stringify(persona),
       signal: controller.signal,
     });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
+    
+    if (!putRes.ok) {
+      const body = await putRes.text().catch(() => "");
       return {
         ok: false,
-        error: `HTTP ${res.status}${body ? ` — ${body.slice(0, 300)}` : ""}`,
+        error: `PUT persona failed: HTTP ${putRes.status}${body ? ` — ${body.slice(0, 200)}` : ""}`,
       };
     }
+    
     return { ok: true };
   } catch (err) {
     return {
