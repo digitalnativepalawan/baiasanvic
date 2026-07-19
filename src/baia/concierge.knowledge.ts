@@ -15,15 +15,35 @@ export interface KnowledgeChunk {
   text: string;
 }
 
+/**
+ * Strip any monetary tokens from a knowledge string before it reaches the
+ * guest-facing prompt. Defense in depth: even if a future knowledge source or
+ * owner custom-knowledge field contains a price, it never reaches the model.
+ * Currency symbols/codes, "per night", amounts, and ranges are removed.
+ */
+const MONETARY_RE =
+  /(₱|\$|€|£|¥|\bphp\b|\busd\b|\beur\b|\bgbp\b|\bpesos?\b)\s?-?\d[\d,]*(?:\.\d+)?|\b\d[\d,]*(?:\.\d+)?\s?(?:php|usd|eur|gbp|pesos?)|per\s?night|per\s?person|nightly\s+rate|price\s*:?|rate\s*:?\s*₱?\d[\d,]*|starting\s+from|starts\s+at\s*₱?\d[\d,]*/gi;
+
+export function stripMonetary(text: string): string {
+  if (!text) return text;
+  const cleaned = text
+    .replace(MONETARY_RE, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  return cleaned;
+}
+
 function roomChunkText(): string {
   const lines = ROOMS.map((r) => {
+    // Inventory count is property inventory ONLY — never current availability.
+    const inventory = r.availabilityCount ?? 0;
     return [
       `ROOM: ${r.name}`,
       `Sleeps: ${r.capacity}`,
       `Size: ${r.size}`,
       `Description: ${r.description}`,
       `Amenities: ${r.amenities.join(", ")}`,
-      `Availability: ${r.availabilityCount} unit(s) of this type`,
+      `Property inventory: ${inventory} unit(s) of this room type. Current availability requires confirmation.`,
     ].join("\n");
   });
   return lines.join("\n\n");

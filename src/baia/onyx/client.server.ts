@@ -205,7 +205,7 @@ export function createOnyxResortAgentClient() {
       }
 
       const data = (await sendRes.json()) as OnyxChatFullResponse;
-      if (data.error_msg) return errResult(data.error_msg, sessionId);
+      if (data.error_msg) { return errResult(data.error_msg, sessionId); }
 
       const actions = (data.tool_calls ?? []).map(mapToolActivity);
       const approvalRequired = actions.some((a) => a.name === "request_approval");

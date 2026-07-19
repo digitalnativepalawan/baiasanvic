@@ -4,7 +4,7 @@
  * each knowledge chunk with keyword overlap and inject only the best matches —
  * not the entire knowledge base on every turn.
  */
-import { buildStaticChunks, KnowledgeChunk } from "./concierge.knowledge";
+import { buildStaticChunks, KnowledgeChunk, stripMonetary } from "./concierge.knowledge";
 
 const STATIC_CHUNKS = buildStaticChunks();
 
@@ -70,7 +70,8 @@ export function retrieveRelevant(question: string, customKnowledge = ""): {
     chunks.push({
       id: "custom",
       label: "Owner knowledge",
-      text: customKnowledge.trim(),
+      // Sanitize owner custom knowledge: never pass monetary values to the model.
+      text: stripMonetary(customKnowledge.trim()),
     });
   }
 

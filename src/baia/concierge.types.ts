@@ -35,6 +35,16 @@ export interface ConciergeResponse {
   reply: string;
   // True when no provider is configured / disabled — UI shows a friendly note.
   unavailable?: boolean;
+  // --- Guarded metadata (ignored by the widget; safe to omit) ---
+  intent?: string;
+  approvalRequired?: boolean;
+  databaseWriteDeferred?: boolean;
+  sanitized?: boolean;
+  // --- Hidden Onyx metadata (not shown to the guest) ---
+  onyxSessionId?: string;
+  runId?: string;
+  actions?: Array<{ name: string; status: string; evidenceJson?: string }>;
+  brain?: "onyx" | "core";
 }
 
 // What the admin panel fetches to populate the model dropdowns (client-side).

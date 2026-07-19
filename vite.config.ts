@@ -12,4 +12,9 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Allow Onyx's CustomTool (running inside Docker) to call BAIA's dev server
+  // via the host.docker.internal gateway. Local proof only.
+  server: {
+    allowedHosts: true,
+  },
 });

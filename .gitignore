@@ -34,3 +34,7 @@ dist-ssr
 # Secrets: never commit real credentials
 .env
 .env.*
+
+# Local Onyx/BAIA secrets (never commit)
+.onyx_key.tmp
+ONYX_OPERATIONS_API_SECRET.txt
