@@ -51,24 +51,31 @@ async function withRetry<T>(fn: () => Promise<T>, tries = 3): Promise<T> {
   throw lastErr;
 }
 
-async function callOpenRouter(
+// Free OpenRouter models we automatically retry with when the configured
+// model returns a payment / quota / rate-limit error. These are known-good
+// free tiers on OpenRouter; kept short so an unhappy provider never hangs
+// the guest turn.
+const FREE_FALLBACK_MODELS = [
+  "deepseek/deepseek-chat-v3.1:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "google/gemini-2.0-flash-exp:free",
+];
+
+async function openRouterOnce(
   cfg: ConciergeConfig,
   messages: ChatMessage[],
+  model: string,
 ): Promise<string> {
-  if (!cfg.openrouterApiKey) {
-    throw new Error("OpenRouter API key not configured");
-  }
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${cfg.openrouterApiKey}`,
-      // OpenRouter: helps route + enables caching metadata.
-      "HTTP-Referer": "https://baia-san-vicente-palawan-island.vercel.app",
+      "HTTP-Referer": "https://baiasanvic.lovable.app",
       "X-Title": "BAIA Concierge",
     },
     body: JSON.stringify({
-      model: cfg.openrouterModel || "openai/gpt-4o-mini",
+      model,
       messages,
       temperature: 0.4,
       max_tokens: 600,
@@ -84,6 +91,36 @@ async function callOpenRouter(
   const text = json.choices?.[0]?.message?.content?.trim();
   if (!text) throw new Error("OpenRouter returned an empty reply");
   return text;
+}
+
+async function callOpenRouter(
+  cfg: ConciergeConfig,
+  messages: ChatMessage[],
+): Promise<string> {
+  if (!cfg.openrouterApiKey) {
+    throw new Error("OpenRouter API key not configured");
+  }
+  const primary = cfg.openrouterModel || "openai/gpt-4o-mini";
+  const tried: string[] = [];
+  const chain = [primary, ...FREE_FALLBACK_MODELS.filter((m) => m !== primary)];
+  let lastErr: unknown;
+  for (const model of chain) {
+    tried.push(model);
+    try {
+      return await openRouterOnce(cfg, messages, model);
+    } catch (err) {
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      // Retry with a free model on payment/quota/rate-limit/server errors.
+      // Anything else (auth 401, bad request 400) — abort chain.
+      if (!/OpenRouter (402|403|404|408|409|429|5\d\d)/.test(msg) && !/empty reply/i.test(msg)) {
+        throw err;
+      }
+    }
+  }
+  throw lastErr instanceof Error
+    ? lastErr
+    : new Error(`OpenRouter exhausted fallback chain: ${tried.join(", ")}`);
 }
 
 async function callOllama(

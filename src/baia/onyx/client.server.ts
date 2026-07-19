@@ -97,7 +97,9 @@ function loadConfig(): OnyxClientConfig {
     baseUrl: baseUrl.replace(/\/+$/, ""),
     apiKey,
     personaId: personaId ? Number(personaId) : 0,
-    timeoutMs: Number(process.env.ONYX_TIMEOUT_MS ?? 30000),
+    // Short timeout so an unreachable Onyx tunnel does not hang the guest turn;
+    // concierge.server.ts falls back to the OpenRouter core immediately.
+    timeoutMs: Number(process.env.ONYX_TIMEOUT_MS ?? 6000),
   };
 }
 

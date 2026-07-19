@@ -80,7 +80,8 @@ function bookingChunkText(): string {
 function aboutChunkText(): string {
   return [
     "ABOUT BAIA",
-    "BAIA Beachfront Boutique Lodge is a barefoot-luxury retreat on Penanindigan Beach, San Vicente, Palawan — a slower pace of life surrounded by raw natural beauty, turquoise tidal pools, and warm Filipino island hospitality.",
+    "BAIA Beachfront Boutique Lodge is a barefoot-luxury retreat on Penanindigan Beach (also spelled Panindigan), in the municipality of San Vicente, northern Palawan, Philippines.",
+    "LOCATION CLARITY: BAIA is in the Penanindigan/Panindigan area of San Vicente — NOT in Port Barton. Port Barton is a separate, well-known town roughly 30–40 minutes away by boat (or about an hour by road). When guests ask 'where is BAIA?', always say 'Penanindigan Beach, San Vicente, Palawan' and note that it is not Port Barton.",
     "Philosophy: 'True luxury is feeling completely at home in nature.' Simplicity becomes riches; raw tropical beauty is framed by custom design and hospitality.",
     "The resort offers private, single-level villas in a tropical-minimalist style — calm, timber, and open to the breeze. Every room includes air conditioning, a flat-screen TV, a private bathroom, and hot water.",
   ].join("\n");
