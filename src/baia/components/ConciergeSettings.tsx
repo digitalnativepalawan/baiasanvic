@@ -18,13 +18,12 @@ import { useState, useEffect, useCallback } from "react";
 import { Save, Check, Loader2, AlertTriangle, Info } from "lucide-react";
 import {
   getConciergeConfig,
+  getConciergeStatus,
   saveConciergeSettings,
   getOpenRouterModels,
+  type ConciergeStatus,
 } from "../concierge.admin.functions";
-import {
-  listOllamaModelsBrowser,
-  type OllamaBrowserResult,
-} from "../concierge.discovery";
+import { listOllamaModelsBrowser, type OllamaBrowserResult } from "../concierge.discovery";
 import type { ConciergeConfig } from "../concierge.types";
 
 export default function ConciergeSettings() {
@@ -42,6 +41,15 @@ export default function ConciergeSettings() {
     onyxError?: string;
   } | null>(null);
   const [showKey, setShowKey] = useState(false);
+  const [liveStatus, setLiveStatus] = useState<ConciergeStatus | null>(null);
+
+  const refreshLiveStatus = useCallback(async () => {
+    try {
+      setLiveStatus(await getConciergeStatus());
+    } catch (e) {
+      console.error("Failed to load concierge live status", e);
+    }
+  }, []);
 
   const refreshOpenRouter = useCallback(async () => {
     try {
@@ -70,13 +78,14 @@ export default function ConciergeSettings() {
         } else {
           void refreshOllama(c.ollamaBaseUrl || "http://localhost:11434");
         }
+        void refreshLiveStatus();
       } catch (e) {
         console.error("Failed to load concierge settings", e);
       } finally {
         setLoading(false);
       }
     })();
-  }, [refreshOpenRouter, refreshOllama]);
+  }, [refreshOpenRouter, refreshOllama, refreshLiveStatus]);
 
   const refreshCurrent = async () => {
     if (!cfg) return;
@@ -117,6 +126,7 @@ export default function ConciergeSettings() {
       setDirty(false);
       setSaved(true);
       setSyncResult({ onyxSynced: res.onyxSynced, onyxError: res.onyxError });
+      void refreshLiveStatus();
     } catch (e) {
       console.error(e);
       setSyncResult({ onyxSynced: false, onyxError: e instanceof Error ? e.message : String(e) });
@@ -145,9 +155,9 @@ export default function ConciergeSettings() {
             AI Concierge
           </h3>
           <p className="text-xs text-luxury-400 font-sans font-light">
-            A chat assistant for your guests. It answers from your site's knowledge, never
-            quotes prices, and points guests to Book Your Stay. Choose OpenRouter (your own
-            key) or a local Ollama model.
+            A chat assistant for your guests. It answers from your site's knowledge, never quotes
+            prices, and points guests to Book Your Stay. Choose OpenRouter (your own key) or a local
+            Ollama model.
           </p>
         </div>
         <button
@@ -181,6 +191,53 @@ export default function ConciergeSettings() {
             <span className="uppercase tracking-wider">{cfg.enabled ? "Enabled" : "Disabled"}</span>
           </label>
         </div>
+
+        {/* Live status — what is ACTUALLY answering guests right now, independent
+            of the transient post-Save persona-sync message below. A failed
+            Onyx persona sync never implies the concierge itself is down. */}
+        {liveStatus && (
+          <div className="space-y-1.5">
+            <p className="text-[9px] tracking-widest text-luxury-500 font-sans uppercase">
+              Live status
+            </p>
+            {liveStatus.activeProvider === "onyx" && (
+              <div className="flex items-center gap-2 text-[11px] text-emerald-400 font-sans bg-emerald-500/5 border border-emerald-500/20 p-3 rounded">
+                <Check size={14} />
+                <span>Concierge active through Onyx.</span>
+              </div>
+            )}
+            {liveStatus.activeProvider === "openrouter" && (
+              <div className="flex items-center gap-2 text-[11px] text-emerald-400 font-sans bg-emerald-500/5 border border-emerald-500/20 p-3 rounded">
+                <Check size={14} />
+                <span>Concierge active through OpenRouter.</span>
+              </div>
+            )}
+            {liveStatus.activeProvider === "ollama" && (
+              <div className="flex items-center gap-2 text-[11px] text-emerald-400 font-sans bg-emerald-500/5 border border-emerald-500/20 p-3 rounded">
+                <Check size={14} />
+                <span>Concierge active through local Ollama.</span>
+              </div>
+            )}
+            {liveStatus.activeProvider === "unavailable" && (
+              <div className="flex items-center gap-2 text-[11px] text-amber-400 font-sans bg-amber-500/5 border border-amber-500/20 p-3 rounded">
+                <AlertTriangle size={14} />
+                <span>
+                  Concierge is not currently answering guests — add an OpenRouter key or enable
+                  Ollama.
+                </span>
+              </div>
+            )}
+            {!liveStatus.onyxConfigured && (
+              <div className="flex items-center gap-2 text-[11px] text-luxury-400 font-sans bg-luxury-900/60 border border-luxury-800 p-3 rounded">
+                <Info size={14} className="shrink-0 text-luxury-400" />
+                <span>
+                  Onyx not connected. This is expected — OpenRouter/Ollama fallback is serving
+                  guests.
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         <div>
           <p className="text-[10px] tracking-widest text-gold-300 font-sans uppercase font-bold mb-2">
@@ -246,9 +303,7 @@ export default function ConciergeSettings() {
                   {cfg.openrouterModel && !openrouterModels.includes(cfg.openrouterModel) && (
                     <option value={cfg.openrouterModel}>{cfg.openrouterModel} (current)</option>
                   )}
-                  {openrouterModels.length === 0 && (
-                    <option value="">No models fetched</option>
-                  )}
+                  {openrouterModels.length === 0 && <option value="">No models fetched</option>}
                   {openrouterModels.map((m) => (
                     <option key={m} value={m}>
                       {m}
@@ -270,8 +325,8 @@ export default function ConciergeSettings() {
                 </p>
               ) : (
                 <p className="text-[10px] text-luxury-500 font-sans">
-                  {openrouterModels.length} models available. Free ones are flagged ·FREE and
-                  sorted to the top.
+                  {openrouterModels.length} models available. Free ones are flagged ·FREE and sorted
+                  to the top.
                 </p>
               )}
             </div>
@@ -292,8 +347,8 @@ export default function ConciergeSettings() {
                 className="bg-luxury-900 border border-luxury-800 rounded-sm px-3 py-2 text-xs text-luxury-100 focus:outline-none focus:border-gold-300 font-mono"
               />
               <p className="text-[10px] text-luxury-500 font-sans">
-                The admin panel fetches models directly from your browser — the server can't
-                see your localhost.
+                The admin panel fetches models directly from your browser — the server can't see
+                your localhost.
               </p>
             </div>
             <div className="flex flex-col space-y-1.5">
@@ -371,8 +426,8 @@ export default function ConciergeSettings() {
               )}
 
               <p className="text-[10px] text-luxury-500 font-sans">
-                Note: Ollama runs on a device with the model installed. For the live hosted
-                site, OpenRouter is the always-works choice.
+                Note: Ollama runs on a device with the model installed. For the live hosted site,
+                OpenRouter is the always-works choice.
               </p>
             </div>
           </div>
@@ -399,13 +454,15 @@ export default function ConciergeSettings() {
             {syncResult.onyxSynced ? (
               <>
                 <Check size={14} />
-                <span>Settings saved and synced to live Onyx persona.</span>
+                <span>Persona sync: settings saved and synced to live Onyx persona.</span>
               </>
             ) : (
               <>
                 <AlertTriangle size={14} />
                 <span>
-                  Settings saved to Supabase, but Onyx sync failed: {syncResult.onyxError ?? "unknown error"}
+                  Persona sync: settings saved to Supabase, but the Onyx persona sync failed (
+                  {syncResult.onyxError ?? "unknown error"}). This does not mean the concierge is
+                  down for guests — see Live status above.
                 </span>
               </>
             )}
@@ -441,8 +498,8 @@ export default function ConciergeSettings() {
             className="bg-luxury-900 border border-luxury-800 rounded-sm px-3 py-2 text-xs text-luxury-100 focus:outline-none focus:border-gold-300 font-sans leading-relaxed"
           />
           <p className="text-[10px] text-luxury-500 font-sans">
-            Rooms, experiences, and the area are pulled automatically from your site content.
-            The agent never sees prices — it always directs guests to Book Your Stay.
+            Rooms, experiences, and the area are pulled automatically from your site content. The
+            agent never sees prices — it always directs guests to Book Your Stay.
           </p>
         </div>
       </div>

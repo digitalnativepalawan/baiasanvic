@@ -18,6 +18,48 @@ export const getConciergeConfig = createServerFn({ method: "GET" }).handler(
   },
 );
 
+export interface ConciergeStatus {
+  /** ONYX_BASE_URL + ONYX_API_KEY are both set in this environment. */
+  onyxConfigured: boolean;
+  /** Which brain is actually serving guest turns right now. */
+  activeProvider: "onyx" | "openrouter" | "ollama" | "unavailable";
+  /** cfg.provider === "openrouter" and an API key is saved. */
+  openrouterReady: boolean;
+  /** cfg.provider === "ollama" and a model name is saved. */
+  ollamaConfigured: boolean;
+}
+
+/**
+ * Live "who is actually answering guests" status for the admin panel.
+ *
+ * Mirrors the exact precedence used in concierge.server.ts's conciergeChat:
+ * Onyx is preferred whenever ONYX_BASE_URL + ONYX_API_KEY are both set
+ * (independent of cfg.enabled); otherwise the core (OpenRouter/Ollama) is
+ * used if the concierge is enabled and the provider is ready; otherwise the
+ * concierge is not currently answering guests at all.
+ *
+ * Never returns any secret value — only booleans/enums.
+ */
+export const getConciergeStatus = createServerFn({ method: "GET" }).handler(
+  async (): Promise<ConciergeStatus> => {
+    const cfg = await loadConciergeConfig();
+    const onyxConfigured = !!(process.env.ONYX_BASE_URL && process.env.ONYX_API_KEY);
+    const openrouterReady = cfg.provider === "openrouter" && !!cfg.openrouterApiKey;
+    const ollamaConfigured = cfg.provider === "ollama" && !!cfg.ollamaModel;
+
+    let activeProvider: ConciergeStatus["activeProvider"] = "unavailable";
+    if (onyxConfigured) {
+      activeProvider = "onyx";
+    } else if (cfg.enabled && openrouterReady) {
+      activeProvider = "openrouter";
+    } else if (cfg.enabled && ollamaConfigured) {
+      activeProvider = "ollama";
+    }
+
+    return { onyxConfigured, activeProvider, openrouterReady, ollamaConfigured };
+  },
+);
+
 export const saveConciergeSettings = createServerFn({ method: "POST" })
   .inputValidator((data: { config: ConciergeConfig }) => data)
   .handler(async ({ data }): Promise<{ ok: boolean; onyxSynced: boolean; onyxError?: string }> => {
@@ -32,16 +74,10 @@ export const saveConciergeSettings = createServerFn({ method: "POST" })
     const onyxPersonaId = Number(process.env.ONYX_RESORT_PERSONA_ID ?? "1");
 
     if (onyxBaseUrl && onyxApiKey) {
-      const { buildOnyxSystemPrompt, syncPersonaToOnyx } = await import(
-        "./onyx/persona-sync.server"
-      );
+      const { buildOnyxSystemPrompt, syncPersonaToOnyx } =
+        await import("./onyx/persona-sync.server");
       const systemPrompt = buildOnyxSystemPrompt(data.config);
-      const result = await syncPersonaToOnyx(
-        onyxBaseUrl,
-        onyxApiKey,
-        onyxPersonaId,
-        systemPrompt,
-      );
+      const result = await syncPersonaToOnyx(onyxBaseUrl, onyxApiKey, onyxPersonaId, systemPrompt);
       if (!result.ok) {
         return { ok: true, onyxSynced: false, onyxError: result.error };
       }
