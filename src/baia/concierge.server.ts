@@ -23,9 +23,8 @@ import { retrieveRelevant, chunksToText } from "./concierge.retrieve";
 import { buildMenuAnswer, isNoKnowledgeFallback } from "./concierge.knowledge";
 import { resolveOllamaModel } from "./concierge.discovery";
 import { logConciergeTurn } from "./concierge.log.server";
-import { runResortAgent } from "../resort-agent/core/orchestrator";
-import { createConciergeModelProvider } from "../resort-agent/adapters/concierge-model";
-import { recordsToBag } from "../resort-agent/knowledge/knowledge";
+import { runModel } from "./concierge.llm";
+import { detectIntent, sanitizeReply, APPROVED_RATE_RESPONSE } from "./concierge.guardrails";
 
 const MAX_HISTORY_TURNS = 10;
 const BAIA_RESORT_ID = "baia-san-vicente";
