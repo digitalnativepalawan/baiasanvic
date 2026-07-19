@@ -25,6 +25,8 @@ import { resolveOllamaModel } from "./concierge.discovery";
 import { logConciergeTurn } from "./concierge.log.server";
 import { runModel } from "./concierge.llm";
 import { detectIntent, sanitizeReply, APPROVED_RATE_RESPONSE } from "./concierge.guardrails";
+import { extractBookingInquiry, buildLeadConfirmationReply } from "./concierge.leads";
+import { handleCreateGuestLead, deriveGuestLeadIdempotencyKey } from "./ops/guest-lead.server";
 
 const MAX_HISTORY_TURNS = 10;
 const BAIA_RESORT_ID = "baia-san-vicente";
@@ -36,9 +38,7 @@ function trimHistory(messages: ConciergeMessage[]): ConciergeMessage[] {
 }
 
 export const conciergeChat = createServerFn({ method: "POST" })
-  .inputValidator(
-    (data: { messages: ConciergeMessage[]; sessionId: string }) => data,
-  )
+  .inputValidator((data: { messages: ConciergeMessage[]; sessionId: string }) => data)
   .handler(async ({ data }): Promise<ConciergeResponse> => {
     const cfg: ConciergeConfig = await loadConciergeConfig();
     // Onyx brain is enabled whenever its environment is configured, independent
@@ -135,6 +135,54 @@ export const conciergeChat = createServerFn({ method: "POST" })
     }
 
     const intent = detectIntent(question);
+
+    // Core-path guest-lead capture: works without Onyx. When the guest has
+    // clearly given contact info, at least one date, and explicit consent,
+    // create (or idempotently re-confirm) a lead deterministically — no LLM
+    // call, so nothing here can invent or confirm a booking/availability.
+    const bookingInquiry = extractBookingInquiry(question);
+    if (bookingInquiry) {
+      try {
+        const idemKey = deriveGuestLeadIdempotencyKey(data.sessionId, question);
+        const evidence = await handleCreateGuestLead({
+          resort_id: BAIA_RESORT_ID,
+          idempotency_key: idemKey,
+          channel: "website",
+          guest: {
+            name: bookingInquiry.name ?? undefined,
+            email: bookingInquiry.email,
+            phone: bookingInquiry.phone ?? undefined,
+          },
+          stay: {
+            check_in: bookingInquiry.checkIn ?? undefined,
+            check_out: bookingInquiry.checkOut ?? undefined,
+            adults: bookingInquiry.adults ?? undefined,
+          },
+        });
+        const reply = buildLeadConfirmationReply(!evidence.created);
+        await logConciergeTurn(data.sessionId, "guest", question);
+        await logConciergeTurn(data.sessionId, "agent", reply);
+        return {
+          reply,
+          intent: "booking_inquiry",
+          approvalRequired: false,
+          databaseWriteDeferred: false,
+          sanitized: false,
+          brain: "core",
+          actions: [
+            {
+              name: "create_guest_lead",
+              status: "success",
+              evidenceJson: JSON.stringify(evidence),
+            },
+          ],
+        };
+      } catch (err) {
+        // Never let lead-capture failure break the guest's turn — fall
+        // through to the normal model-answered reply below.
+        console.error("Core-path guest lead capture failed:", err);
+      }
+    }
 
     // Rate/pricing questions: never call the model — return the approved reply.
     if (intent.isRateQuestion) {

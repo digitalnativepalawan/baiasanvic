@@ -26,6 +26,24 @@
  * inventing a fake success.
  */
 
+// ---- Idempotency key (shared by every caller: Onyx tool, core/OpenRouter path) --
+
+import { createHash } from "node:crypto";
+
+/**
+ * Deterministic idempotency key for a guest inquiry, shared by every caller
+ * that can create a lead (Onyx's create_guest_lead tool AND the core/
+ * OpenRouter path in concierge.server.ts). Same conversation + same
+ * normalized inquiry text => same key => the same confirmed inquiry never
+ * creates a second lead, regardless of which brain answered the turn.
+ */
+export function deriveGuestLeadIdempotencyKey(conversationId: string, message: string): string {
+  const normalized = message.toLowerCase().replace(/\s+/g, " ").trim();
+  const basis = `${conversationId}|${normalized}`;
+  const hash = createHash("sha256").update(basis).digest("hex").slice(0, 24);
+  return `baia-${hash}`;
+}
+
 // ---- Types ------------------------------------------------------------------
 
 export interface GuestLeadInput {
@@ -79,15 +97,31 @@ export interface GuestLeadEvidence {
 
 // ---- Config -----------------------------------------------------------------
 
-const ALLOWED_RESORT_IDS = new Set<string>([
-  "baia-san-vicente",
-]);
+const ALLOWED_RESORT_IDS = new Set<string>(["baia-san-vicente"]);
 
 // Fields that must NEVER appear in a lead payload (absolute pricing rule).
 const FORBIDDEN_MONETARY_KEYS = [
-  "price", "prices", "rate", "rates", "quote", "quoted", "amount", "total",
-  "cost", "fee", "deposit", "discount", "currency", "php", "usd", "peso",
-  "pesos", "subtotal", "nightly", "per_night", "price_per_night",
+  "price",
+  "prices",
+  "rate",
+  "rates",
+  "quote",
+  "quoted",
+  "amount",
+  "total",
+  "cost",
+  "fee",
+  "deposit",
+  "discount",
+  "currency",
+  "php",
+  "usd",
+  "peso",
+  "pesos",
+  "subtotal",
+  "nightly",
+  "per_night",
+  "price_per_night",
 ];
 
 // ---- Auth -------------------------------------------------------------------
@@ -209,7 +243,12 @@ export async function handleCreateGuestLead(input: GuestLeadInput): Promise<Gues
   return createGuestLeadTest(input);
 }
 
-function toEvidence(row: StoredLead, created: boolean, persistence: "supabase" | "test-adapter", verifiedRow: StoredLead | null): GuestLeadEvidence {
+function toEvidence(
+  row: StoredLead,
+  created: boolean,
+  persistence: "supabase" | "test-adapter",
+  verifiedRow: StoredLead | null,
+): GuestLeadEvidence {
   return {
     ok: true,
     action: "create_guest_lead",
@@ -273,11 +312,9 @@ function createGuestLeadTest(input: GuestLeadInput): GuestLeadEvidence {
 
 async function createGuestLeadSupabase(input: GuestLeadInput): Promise<GuestLeadEvidence> {
   const { createClient } = await import("@supabase/supabase-js");
-  const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false, autoRefreshToken: false } },
-  );
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 
   // Idempotency: look up existing by (resort_id, idempotency_key).
   const { data: existing, error: selErr } = await supabase
@@ -294,7 +331,12 @@ async function createGuestLeadSupabase(input: GuestLeadInput): Promise<GuestLead
       .select("*")
       .eq("id", existing.id)
       .maybeSingle();
-    return toEvidence(rowFromSupabase(v, input), false, "supabase", v ? rowFromSupabase(v, input) : null);
+    return toEvidence(
+      rowFromSupabase(v, input),
+      false,
+      "supabase",
+      v ? rowFromSupabase(v, input) : null,
+    );
   }
 
   const insertRow = {

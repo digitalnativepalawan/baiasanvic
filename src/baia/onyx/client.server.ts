@@ -103,11 +103,7 @@ function loadConfig(): OnyxClientConfig {
   };
 }
 
-async function onyxFetch(
-  cfg: OnyxClientConfig,
-  path: string,
-  body: unknown,
-): Promise<Response> {
+async function onyxFetch(cfg: OnyxClientConfig, path: string, body: unknown): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), cfg.timeoutMs);
   try {
@@ -146,10 +142,17 @@ function mapToolActivity(tc: OnyxToolCall): OnyxToolActivity {
   const dig = (val: unknown, depth = 0): Record<string, unknown> | null => {
     if (!val || depth > 6) return null;
     if (typeof val === "string") {
-      try { return dig(JSON.parse(val), depth + 1); } catch { return null; }
+      try {
+        return dig(JSON.parse(val), depth + 1);
+      } catch {
+        return null;
+      }
     }
     if (Array.isArray(val)) {
-      for (const v of val) { const r = dig(v, depth + 1); if (r) return r; }
+      for (const v of val) {
+        const r = dig(v, depth + 1);
+        if (r) return r;
+      }
       return null;
     }
     if (typeof val === "object") {
@@ -169,6 +172,38 @@ function mapToolActivity(tc: OnyxToolCall): OnyxToolActivity {
 
   const evidence = result ?? (tc.tool_result != null ? { value: tc.tool_result } : null);
   return { name: tc.tool_name ?? "unknown", status, evidence };
+}
+
+/**
+ * Honest reachability check for the admin "Live status" panel.
+ *
+ * Does the exact same first call a real guest turn depends on
+ * (POST /chat/create-chat-session) with a short timeout, so "Onyx" is only
+ * reported as the active provider when it would ACTUALLY answer a guest —
+ * not just when ONYX_BASE_URL/ONYX_API_KEY happen to be set. A Cloudflare
+ * edge error (e.g. a stale quick-tunnel hostname returning 403) counts as
+ * unreachable, same as a network failure, because guests would see the same
+ * OpenRouter fallback either way.
+ */
+export async function probeOnyxReachable(): Promise<boolean> {
+  let cfg: OnyxClientConfig;
+  try {
+    cfg = loadConfig();
+  } catch {
+    return false;
+  }
+  try {
+    const res = await onyxFetch(
+      { ...cfg, timeoutMs: Math.min(cfg.timeoutMs, 4000) },
+      "/chat/create-chat-session",
+      { persona_id: cfg.personaId },
+    );
+    if (!res.ok) return false;
+    const body = (await res.json().catch(() => null)) as { chat_session_id?: string } | null;
+    return !!body?.chat_session_id;
+  } catch {
+    return false;
+  }
 }
 
 export function createOnyxResortAgentClient() {
@@ -207,7 +242,9 @@ export function createOnyxResortAgentClient() {
       }
 
       const data = (await sendRes.json()) as OnyxChatFullResponse;
-      if (data.error_msg) { return errResult(data.error_msg, sessionId); }
+      if (data.error_msg) {
+        return errResult(data.error_msg, sessionId);
+      }
 
       const actions = (data.tool_calls ?? []).map(mapToolActivity);
       const approvalRequired = actions.some((a) => a.name === "request_approval");

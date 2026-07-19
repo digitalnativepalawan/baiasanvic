@@ -21,6 +21,11 @@ export const getConciergeConfig = createServerFn({ method: "GET" }).handler(
 export interface ConciergeStatus {
   /** ONYX_BASE_URL + ONYX_API_KEY are both set in this environment. */
   onyxConfigured: boolean;
+  /**
+   * A live reachability probe to Onyx succeeded just now (same call shape a
+   * real guest turn depends on). Only meaningful when onyxConfigured is true.
+   */
+  onyxReachable: boolean;
   /** Which brain is actually serving guest turns right now. */
   activeProvider: "onyx" | "openrouter" | "ollama" | "unavailable";
   /** cfg.provider === "openrouter" and an API key is saved. */
@@ -33,8 +38,10 @@ export interface ConciergeStatus {
  * Live "who is actually answering guests" status for the admin panel.
  *
  * Mirrors the exact precedence used in concierge.server.ts's conciergeChat:
- * Onyx is preferred whenever ONYX_BASE_URL + ONYX_API_KEY are both set
- * (independent of cfg.enabled); otherwise the core (OpenRouter/Ollama) is
+ * Onyx is preferred only when it's configured AND a live reachability probe
+ * to it succeeds right now (not just when the env vars happen to be set —
+ * a stale Cloudflare tunnel returning a 403 is treated as unreachable, same
+ * as guests would experience it). Otherwise the core (OpenRouter/Ollama) is
  * used if the concierge is enabled and the provider is ready; otherwise the
  * concierge is not currently answering guests at all.
  *
@@ -47,8 +54,14 @@ export const getConciergeStatus = createServerFn({ method: "GET" }).handler(
     const openrouterReady = cfg.provider === "openrouter" && !!cfg.openrouterApiKey;
     const ollamaConfigured = cfg.provider === "ollama" && !!cfg.ollamaModel;
 
-    let activeProvider: ConciergeStatus["activeProvider"] = "unavailable";
+    let onyxReachable = false;
     if (onyxConfigured) {
+      const { probeOnyxReachable } = await import("./onyx/client.server");
+      onyxReachable = await probeOnyxReachable();
+    }
+
+    let activeProvider: ConciergeStatus["activeProvider"] = "unavailable";
+    if (onyxConfigured && onyxReachable) {
       activeProvider = "onyx";
     } else if (cfg.enabled && openrouterReady) {
       activeProvider = "openrouter";
@@ -56,7 +69,7 @@ export const getConciergeStatus = createServerFn({ method: "GET" }).handler(
       activeProvider = "ollama";
     }
 
-    return { onyxConfigured, activeProvider, openrouterReady, ollamaConfigured };
+    return { onyxConfigured, onyxReachable, activeProvider, openrouterReady, ollamaConfigured };
   },
 );
 
