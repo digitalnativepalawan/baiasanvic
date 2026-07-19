@@ -37,6 +37,10 @@ export default function ConciergeSettings() {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [syncResult, setSyncResult] = useState<{
+    onyxSynced: boolean;
+    onyxError?: string;
+  } | null>(null);
   const [showKey, setShowKey] = useState(false);
 
   const refreshOpenRouter = useCallback(async () => {
@@ -94,6 +98,7 @@ export default function ConciergeSettings() {
     setCfg(next);
     setDirty(true);
     setSaved(false);
+    setSyncResult(null);
     // If provider just switched, trigger the right discovery.
     if (patch.provider && patch.provider !== cfg.provider) {
       if (patch.provider === "openrouter") {
@@ -108,11 +113,13 @@ export default function ConciergeSettings() {
     if (!cfg) return;
     setSaving(true);
     try {
-      await saveConciergeSettings({ data: { config: cfg } });
+      const res = await saveConciergeSettings({ data: { config: cfg } });
       setDirty(false);
       setSaved(true);
+      setSyncResult({ onyxSynced: res.onyxSynced, onyxError: res.onyxError });
     } catch (e) {
       console.error(e);
+      setSyncResult({ onyxSynced: false, onyxError: e instanceof Error ? e.message : String(e) });
     } finally {
       setSaving(false);
     }
@@ -381,9 +388,27 @@ export default function ConciergeSettings() {
             </span>
           </div>
         )}
-        {saved && (
-          <div className="flex items-center gap-2 text-[11px] text-emerald-400 font-sans bg-emerald-500/5 border border-emerald-500/20 p-3 rounded">
-            <Check size={14} /> Settings saved.
+        {saved && syncResult && (
+          <div
+            className={`flex items-center gap-2 text-[11px] font-sans p-3 rounded ${
+              syncResult.onyxSynced
+                ? "text-emerald-400 bg-emerald-500/5 border border-emerald-500/20"
+                : "text-amber-400 bg-amber-500/5 border border-amber-500/20"
+            }`}
+          >
+            {syncResult.onyxSynced ? (
+              <>
+                <Check size={14} />
+                <span>Settings saved and synced to live Onyx persona.</span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle size={14} />
+                <span>
+                  Settings saved to Supabase, but Onyx sync failed: {syncResult.onyxError ?? "unknown error"}
+                </span>
+              </>
+            )}
           </div>
         )}
       </div>

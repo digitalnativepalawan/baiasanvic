@@ -20,9 +20,33 @@ export const getConciergeConfig = createServerFn({ method: "GET" }).handler(
 
 export const saveConciergeSettings = createServerFn({ method: "POST" })
   .inputValidator((data: { config: ConciergeConfig }) => data)
-  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+  .handler(async ({ data }): Promise<{ ok: boolean; onyxSynced: boolean; onyxError?: string }> => {
+    // 1. Always save to Supabase first.
     await saveConciergeConfig(data.config);
-    return { ok: true };
+
+    // 2. If Onyx is configured (env vars present), also push the updated
+    // system prompt to the live Onyx persona so admin changes take effect
+    // immediately. The persona id comes from ONYX_RESORT_PERSONA_ID (default 1).
+    const onyxBaseUrl = process.env.ONYX_BASE_URL;
+    const onyxApiKey = process.env.ONYX_API_KEY;
+    const onyxPersonaId = Number(process.env.ONYX_RESORT_PERSONA_ID ?? "1");
+
+    if (onyxBaseUrl && onyxApiKey) {
+      const { buildOnyxSystemPrompt, syncPersonaToOnyx } = await import(
+        "../onyx/persona-sync.server"
+      );
+      const systemPrompt = buildOnyxSystemPrompt(data.config);
+      const result = await syncPersonaToOnyx(
+        onyxBaseUrl,
+        onyxApiKey,
+        onyxPersonaId,
+        systemPrompt,
+      );
+      if (!result.ok) {
+        return { ok: true, onyxSynced: false, onyxError: result.error };
+      }
+    }
+    return { ok: true, onyxSynced: true };
   });
 
 /**
