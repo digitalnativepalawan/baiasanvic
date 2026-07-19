@@ -33,7 +33,7 @@ export const saveConciergeSettings = createServerFn({ method: "POST" })
 
     if (onyxBaseUrl && onyxApiKey) {
       const { buildOnyxSystemPrompt, syncPersonaToOnyx } = await import(
-        "../onyx/persona-sync.server"
+        "./onyx/persona-sync.server"
       );
       const systemPrompt = buildOnyxSystemPrompt(data.config);
       const result = await syncPersonaToOnyx(

@@ -95,7 +95,7 @@ export async function syncPersonaToOnyx(
       method: "PATCH",
       headers: {
         "content-type": "application/json",
-        authorization: *** ${apiKey}`,
+        authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({ system_prompt: systemPrompt }),
       signal: controller.signal,
