@@ -51,7 +51,14 @@ export const getConciergeStatus = createServerFn({ method: "GET" }).handler(
   async (): Promise<ConciergeStatus> => {
     const cfg = await loadConciergeConfig();
     const onyxConfigured = !!(process.env.ONYX_BASE_URL && process.env.ONYX_API_KEY);
-    const openrouterReady = cfg.provider === "openrouter" && !!cfg.openrouterApiKey;
+    // Real OpenRouter keys are long ("sk-or-v1-..." plus 60+ hex chars). A short
+    // placeholder/typo value (e.g. a handful of digits) will always fail
+    // OpenRouter auth with a 401 — do not report the provider as "ready" for
+    // guests when the saved key is obviously not a usable credential.
+    const openrouterReady =
+      cfg.provider === "openrouter" &&
+      !!cfg.openrouterApiKey &&
+      cfg.openrouterApiKey.trim().length >= 20;
     const ollamaConfigured = cfg.provider === "ollama" && !!cfg.ollamaModel;
 
     let onyxReachable = false;

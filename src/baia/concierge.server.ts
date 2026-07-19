@@ -1,26 +1,29 @@
 /**
  * Server function: one turn of the concierge conversation.
  *
- * Refactored to route through the reusable Resort Agent core
- * (src/resort-agent/core/orchestrator.ts) so all safety, intent, qualification,
- * approval, and persistence logic lives in one provider-independent place.
- * The existing OpenRouter/Ollama provider system is preserved via the
- * concierge-model adapter; the widget and booking form are untouched.
+ * All safety, intent, knowledge-retrieval, lead-extraction, and reply
+ * sanitization logic lives directly in this module and its sibling
+ * concierge.* files (concierge.guardrails.ts, concierge.knowledge.ts,
+ * concierge.leads.ts, concierge.retrieve.ts). There is no separate
+ * "src/resort-agent" orchestrator package in this repo — an earlier
+ * refactor plan referenced one, but it was never created; this file is the
+ * single source of truth for a guest turn.
  *
  * Flow:
- *   ConciergeWidget -> conciergeChat -> runResortAgent (generic core)
+ *   ConciergeWidget -> conciergeChat
+ *     -> Onyx brain (if configured/reachable) OR core brain (OpenRouter/Ollama)
  *     -> intent -> knowledge -> extraction -> action/approval -> safe reply
- *     -> temporary persistence (memory adapter until Supabase confirmed)
+ *     -> Supabase persistence (booking_inquiries) via ops/guest-lead.server.ts
  *
- * The absolute pricing rule is enforced in the core (3 layers) and the
- * response sanitizer.
+ * The absolute pricing rule is enforced both pre-model (detectIntent) and
+ * post-model (sanitizeReply), plus hard rules in the system prompt.
  */
 import { createServerFn } from "@tanstack/react-start";
 import type { ConciergeConfig, ConciergeMessage, ConciergeResponse } from "./concierge.types";
 import { loadConciergeConfig } from "./concierge.config.server";
 import { buildSystemPrompt } from "./concierge.prompt";
 import { retrieveRelevant, chunksToText } from "./concierge.retrieve";
-import { buildMenuAnswer, isNoKnowledgeFallback } from "./concierge.knowledge";
+import { buildMenuAnswer, isNoKnowledgeFallback, isMenuQuestion } from "./concierge.knowledge";
 import { resolveOllamaModel } from "./concierge.discovery";
 import { logConciergeTurn } from "./concierge.log.server";
 import { runModel } from "./concierge.llm";
@@ -85,7 +88,9 @@ export const conciergeChat = createServerFn({ method: "POST" })
           await logConciergeTurn(data.sessionId, "guest", question);
           await logConciergeTurn(data.sessionId, "agent", onyxReply);
           const finalReply =
-            onyxRes.intent !== "booking_inquiry" && isNoKnowledgeFallback(onyxReply)
+            onyxRes.intent !== "booking_inquiry" &&
+            isMenuQuestion(question) &&
+            isNoKnowledgeFallback(onyxReply)
               ? buildMenuAnswer()
               : onyxReply;
           return {
@@ -214,9 +219,13 @@ export const conciergeChat = createServerFn({ method: "POST" })
       };
     }
 
-    // Menu fallback: if the model returns a no-knowledge dead-end for a menu
-    // question, answer from the BAIA in-repo menu knowledge (no prices).
-    const replyForMenuCheck = isNoKnowledgeFallback(raw) ? buildMenuAnswer() : raw;
+    // Menu fallback: only substitute the in-repo menu knowledge when the
+    // GUEST'S QUESTION was actually about food/dining/menu AND the model's
+    // reply was a no-knowledge dead-end. Checking isNoKnowledgeFallback alone
+    // would incorrectly replace unrelated no-knowledge answers (e.g. wifi,
+    // pets) with menu text.
+    const replyForMenuCheck =
+      isMenuQuestion(question) && isNoKnowledgeFallback(raw) ? buildMenuAnswer() : raw;
 
     const guarded = sanitizeReply(replyForMenuCheck, intent.intent);
 

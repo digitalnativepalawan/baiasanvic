@@ -30,29 +30,51 @@ interface StoredConfigRow {
 /** Load merged config from Supabase (server-side only). */
 export async function loadConciergeConfig(): Promise<ConciergeConfig> {
   try {
-    const supabaseAdmin = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+    const supabaseAdmin = (await import("@/integrations/supabase/client.server"))
+      .supabaseAdmin as any;
     const { data, error } = await supabaseAdmin
       .from("concierge_config")
       .select("data")
       .eq("key", "default")
       .maybeSingle();
-    if (error || !data) return { ...DEFAULT_CONFIG };
+    if (error) {
+      console.error(
+        "loadConciergeConfig: Supabase query error, falling back to DEFAULT_CONFIG:",
+        error,
+      );
+      return { ...DEFAULT_CONFIG };
+    }
+    if (!data) {
+      console.error(
+        "loadConciergeConfig: no 'default' row in concierge_config, falling back to DEFAULT_CONFIG. " +
+          "Guests will see the concierge as unavailable/misconfigured until a config row is saved.",
+      );
+      return { ...DEFAULT_CONFIG };
+    }
     const row = data as unknown as StoredConfigRow;
     return { ...DEFAULT_CONFIG, ...(row.data ?? {}) };
-  } catch {
+  } catch (err) {
+    console.error(
+      "loadConciergeConfig: threw while loading config (likely missing Supabase env vars or import failure), " +
+        "falling back to DEFAULT_CONFIG:",
+      err,
+    );
     return { ...DEFAULT_CONFIG };
   }
 }
 
 /** Persist config (server-side, service role). Never call from client bundle. */
-export async function saveConciergeConfig(
-  cfg: ConciergeConfig,
-): Promise<void> {
-  const supabaseAdmin = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+export async function saveConciergeConfig(cfg: ConciergeConfig): Promise<void> {
+  const supabaseAdmin = (await import("@/integrations/supabase/client.server"))
+    .supabaseAdmin as any;
   const { error } = await supabaseAdmin
     .from("concierge_config")
     .upsert(
-      { key: "default", data: cfg as unknown as Record<string, unknown>, updated_at: new Date().toISOString() },
+      {
+        key: "default",
+        data: cfg as unknown as Record<string, unknown>,
+        updated_at: new Date().toISOString(),
+      },
       { onConflict: "key" },
     );
   if (error) throw new Error(`Failed to save concierge config: ${error.message}`);

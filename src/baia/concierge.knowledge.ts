@@ -142,6 +142,23 @@ export function isNoKnowledgeFallback(reply: string): boolean {
   );
 }
 
+/**
+ * True when the GUEST'S QUESTION (not the reply) is actually about food,
+ * dining, breakfast, the restaurant, dishes, or the menu.
+ *
+ * isNoKnowledgeFallback() alone is not enough to decide when to substitute
+ * buildMenuAnswer() — its regex also matches generic non-answers like "I
+ * don't have that information", which has nothing to do with food. Without
+ * this guard, a guest asking about wifi or pets who gets a generic
+ * no-knowledge reply would incorrectly receive the menu text instead. Both
+ * checks must pass before buildMenuAnswer() is used.
+ */
+export function isMenuQuestion(question: string): boolean {
+  return /\b(menu|food|dining|dine|dish|dishes|breakfast|lunch|dinner|restaurant|eat|cuisine|meal)\b/i.test(
+    question || "",
+  );
+}
+
 function transfersChunkText(): string {
   return [
     "TRANSFERS & GETTING HERE",
