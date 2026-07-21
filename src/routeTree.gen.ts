@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSiteAssetsSplatRouteImport } from './routes/api/site-assets/$'
 import { Route as ApiOpsGuestLeadRouteImport } from './routes/api/ops/guest-lead'
+import { Route as ApiOnyxStatusRouteImport } from './routes/api/onyx/status'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,33 +29,51 @@ const ApiOpsGuestLeadRoute = ApiOpsGuestLeadRouteImport.update({
   path: '/api/ops/guest-lead',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOnyxStatusRoute = ApiOnyxStatusRouteImport.update({
+  id: '/api/onyx/status',
+  path: '/api/onyx/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/onyx/status': typeof ApiOnyxStatusRoute
   '/api/ops/guest-lead': typeof ApiOpsGuestLeadRoute
   '/api/site-assets/$': typeof ApiSiteAssetsSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/onyx/status': typeof ApiOnyxStatusRoute
   '/api/ops/guest-lead': typeof ApiOpsGuestLeadRoute
   '/api/site-assets/$': typeof ApiSiteAssetsSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/onyx/status': typeof ApiOnyxStatusRoute
   '/api/ops/guest-lead': typeof ApiOpsGuestLeadRoute
   '/api/site-assets/$': typeof ApiSiteAssetsSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/ops/guest-lead' | '/api/site-assets/$'
+  fullPaths:
+    | '/'
+    | '/api/onyx/status'
+    | '/api/ops/guest-lead'
+    | '/api/site-assets/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/ops/guest-lead' | '/api/site-assets/$'
-  id: '__root__' | '/' | '/api/ops/guest-lead' | '/api/site-assets/$'
+  to: '/' | '/api/onyx/status' | '/api/ops/guest-lead' | '/api/site-assets/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/onyx/status'
+    | '/api/ops/guest-lead'
+    | '/api/site-assets/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiOnyxStatusRoute: typeof ApiOnyxStatusRoute
   ApiOpsGuestLeadRoute: typeof ApiOpsGuestLeadRoute
   ApiSiteAssetsSplatRoute: typeof ApiSiteAssetsSplatRoute
 }
@@ -82,24 +101,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOpsGuestLeadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/onyx/status': {
+      id: '/api/onyx/status'
+      path: '/api/onyx/status'
+      fullPath: '/api/onyx/status'
+      preLoaderRoute: typeof ApiOnyxStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiOnyxStatusRoute: ApiOnyxStatusRoute,
   ApiOpsGuestLeadRoute: ApiOpsGuestLeadRoute,
   ApiSiteAssetsSplatRoute: ApiSiteAssetsSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
