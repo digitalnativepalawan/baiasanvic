@@ -236,16 +236,6 @@ export default function ConciergeSettings() {
                 </span>
               </div>
             )}
-            {liveStatus.onyxConfigured && !liveStatus.onyxReachable && (
-              <div className="flex items-center gap-2 text-[11px] text-amber-400 font-sans bg-amber-500/5 border border-amber-500/20 p-3 rounded">
-                <AlertTriangle size={14} className="shrink-0" />
-                <span>
-                  Onyx is configured but not reachable right now (checked just now) — likely a stale
-                  tunnel URL. Guests are being served by the OpenRouter/Ollama fallback, not by
-                  Onyx.
-                </span>
-              </div>
-            )}
           </div>
         )}
 
