@@ -196,6 +196,194 @@ function townChunkText(): string {
   ].join("\n");
 }
 
+function breakfastChunkText(): string {
+  return [
+    "BREAKFAST",
+    "Hours: 08:30–10:30 daily.",
+    "Formats: Continental, Full English, Asian — all cooked to order.",
+    "Price: ₱400 per adult, ₱400 per child when breakfast is NOT explicitly bundled in the booked room rate.",
+    "Rule: Charge applies only when the room package does not already include breakfast. Confirm inclusion at booking.",
+  ].join("\n");
+}
+
+function checkinCheckoutChunkText(): string {
+  return [
+    "CHECK-IN / CHECK-OUT",
+    "Front desk hours: 08:00–21:00.",
+    "Check-in window: 14:00–21:00.",
+    "Late arrival: Guests arriving after 18:00 MUST contact the resort in advance to arrange late check-in.",
+    "Check-out window: 07:00–12:00.",
+    "Luggage storage available for early arrivals / late departures.",
+  ].join("\n");
+}
+
+function cancellationChunkText(): string {
+  return [
+    "CANCELLATION POLICY",
+    "Varies by booking channel.",
+    "OTA bookings (Booking.com, Agoda, Airbnb): Often non-refundable — check the specific rate conditions at time of booking.",
+    "Direct bookings: Flexible with 48–72 hours notice required for free cancellation.",
+    "Late cancellation (within 48–72 hours): 100% of first night may be charged.",
+    "No-show: 100% of first night charged.",
+    "Modifications: Subject to availability and rate difference; contact resort directly via email.",
+  ].join("\n");
+}
+
+function petsEventsChunkText(): string {
+  return [
+    "PETS & EVENTS POLICY",
+    "Pets: NOT allowed.",
+    "Large groups / parties: NOT allowed.",
+    "Bachelor / bachelorette parties: NOT allowed.",
+    "Noise events / parties: NOT allowed.",
+    "Quiet hours respected for all guests' comfort.",
+  ].join("\n");
+}
+
+function airportTransferChunkText(): string {
+  return [
+    "AIRPORT TRANSFER DETAILS",
+    "Private van (capacity 12 passengers): ₱6,000 one-way per vehicle.",
+    "Advance notice required: 48 hours minimum with complete flight details.",
+    "Required information: exact flight number, arrival airport (PPS), arrival date, arrival time, guest count, luggage count, contact phone number.",
+    "Pickup: Driver meets at Puerto Princesa International Airport (PPS) arrivals.",
+    "Duration: ~2.5–3 hours by road to San Vicente.",
+    "Flights to PPS: Daily from Manila and Cebu.",
+    "Rate is per vehicle (not per person) for up to 12 guests + luggage.",
+  ].join("\n");
+}
+
+function tourPartnersChunkText(): string {
+  return [
+    "TOUR PARTNERS & ISLAND HOPPING",
+    "Authorized local outrigger captains pick up directly from BAIA's shoreline.",
+    "Primary zone: Port Barton Bay Marine Park.",
+    "Character: Calm water, clear water, sea turtles, shallow coral reefs.",
+    "Destinations: Turtle Bay / Inaladelan Island (turtle encounters, swimming), German Island (white sandbar, beach lunch, hammocks), Exotic Island (shallow sandbar connection at low tide), Maxima Island (shallow sandbar connection at low tide), Twin Reef (shallow snorkeling, fan corals), Wide Reef (shallow snorkeling, fan corals).",
+    "Wildlife sightings (turtles, etc.) are NOT guaranteed.",
+    "Live-check required before departure: weather, sea conditions, tide, operator itinerary, pickup availability, price, departure time.",
+    "Boat charter arranged through concierge — describe your ideal day and the team will tailor it.",
+  ].join("\n");
+}
+
+function rentalsChunkText(): string {
+  return [
+    "RENTALS",
+    "Available at front desk: scooter, moped, bicycle.",
+    "Managed directly by front desk staff — inquire on arrival.",
+    "Scooter/moped recommended for exploring Long Beach, waterfalls, and San Vicente town at own pace.",
+  ].join("\n");
+}
+
+function wifiChunkText(): string {
+  return [
+    "WIFI & CONNECTIVITY",
+    "Free WiFi throughout: all rooms, beach lounge, restaurant, common areas.",
+    "Target speed: 50+ Mbps over fiber where stable.",
+    "Operational reality: Connection drops are common across the local grid.",
+    "Backup: Smart cellular hotspot + Globe cellular hotspot (both maintained on-site).",
+    "Signal note: Smart and Globe alternate in signal priority along Panindigan Beach section.",
+    "Manage expectations: Suitable for messaging, email, light browsing. Not reliable for HD streaming or video calls.",
+  ].join("\n");
+}
+
+function powerChunkText(): string {
+  return [
+    "POWER & BACKUP",
+    "Primary grid: PALECO (Palawan Electric Cooperative) main grid.",
+    "Local issue: Frequent load shedding (planned outages) across northern Palawan.",
+    "Backup: Local backup generator infrastructure on-site.",
+    "Generator limitation: During total grid failure, continuous uninterrupted daytime multi-unit air conditioning is subject to generator load management. Essential circuits prioritized.",
+    "Advice: Expect occasional brief interruptions. Resort manages transitions smoothly for guest comfort.",
+  ].join("\n");
+}
+
+function faqsChunkText(): string {
+  return [
+    "FREQUENTLY ASKED QUESTIONS",
+    "Q: How do I get an exact package total?",
+    "A: Provide exact check-in date, check-out date, number of guests, preferred room type, and whether you need the airport van. BAIA management will prepare the final quote.",
+    "Q: What time is check-in?",
+    "A: Check-in is 14:00–21:00. Guests arriving after 18:00 must contact BAIA in advance.",
+    "Q: What time is check-out?",
+    "A: Check-out is 07:00–12:00.",
+    "Q: How much is the private airport van?",
+    "A: ₱6,000 one way per vehicle (up to 12 passengers), requested 48+ hours in advance with complete flight details.",
+    "Q: What time is breakfast?",
+    "A: Breakfast served daily 08:30–10:30.",
+    "Q: How much is breakfast when not included?",
+    "A: Approximately ₱400 per adult and ₱400 per child (cooked to order).",
+    "Q: How fast is the WiFi?",
+    "A: Target 50+ Mbps over fiber where stable. Local outages and drops occur; Smart/Globe cellular hotspots serve as backup.",
+    "Q: Does BAIA have backup power?",
+    "A: Yes — connected to PALECO grid with on-site backup generator. During total grid failure, continuous multi-unit AC may be limited by generator load management.",
+  ].join("\n");
+}
+
+function sanVicenteGeoChunkText(): string {
+  return [
+    "SAN VICENTE GEOGRAPHY",
+    "Municipality: San Vicente, Palawan, Philippines.",
+    "Postal code: 5309.",
+    "Coordinates: 10.538582° N, 119.237916° E.",
+    "Barangays (10): Alimanguan, Binga, Caruray, Kemdeng, New Agutaya, New Canipo, Poblacion, Port Barton, San Isidro, Sto. Niño.",
+    "BAIA is located in the Panindigan/Penanindigan area of Barangay Poblacion, San Vicente — NOT in Port Barton (which is a separate barangay 30–40 min by boat).",
+  ].join("\n");
+}
+
+function longBeachChunkText(): string {
+  return [
+    "LONG BEACH (SAN VICENTE)",
+    "Length: 14.7 km — one of the longest continuous white-sand beaches in the Philippines.",
+    "Spans barangays: Poblacion, New Agutaya, San Isidro, Alimanguan.",
+    "Live-check required for: access, weather, tide, transport.",
+    "Best at first light for emptiest, most photogenic stretch.",
+    "Accessible by scooter/moped from BAIA (~10 min to nearest access point).",
+  ].join("\n");
+}
+
+function portBartonChunkText(): string {
+  return [
+    "PORT BARTON",
+    "Separate barangay from BAIA — distinct zone, 30–40 min by boat.",
+    "Tour letter codes (A, B, C, etc.) are NOT standardized across operators.",
+    "Wildlife sightings (turtles, etc.) are NOT guaranteed.",
+    "Casual beachfront restaurants — concierge can recommend favorites.",
+    "Can be combined with Pamuayan Falls for a land day-trip from Port Barton area.",
+  ].join("\n");
+}
+
+function islandHoppingChunkText(): string {
+  return [
+    "ISLAND HOPPING DETAILS",
+    "Pickup: Authorized skippers collect guests directly from BAIA's beachfront shoreline.",
+    "Primary zone: Port Barton Bay Marine Park — calm, clear water, sea turtles, shallow coral reefs.",
+    "Stops: Turtle Bay / Inaladelan Island (turtle encounters, swimming), German Island (white sandbar, beach lunch, hammocks), Exotic Island (low-tide sandbar connection), Maxima Island (low-tide sandbar connection), Twin Reef (shallow snorkeling, fan corals), Wide Reef (shallow snorkeling, fan corals).",
+    "Wildlife sightings (turtles, etc.) are NOT guaranteed.",
+    "Live-check required before departure: weather, sea conditions, tide, operator itinerary, pickup availability, price, departure time.",
+    "Half-day and full-day charters available — describe your ideal day and concierge will arrange.",
+  ].join("\n");
+}
+
+function waterfallsChunkText(): string {
+  return [
+    "WATERFALLS",
+    "Pamuayan Falls: Near Port Barton. Typically combined with Port Barton land day-trip. Walk: relatively easy and flat, 30–40 min along shaded jungle riverbed. Features: 8 m height, deep wide cold freshwater pool suitable for swimming. Live-check: trail condition, water flow, weather, guide need.",
+    "Bigaho / Ipanganan Waterfalls: Northern San Vicente / Alimanguan–Port Barton area. Bigaho known for maintained wooden eco-walkway from road. Access: further north; minimal difficulty. Features: cascading tier system, dense primary forest, natural swimming pool at base. Live-check: access route, road condition, entry status, water flow, weather.",
+  ].join("\n");
+}
+
+function alimanguanSurfingChunkText(): string {
+  return [
+    "ALIMANGUAN SURFING",
+    "Location: Alimanguan barangay, northern San Vicente (further north than BAIA).",
+    "Seasonal surf break — conditions vary by swell and wind.",
+    "Access: Scooter/moped ride from BAIA (~20–30 min north).",
+    "Best for: Experienced surfers familiar with remote breaks; no surf shops or rentals on-site.",
+    "Live-check required: swell forecast, wind direction, tide, road conditions, access permissions.",
+  ].join("\n");
+}
+
 // Topics the owner authors over time. Append new entries here (unique id!).
 const OWNER_TOPICS: { id: string; label: string; text: string }[] = [
   { id: "dining", label: "Food & dining", text: diningChunkText() },
@@ -203,6 +391,22 @@ const OWNER_TOPICS: { id: string; label: string; text: string }[] = [
   { id: "stay", label: "Stay details", text: stayChunkText() },
   { id: "family", label: "Families & kids", text: familyChunkText() },
   { id: "town", label: "Nearby town", text: townChunkText() },
+  { id: "breakfast", label: "Breakfast", text: breakfastChunkText() },
+  { id: "checkin_checkout", label: "Check-in / Check-out", text: checkinCheckoutChunkText() },
+  { id: "cancellation", label: "Cancellation policy", text: cancellationChunkText() },
+  { id: "pets_events", label: "Pets & events policy", text: petsEventsChunkText() },
+  { id: "airport_transfer", label: "Airport transfer details", text: airportTransferChunkText() },
+  { id: "tour_partners", label: "Tour partners & island hopping", text: tourPartnersChunkText() },
+  { id: "rentals", label: "Rentals", text: rentalsChunkText() },
+  { id: "wifi", label: "WiFi & connectivity", text: wifiChunkText() },
+  { id: "power", label: "Power & backup", text: powerChunkText() },
+  { id: "faqs", label: "Frequently asked questions", text: faqsChunkText() },
+  { id: "san_vicente_geo", label: "San Vicente geography", text: sanVicenteGeoChunkText() },
+  { id: "long_beach", label: "Long Beach", text: longBeachChunkText() },
+  { id: "port_barton", label: "Port Barton", text: portBartonChunkText() },
+  { id: "island_hopping", label: "Island hopping details", text: islandHoppingChunkText() },
+  { id: "waterfalls", label: "Waterfalls", text: waterfallsChunkText() },
+  { id: "alimanguan_surfing", label: "Alimanguan surfing", text: alimanguanSurfingChunkText() },
 ];
 
 /** Static chunks built once from site data + owner-authored topics. */
