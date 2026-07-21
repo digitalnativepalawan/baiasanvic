@@ -5,7 +5,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 
-interface OnyxStatus {
+export interface OnyxStatus {
   configured: boolean;
   reachable: boolean;
   personaName?: string;

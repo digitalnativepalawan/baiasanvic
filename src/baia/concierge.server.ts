@@ -160,53 +160,69 @@ export const conciergeChat = createServerFn({ method: "POST" })
     }
 
     // ---------------------------------------------------------------------
-    // 4. Unknown / open-ended question — try optional LLM enhancers.
-    //    Onyx first (if configured), then OpenRouter/Ollama. Either one
-    //    failing, being unreachable, or not configured simply falls through
-    //    to the next option, and ultimately to the contact fallback. A
-    //    guest question NEVER hard-fails just because a provider is broken.
-    // ---------------------------------------------------------------------
-    if (onyxConfigured) {
-      try {
-        const { createOnyxResortAgentClient } = await import("./onyx/client.server");
-        const onyx = createOnyxResortAgentClient();
-        const onyxRes = await onyx.sendGuestEvent({
-          resortId: BAIA_RESORT_ID,
-          conversationId: data.sessionId,
-          messageId: `m_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-          channel: "website",
-          message: question,
-          onyxSessionId: (data as { onyxSessionId?: string }).onyxSessionId,
-        });
-        const onyxReply = (onyxRes.reply ?? "").trim();
-        if (!onyxRes.error && onyxReply.length > 0) {
-          await logConciergeTurn(data.sessionId, "guest", question);
-          await logConciergeTurn(data.sessionId, "agent", onyxReply);
-          const finalReply =
-            onyxRes.intent !== "booking_inquiry" &&
-            isMenuQuestion(question) &&
-            isNoKnowledgeFallback(onyxReply)
-              ? buildMenuAnswer()
-              : onyxReply;
-          return {
-            reply: finalReply,
-            intent: onyxRes.intent,
-            approvalRequired: onyxRes.approvalRequired,
-            onyxSessionId: onyxRes.onyxSessionId,
-            runId: onyxRes.runId,
-            actions: onyxRes.actions.map((a) => ({
-              name: a.name,
-              status: a.status,
-              evidenceJson: a.evidence ? JSON.stringify(a.evidence) : undefined,
-            })),
-            brain: "onyx",
-          };
+        // 4. Unknown / open-ended question — try optional LLM enhancers.
+        //    Onyx first (if configured), then OpenRouter/Ollama. Either one
+        //    failing, being unreachable, or not configured simply falls through
+        //    to the next option, and ultimately to the contact fallback. A
+        //    guest question NEVER hard-fails just because a provider is broken.
+        // ---------------------------------------------------------------------
+        if (onyxConfigured) {
+          try {
+            const { createOnyxResortAgentClient } = await import("./onyx/client.server");
+            const onyx = createOnyxResortAgentClient();
+            const onyxRes = await onyx.sendGuestEvent({
+              resortId: BAIA_RESORT_ID,
+              conversationId: data.sessionId,
+              messageId: `m_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+              channel: "website",
+              message: question,
+              onyxSessionId: (data as { onyxSessionId?: string }).onyxSessionId,
+            });
+            const onyxReply = (onyxRes.reply ?? "").trim();
+            if (!onyxRes.error && onyxReply.length > 0) {
+              await logConciergeTurn(data.sessionId, "guest", question);
+              await logConciergeTurn(data.sessionId, "agent", onyxReply);
+              const finalReply =
+                onyxRes.intent !== "booking_inquiry" &&
+                isMenuQuestion(question) &&
+                isNoKnowledgeFallback(onyxReply)
+                  ? buildMenuAnswer()
+                  : onyxReply;
+              return {
+                reply: finalReply,
+                intent: onyxRes.intent,
+                approvalRequired: onyxRes.approvalRequired,
+                onyxSessionId: onyxRes.onyxSessionId,
+                runId: onyxRes.runId,
+                actions: onyxRes.actions.map((a) => ({
+                  name: a.name,
+                  status: a.status,
+                  evidenceJson: a.evidence ? JSON.stringify(a.evidence) : undefined,
+                })),
+                brain: "onyx",
+              };
+            }
+            // Log Onyx error and fall through to core enhancer
+            if (onyxRes.error) {
+              await logConciergeTurn(
+                data.sessionId,
+                "agent",
+                "",
+                { source: "onyx", onyxError: onyxRes.error }
+              );
+            }
+            console.warn("Onyx returned no usable reply, trying core enhancer:", onyxRes.error);
+          } catch (err) {
+            const errMsg = err instanceof Error ? err.message : String(err);
+            await logConciergeTurn(
+              data.sessionId,
+              "agent",
+              "",
+              { source: "onyx", onyxError: errMsg }
+            );
+            console.error("Onyx enhancer failed, trying core enhancer:", err);
+          }
         }
-        console.warn("Onyx returned no usable reply, trying core enhancer:", onyxRes.error);
-      } catch (err) {
-        console.error("Onyx enhancer failed, trying core enhancer:", err);
-      }
-    }
 
     // ---------------- Core enhancer (OpenRouter / Ollama direct) ----------
     // Only reached for a question the deterministic layer wasn't confident
