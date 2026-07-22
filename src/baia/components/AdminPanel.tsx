@@ -590,6 +590,18 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       <Coffee size={14} />
                       <span>AI Concierge</span>
                     </button>
+                    <button
+                      onClick={() => setActiveTab("knowledge")}
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-sm font-sans text-xs tracking-wider uppercase transition-all text-left ${
+                        activeTab === "knowledge"
+                          ? "bg-gold-500/10 text-gold-300 border-l-2 border-gold-300 font-medium"
+                          : "text-luxury-400 hover:text-luxury-100 hover:bg-luxury-900/50"
+                      }`}
+                    >
+                      <FileText size={14} />
+                      <span>Knowledge Base</span>
+                    </button>
+
                   </div>
 
                   {/* Status Indicator */}
