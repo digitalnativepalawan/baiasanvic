@@ -26,7 +26,7 @@ const isVideo = (url: string) => {
          url.includes("video");
 };
 
-type AdminTab = "hero_logo" | "sections" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "testimonials" | "system" | "concierge";
+type AdminTab = "hero_logo" | "sections" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "testimonials" | "system" | "concierge" | "knowledge";
 
 const ACCEPTED_IMAGE_TYPES = "image/webp,image/png,image/jpeg,image/svg+xml,.webp,.png,.jpg,.jpeg,.svg";
 const ACCEPTED_IMAGE_GUIDANCE = "Accepted image types: WEBP, PNG, JPG/JPEG, SVG. Max 5 MB.";
