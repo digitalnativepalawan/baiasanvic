@@ -2916,6 +2916,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
                   {/* -------------------- TAB: SYSTEM SETTINGS -------------------- */}
                   {activeTab === "concierge" && <ConciergeSettings />}
+                  {activeTab === "knowledge" && <KnowledgeManager />}
 
 
                   {activeTab === "system" && (
