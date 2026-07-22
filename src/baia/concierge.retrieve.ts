@@ -103,8 +103,24 @@ const SYNONYMS: Record<string, string[]> = {
   address: ["location", "san", "vicente"],
 };
 
+// Intent-level question rewrites — applied BEFORE stopword filtering so
+// short guest questions ("Where is BAIA?", "How much?", "Any pets OK?")
+// pick up the topic keywords that actually live in the chunks.
+const QUESTION_HINTS: Array<{ re: RegExp; add: string[] }> = [
+  { re: /\bwhere\b|\blocated\b|\baddress\b|\bmap\b/i, add: ["location", "san", "vicente", "penanindigan"] },
+  { re: /\bhow far\b|\bdistance\b/i, add: ["location", "san", "vicente"] },
+  { re: /\bwhat time\b|\bwhen.*(check|open|close|arriv|depart)\b/i, add: ["check", "front", "desk"] },
+  { re: /\bwho\b/i, add: ["baia", "team"] },
+];
+
 function tokenize(text: string, expand = false): string[] {
-  const raw = text
+  let src = text;
+  if (expand) {
+    for (const h of QUESTION_HINTS) {
+      if (h.re.test(src)) src += " " + h.add.join(" ");
+    }
+  }
+  const raw = src
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
