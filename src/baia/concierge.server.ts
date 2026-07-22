@@ -33,6 +33,8 @@ import { buildSystemPrompt } from "./concierge.prompt";
 import { retrieveRelevant, chunksToText } from "./concierge.retrieve";
 import { buildMenuAnswer, isNoKnowledgeFallback, isMenuQuestion } from "./concierge.knowledge";
 import { answerKnownTopic } from "./concierge.answer";
+import { loadDbKnowledgeChunks } from "./concierge.knowledge.server";
+
 import { resolveOllamaModel } from "./concierge.discovery";
 import { logConciergeTurn } from "./concierge.log.server";
 import { runModel } from "./concierge.llm";
