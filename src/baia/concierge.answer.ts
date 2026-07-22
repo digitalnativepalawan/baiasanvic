@@ -61,7 +61,14 @@ function formatChunkForGuest(chunk: KnowledgeChunk): string {
     // redundant once several are strung into one paragraph.
     .filter((line) => /[a-z]/.test(line))
     .map((line) => line.replace(/^[A-Z][A-Za-z \/&]*:\s*/, "").trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    // Per-line money guard: strip currency/amounts, then drop any line
+    // that still trips the obvious-money heuristic (phrases like
+    // "deposit", "per adult", "₱6,000"). This keeps the rest of the
+    // topic — check-in time, wifi speed, van required-info — usable
+    // even when a sibling line mentions price.
+    .map((line) => stripMonetary(line))
+    .filter((line) => line && !hasObviousMoneySignal(line));
   return sentences.join(" ");
 }
 
