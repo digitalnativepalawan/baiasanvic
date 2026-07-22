@@ -96,7 +96,10 @@ export interface DeterministicAnswer {
  * "2:00 PM to 12:00 PM", which appear throughout BAIA's real static
  * knowledge.
  */
-export function answerKnownTopic(question: string): DeterministicAnswer | null {
+export function answerKnownTopic(
+  question: string,
+  extraChunks: KnowledgeChunk[] = [],
+): DeterministicAnswer | null {
   const q = (question || "").trim();
   if (!q) return null;
 
@@ -109,8 +112,10 @@ export function answerKnownTopic(question: string): DeterministicAnswer | null {
     return { reply: buildMenuAnswer(), topicId: "dining", label: "Food & dining" };
   }
 
-  const scored = scoreChunks(q);
-  const top = scored.find((s) => KNOWN_TOPIC_IDS.has(s.chunk.id));
+  // Admin-authored DB knowledge is trusted the same way static chunks are.
+  const knownIds = new Set<string>([...KNOWN_TOPIC_IDS, ...extraChunks.map((c) => c.id)]);
+  const scored = scoreChunks(q, extraChunks);
+  const top = scored.find((s) => knownIds.has(s.chunk.id));
   if (!top || top.score < MIN_CONFIDENT_SCORE) return null;
 
   const formatted = stripMonetary(formatChunkForGuest(top.chunk));
@@ -122,3 +127,4 @@ export function answerKnownTopic(question: string): DeterministicAnswer | null {
 
   return { reply: formatted, topicId: top.chunk.id, label: top.chunk.label };
 }
+
