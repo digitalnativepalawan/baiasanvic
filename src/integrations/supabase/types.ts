@@ -107,6 +107,42 @@ export type Database = {
         }
         Relationships: []
       }
+      concierge_knowledge: {
+        Row: {
+          body: string
+          created_at: string
+          enabled: boolean
+          id: string
+          label: string
+          sort_order: number
+          tags: string[]
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          label: string
+          sort_order?: number
+          tags?: string[]
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          label?: string
+          sort_order?: number
+          tags?: string[]
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       concierge_log: {
         Row: {
           content: string

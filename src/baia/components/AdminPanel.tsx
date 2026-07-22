@@ -9,6 +9,7 @@ import { useSite, GalleryItem, DEFAULT_THEME, MediaPlayback, DEFAULT_HERO_PLAYBA
 import { RoomTier, Activity, Testimonial } from "../types";
 import { uploadSiteAsset } from "../admin.functions";
 import ConciergeSettings from "./ConciergeSettings";
+import KnowledgeManager from "./KnowledgeManager";
 
 
 interface AdminPanelProps {
@@ -26,7 +27,7 @@ const isVideo = (url: string) => {
          url.includes("video");
 };
 
-type AdminTab = "hero_logo" | "sections" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "testimonials" | "system" | "concierge";
+type AdminTab = "hero_logo" | "sections" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "testimonials" | "system" | "concierge" | "knowledge";
 
 const ACCEPTED_IMAGE_TYPES = "image/webp,image/png,image/jpeg,image/svg+xml,.webp,.png,.jpg,.jpeg,.svg";
 const ACCEPTED_IMAGE_GUIDANCE = "Accepted image types: WEBP, PNG, JPG/JPEG, SVG. Max 5 MB.";
@@ -589,6 +590,18 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       <Coffee size={14} />
                       <span>AI Concierge</span>
                     </button>
+                    <button
+                      onClick={() => setActiveTab("knowledge")}
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-sm font-sans text-xs tracking-wider uppercase transition-all text-left ${
+                        activeTab === "knowledge"
+                          ? "bg-gold-500/10 text-gold-300 border-l-2 border-gold-300 font-medium"
+                          : "text-luxury-400 hover:text-luxury-100 hover:bg-luxury-900/50"
+                      }`}
+                    >
+                      <FileText size={14} />
+                      <span>Knowledge Base</span>
+                    </button>
+
                   </div>
 
                   {/* Status Indicator */}
@@ -2903,6 +2916,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
                   {/* -------------------- TAB: SYSTEM SETTINGS -------------------- */}
                   {activeTab === "concierge" && <ConciergeSettings />}
+                  {activeTab === "knowledge" && <KnowledgeManager />}
 
 
                   {activeTab === "system" && (

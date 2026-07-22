@@ -33,6 +33,8 @@ import { buildSystemPrompt } from "./concierge.prompt";
 import { retrieveRelevant, chunksToText } from "./concierge.retrieve";
 import { buildMenuAnswer, isNoKnowledgeFallback, isMenuQuestion } from "./concierge.knowledge";
 import { answerKnownTopic } from "./concierge.answer";
+import { loadDbKnowledgeChunks } from "./concierge.knowledge.server";
+
 import { resolveOllamaModel } from "./concierge.discovery";
 import { logConciergeTurn } from "./concierge.log.server";
 import { runModel } from "./concierge.llm";
@@ -151,7 +153,11 @@ export const conciergeChat = createServerFn({ method: "POST" })
     //    concierge working end to end even with an invalid/missing
     //    OpenRouter key and no Onyx connection.
     // ---------------------------------------------------------------------
-    const deterministic = answerKnownTopic(question);
+    // Load admin-authored knowledge once per turn. Fail-safe: empty list on
+    // any DB error so a bad row never breaks the concierge.
+    const dbChunks = await loadDbKnowledgeChunks().catch(() => []);
+    const deterministic = answerKnownTopic(question, dbChunks);
+
     if (deterministic) {
       await logConciergeTurn(data.sessionId, "guest", question);
       await logConciergeTurn(data.sessionId, "agent", deterministic.reply);
@@ -253,7 +259,7 @@ export const conciergeChat = createServerFn({ method: "POST" })
 
     if (effective) {
       try {
-        const { chunks } = retrieveRelevant(question, cfg.customKnowledge);
+        const { chunks } = retrieveRelevant(question, cfg.customKnowledge, dbChunks);
         const knowledgeBlock = chunksToText(chunks);
         const system = buildSystemPrompt(effective, knowledgeBlock);
         const raw = await runModel(effective, system, history);

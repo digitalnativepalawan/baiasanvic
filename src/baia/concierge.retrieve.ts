@@ -135,14 +135,17 @@ function tokenize(text: string, expand = false): string[] {
   return out;
 }
 
-const CHUNK_TOKEN_INDEX: { chunk: KnowledgeChunk; tokens: Map<string, number> }[] =
-  STATIC_CHUNKS.map((chunk) => {
+function buildIndex(chunks: KnowledgeChunk[]) {
+  return chunks.map((chunk) => {
     const tokens = new Map<string, number>();
     for (const t of tokenize(chunk.text)) {
       tokens.set(t, (tokens.get(t) ?? 0) + 1);
     }
     return { chunk, tokens };
   });
+}
+
+const CHUNK_TOKEN_INDEX = buildIndex(STATIC_CHUNKS);
 
 export interface ScoredChunk {
   chunk: KnowledgeChunk;
@@ -150,22 +153,28 @@ export interface ScoredChunk {
 }
 
 /**
- * Score every static knowledge chunk against a question by keyword overlap,
- * best match first. Exported so callers that need to know HOW confident a
- * match is (not just the merged text) — e.g. the deterministic known-topic
- * answerer — can apply their own confidence threshold instead of always
- * sending everything to the model.
+ * Score every knowledge chunk (static + optional dynamic DB-backed ones)
+ * against the question by keyword overlap, best match first. Dynamic chunks
+ * are indexed on the fly per request.
  */
-export function scoreChunks(question: string): ScoredChunk[] {
+export function scoreChunks(
+  question: string,
+  extraChunks: KnowledgeChunk[] = [],
+): ScoredChunk[] {
   const qTokens = tokenize(question, true);
-  return CHUNK_TOKEN_INDEX.map(({ chunk, tokens }) => {
-    let score = 0;
-    for (const qt of qTokens) {
-      const hit = tokens.get(qt);
-      if (hit) score += hit;
-    }
-    return { chunk, score };
-  }).sort((a, b) => b.score - a.score);
+  const index = extraChunks.length
+    ? [...CHUNK_TOKEN_INDEX, ...buildIndex(extraChunks)]
+    : CHUNK_TOKEN_INDEX;
+  return index
+    .map(({ chunk, tokens }) => {
+      let score = 0;
+      for (const qt of qTokens) {
+        const hit = tokens.get(qt);
+        if (hit) score += hit;
+      }
+      return { chunk, score };
+    })
+    .sort((a, b) => b.score - a.score);
 }
 
 /**
@@ -176,11 +185,12 @@ export function scoreChunks(question: string): ScoredChunk[] {
 export function retrieveRelevant(
   question: string,
   customKnowledge = "",
+  extraChunks: KnowledgeChunk[] = [],
 ): {
   chunks: KnowledgeChunk[];
   score: number;
 } {
-  const scored = scoreChunks(question);
+  const scored = scoreChunks(question, extraChunks);
 
   // Strong matches first; keep everything with a positive score.
   const matched = scored.filter((s) => s.score > 0).map((s) => s.chunk);
@@ -210,3 +220,4 @@ export function retrieveRelevant(
 export function chunksToText(chunks: KnowledgeChunk[]): string {
   return chunks.map((c) => `## ${c.label}\n${c.text}`).join("\n\n");
 }
+
