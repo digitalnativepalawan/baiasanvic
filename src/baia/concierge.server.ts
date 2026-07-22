@@ -153,7 +153,11 @@ export const conciergeChat = createServerFn({ method: "POST" })
     //    concierge working end to end even with an invalid/missing
     //    OpenRouter key and no Onyx connection.
     // ---------------------------------------------------------------------
-    const deterministic = answerKnownTopic(question);
+    // Load admin-authored knowledge once per turn. Fail-safe: empty list on
+    // any DB error so a bad row never breaks the concierge.
+    const dbChunks = await loadDbKnowledgeChunks().catch(() => []);
+    const deterministic = answerKnownTopic(question, dbChunks);
+
     if (deterministic) {
       await logConciergeTurn(data.sessionId, "guest", question);
       await logConciergeTurn(data.sessionId, "agent", deterministic.reply);
