@@ -1,56 +1,62 @@
-# Fix the concierge so it actually answers simple BAIA questions
+# Admin-managed concierge knowledge base
 
-The screenshots show "How do I get there?" and "What rooms do you have?" both dead-ending in the generic "email hello@baiapalawan.com" fallback. That is a bug in the deterministic knowledge layer, not a model/provider problem. Onyx also currently runs first when its env vars are set — you want it on standby, so it needs to be skipped entirely until you flip it back on.
+Give the admin full CRUD over the concierge's knowledge, backed by Supabase, plus CSV template download and bulk upload. The current free-text "Extra knowledge" blob stays as-is for backwards compatibility, but new structured entries become the primary way to grow the bot's answers.
 
-## Root causes (verified in the code)
+## 1. Database (Supabase migration)
 
-1. **Retrieval tokenizer drops the wrong words** (`src/baia/concierge.retrieve.ts`)
-   - `get` and `from` are in STOPWORDS → "how do I get there" tokenizes to just `["there"]`, matches nothing → contact fallback.
-   - No plural/simple stemming → `rooms` never matches `room`, `tours`/`tour`, `menus`/`menu`, `transfers`/`transfer`, `villas`/`villa`, `kids`/`kid`, etc.
-   - Result: "What rooms do you have?" tokenizes to `["rooms"]`, scores 0 against the accommodations chunk, falls through.
+New table `public.concierge_knowledge`:
 
-2. **Deterministic allow-list is stale** (`src/baia/concierge.answer.ts`)
-   - `KNOWN_TOPIC_IDS` only lists 11 legacy ids (about, accommodations, experiences, booking, policies, dining, transfers, stay, family, town, custom).
-   - The 17 richer owner topics that were added later — `breakfast`, `checkin_checkout`, `cancellation`, `pets_events`, `airport_transfer`, `tour_partners`, `rentals`, `wifi`, `power`, `faqs`, `san_vicente_geo`, `long_beach`, `port_barton`, `island_hopping`, `waterfalls`, `alimanguan_surfing` — are excluded from the deterministic answerer even when they score highest. So questions about tours, airport van, island hopping, WiFi, Long Beach, Port Barton, waterfalls etc. can never be answered deterministically today.
+- `id uuid pk`
+- `topic text not null` — short slug like `breakfast`, `airport-van`, used for retrieval labeling
+- `label text not null` — human title shown in admin
+- `body text not null` — the actual knowledge (money is stripped at read time by existing `stripMonetary`)
+- `tags text[] default '{}'` — optional keywords to boost retrieval matches
+- `enabled boolean default true`
+- `sort_order int default 0`
+- `created_at`, `updated_at` timestamps + trigger
 
-3. **Onyx runs first when env vars are set** (`src/baia/concierge.server.ts`)
-   - You want it on standby during low season; today it's tried before OpenRouter for any unknown question, which slows replies and can produce off-brand output.
+RLS: `SELECT` for `authenticated` + `anon` (bot needs to read via server fn using publishable client; simpler: read via service role on the server, so restrict to `service_role` only + `authenticated` for admin panel). Writes: `authenticated` only. GRANTs to `authenticated` + `service_role`.
 
-## What I will change (concierge only — nothing else)
+## 2. Server functions (`src/baia/admin.functions.ts` additions)
 
-**A. `src/baia/concierge.retrieve.ts`**
-- Remove `get` and `from` from STOPWORDS.
-- Add a tiny normalizer: lowercase, strip a trailing `s`/`es` for tokens > 3 chars (so `rooms→room`, `tours→tour`, `villas→villa`, `transfers→transfer`, `dishes→dish`). Apply the same normalization to chunk indexing and question tokenization so scoring stays symmetric.
-- Add a small synonym expansion map applied only to the question (not the chunks) for common guest phrasings, e.g. `there → baia san vicente location`, `here → baia location`, `van/pickup/shuttle → transfer airport`, `wifi/internet → wifi`, `kids/children → family`, `pet → pets`, `price/rate/cost → rate` (rate questions are already caught by the guardrail — this just keeps them from matching noise).
+All gated by existing `verifyAdminPasskey`:
 
-**B. `src/baia/concierge.answer.ts`**
-- Replace the hand-maintained `KNOWN_TOPIC_IDS` allow-list with "any chunk id built by `buildStaticChunks()`" (derived at module load), so every current and future owner topic is eligible.
-- Keep the existing confidence threshold (`MIN_CONFIDENT_SCORE = 1`) and existing safety layers (menu detour, `stripMonetary`, `hasObviousMoneySignal`) unchanged.
-- Keep the existing paragraph formatter, but stop dropping ALL-CAPS header lines that happen to also contain the resort's context words — instead, only drop pure section-title lines (`/^[A-Z0-9 &/\-]+$/`). This keeps replies clean without accidentally deleting real content.
+- `listKnowledge()` — returns all rows ordered by `sort_order, label`
+- `upsertKnowledge({ id?, topic, label, body, tags, enabled, sort_order })`
+- `deleteKnowledge({ id })`
+- `bulkImportKnowledge({ csv, mode: 'append' | 'replace' })` — parses CSV, validates, inserts (or wipes+inserts on `replace`)
 
-**C. `src/baia/concierge.server.ts` — put Onyx on standby**
-- Force `onyxConfigured = false` behind a single feature flag (`ONYX_ENABLED`, default off). Env vars (`ONYX_BASE_URL`, `ONYX_API_KEY`) can stay in place; the block is simply skipped when the flag is off. Flipping the flag back on later re-enables Onyx with zero code changes.
-- Order of the guest turn stays: lead → rate guard → deterministic knowledge → (Onyx skipped) → OpenRouter/Ollama enhancer → contact fallback.
+CSV columns: `topic,label,body,tags,enabled,sort_order` (tags = `;`-separated). Template is generated on the client (no server round-trip needed) but export uses a server fn to dump current rows.
 
-**D. No changes to**: UI, styling, admin panel, Onyx client, guardrails, lead capture, prompt, routes, DB, or images. This is a targeted retrieval + allow-list + flag change.
+## 3. Retrieval integration (`src/baia/concierge.retrieve.ts`)
 
-## How I'll verify before handing back
+Load enabled rows once per request (cached briefly) and append each as its own `KnowledgeChunk` (id = `db:<uuid>`, label = row.label, text = `body` + tags appended for token matching). This is better than one big blob because each entry scores independently — matches your existing per-chunk retrieval + money-strip pipeline.
 
-Locally hit the deterministic layer with the exact failing questions from your screenshots and a few more, and confirm each returns a real BAIA answer (not the contact fallback):
+The existing free-text `customKnowledge` field continues to work unchanged.
 
-- "How do I get there?" → transfers / airport_transfer
-- "What rooms do you have?" → accommodations
-- "What tours do you offer?" → tour_partners / island_hopping
-- "Where is BAIA?" → about (San Vicente, not Port Barton)
-- "Menu?" / "What's for breakfast?" → dining / breakfast
-- "Do you have WiFi?" → wifi
-- "Can I bring my dog?" → pets_events
-- "What time is check-in?" → checkin_checkout
+## 4. Admin UI — new "Knowledge Base" tab in `AdminPanel.tsx`
 
-Then run `bun run build` to confirm the app still compiles. No publish unless you ask.
+New component `src/baia/components/KnowledgeManager.tsx`:
 
-## Technical notes
+- Table of entries (label, topic, enabled toggle, edit, delete)
+- "Add entry" button → modal with topic, label, body (textarea), tags (comma input), enabled, sort_order
+- Toolbar buttons:
+  - **Download all (CSV)** — current entries as backup
+  - **Download blank template (CSV)** — headers + 2 example rows + inline instructions row
+  - **Bulk upload CSV** — file picker + append/replace radio + preview count → confirm
+- Uses same luxury styling tokens as existing admin tabs
 
-- Files touched: `src/baia/concierge.retrieve.ts`, `src/baia/concierge.answer.ts`, `src/baia/concierge.server.ts`. Nothing else.
-- `ONYX_ENABLED` is read as `process.env.ONYX_ENABLED === "true"`; unset = off (standby). No secret rotation, no key changes.
-- Existing tests in `src/baia/__tests__/concierge.guardrails.test.ts` continue to apply — money/rate refusal behavior is unchanged.
+## 5. Files touched
+
+- New migration (create table + RLS + grants + trigger)
+- `src/baia/admin.functions.ts` — 4 new server fns + CSV parsing
+- `src/baia/concierge.retrieve.ts` — pull DB entries into chunk list
+- `src/baia/components/KnowledgeManager.tsx` — new UI
+- `src/baia/components/AdminPanel.tsx` — add nav item + route the tab
+- `src/integrations/supabase/types.ts` regenerates after migration approval
+
+## Notes
+
+- Prices are still auto-stripped at retrieval time via existing `stripMonetary`, so admins can paste content freely without leaking rates.
+- Bulk `replace` mode is destructive (wipes all rows then inserts) — UI will require a typed confirmation.
+- No changes to Onyx standby, OpenRouter, or fallback logic.
