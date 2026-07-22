@@ -141,7 +141,7 @@ export interface ScoredChunk {
  * sending everything to the model.
  */
 export function scoreChunks(question: string): ScoredChunk[] {
-  const qTokens = tokenize(question);
+  const qTokens = tokenize(question, true);
   return CHUNK_TOKEN_INDEX.map(({ chunk, tokens }) => {
     let score = 0;
     for (const qt of qTokens) {
