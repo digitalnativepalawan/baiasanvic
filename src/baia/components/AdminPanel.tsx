@@ -9,6 +9,7 @@ import { useSite, GalleryItem, DEFAULT_THEME, MediaPlayback, DEFAULT_HERO_PLAYBA
 import { RoomTier, Activity, Testimonial } from "../types";
 import { uploadSiteAsset } from "../admin.functions";
 import ConciergeSettings from "./ConciergeSettings";
+import KnowledgeManager from "./KnowledgeManager";
 
 
 interface AdminPanelProps {
