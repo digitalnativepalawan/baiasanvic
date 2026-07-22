@@ -60,7 +60,7 @@ function formatChunkForGuest(chunk: KnowledgeChunk): string {
     // (all-caps, no lowercase letters) — they read fine inline but are
     // redundant once several are strung into one paragraph.
     .filter((line) => /[a-z]/.test(line))
-    .map((line) => line.replace(/^[A-Z][A-Za-z \/&]*:\s*/, "").trim())
+    .filter(Boolean)
     .filter(Boolean)
     // Per-line money guard: strip currency/amounts, then drop any line
     // that still trips the obvious-money heuristic (phrases like
