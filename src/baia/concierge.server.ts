@@ -259,7 +259,7 @@ export const conciergeChat = createServerFn({ method: "POST" })
 
     if (effective) {
       try {
-        const { chunks } = retrieveRelevant(question, cfg.customKnowledge);
+        const { chunks } = retrieveRelevant(question, cfg.customKnowledge, dbChunks);
         const knowledgeBlock = chunksToText(chunks);
         const system = buildSystemPrompt(effective, knowledgeBlock);
         const raw = await runModel(effective, system, history);
