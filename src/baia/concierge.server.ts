@@ -66,7 +66,13 @@ export const conciergeChat = createServerFn({ method: "POST" })
     // custom knowledge) and admin on/off. It is NOT required for the
     // deterministic core below.
     const cfg: ConciergeConfig = await loadConciergeConfig();
-    const onyxConfigured = !!(process.env.ONYX_BASE_URL && process.env.ONYX_API_KEY);
+    // Onyx is on standby unless explicitly enabled via ONYX_ENABLED=true.
+    // Env vars can remain set; the block is simply skipped when the flag
+    // is off, so low-season traffic goes straight to the deterministic
+    // knowledge layer and (if needed) OpenRouter enhancer.
+    const onyxEnabled = process.env.ONYX_ENABLED === "true";
+    const onyxConfigured =
+      onyxEnabled && !!(process.env.ONYX_BASE_URL && process.env.ONYX_API_KEY);
 
     const history = trimHistory(data.messages);
     const lastGuest = [...history].reverse().find((m) => m.role === "guest");
