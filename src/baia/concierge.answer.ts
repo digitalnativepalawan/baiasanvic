@@ -21,39 +21,27 @@
  * model call at all.
  */
 import { scoreChunks } from "./concierge.retrieve";
-import type { KnowledgeChunk } from "./concierge.knowledge";
+import { buildStaticChunks, type KnowledgeChunk } from "./concierge.knowledge";
 import { stripMonetary, isMenuQuestion, buildMenuAnswer } from "./concierge.knowledge";
 import { hasObviousMoneySignal } from "./concierge.guardrails";
 
 /**
  * Minimum keyword-overlap score required before we trust a static chunk
- * enough to answer from it directly (no model). A score of 1 means at least
+ * enough to answer from it directly (no model). Score of 1 means at least
  * one distinct, non-generic term from the guest's question appears in that
- * chunk (stopwords, and the resort's own near-universal brand/hospitality
- * words, are already filtered out of scoring in concierge.retrieve.ts, so
- * even a score of 1 is a real, specific signal). Below this, we'd rather
- * admit "I don't know" (fall through to Onyx/OpenRouter, then the contact
- * fallback) than guess.
+ * chunk. Below this, admit "I don't know" and let the enhancer / contact
+ * fallback take over rather than guess.
  */
 const MIN_CONFIDENT_SCORE = 1;
 
 /**
- * Every static chunk id from concierge.knowledge.ts's buildStaticChunks()
- * plus the ad-hoc "custom" chunk id used for owner-authored extra
- * knowledge. Kept as an explicit allow-list (rather than "any chunk") so
- * a future new chunk type has to be deliberately opted in here.
+ * Every static chunk id produced by buildStaticChunks() is eligible for
+ * deterministic answering — plus the ad-hoc "custom" chunk id used for
+ * owner-authored extra knowledge. Derived once at module load so new owner
+ * topics added to concierge.knowledge.ts are picked up automatically.
  */
-const KNOWN_TOPIC_IDS = new Set([
-  "about",
-  "accommodations",
-  "experiences",
-  "booking",
-  "policies",
-  "dining",
-  "transfers",
-  "stay",
-  "family",
-  "town",
+const KNOWN_TOPIC_IDS = new Set<string>([
+  ...buildStaticChunks().map((c) => c.id),
   "custom",
 ]);
 
@@ -72,8 +60,15 @@ function formatChunkForGuest(chunk: KnowledgeChunk): string {
     // (all-caps, no lowercase letters) — they read fine inline but are
     // redundant once several are strung into one paragraph.
     .filter((line) => /[a-z]/.test(line))
-    .map((line) => line.replace(/^[A-Z][A-Za-z \/&]*:\s*/, "").trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter(Boolean)
+    // Per-line money guard: strip currency/amounts, then drop any line
+    // that still trips the obvious-money heuristic (phrases like
+    // "deposit", "per adult", "₱6,000"). This keeps the rest of the
+    // topic — check-in time, wifi speed, van required-info — usable
+    // even when a sibling line mentions price.
+    .map((line) => stripMonetary(line))
+    .filter((line) => line && !hasObviousMoneySignal(line));
   return sentences.join(" ");
 }
 
