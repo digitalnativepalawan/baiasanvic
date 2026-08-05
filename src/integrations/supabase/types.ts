@@ -185,6 +185,189 @@ export type Database = {
         }
         Relationships: []
       }
+      tala_config: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      tala_conversations: {
+        Row: {
+          brain: string | null
+          content: string
+          created_at: string | null
+          id: string
+          role: string
+          session_id: string
+        }
+        Insert: {
+          brain?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          role: string
+          session_id: string
+        }
+        Update: {
+          brain?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
+      tala_events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          event_date: string
+          event_time: string | null
+          id: string
+          location: string | null
+          max_guests: number | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          event_date: string
+          event_time?: string | null
+          id?: string
+          location?: string | null
+          max_guests?: number | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          event_date?: string
+          event_time?: string | null
+          id?: string
+          location?: string | null
+          max_guests?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
+      tala_nomad_leads: {
+        Row: {
+          created_at: string | null
+          handle: string | null
+          id: string
+          interest: string | null
+          name: string
+          notes: string | null
+          source: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          handle?: string | null
+          id?: string
+          interest?: string | null
+          name: string
+          notes?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          handle?: string | null
+          id?: string
+          interest?: string | null
+          name?: string
+          notes?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tala_rooms: {
+        Row: {
+          capacity: number | null
+          created_at: string | null
+          id: string
+          name: string
+          status: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string | null
+          id?: string
+          name: string
+          status?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          status?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tala_tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          priority: string | null
+          room: string
+          status: string
+          task_type: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          room: string
+          status?: string
+          task_type: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          room?: string
+          status?: string
+          task_type?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
