@@ -123,7 +123,7 @@ export function WorkforcePanel() {
           <Button onClick={() => setShowSettings(!showSettings)} size="sm" variant="outline">
             <Settings className="h-4 w-4" />
           </Button>
-          <Button onClick={fetchData} size="sm" variant="outline">
+          <Button onClick={loadConfig} size="sm" variant="outline">
             <RefreshCw className="h-4 w-4" />
           </Button>
           <Badge variant="outline" className="gap-1">
