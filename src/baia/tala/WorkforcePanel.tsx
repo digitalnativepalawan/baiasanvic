@@ -54,12 +54,29 @@ export function WorkforcePanel() {
   const [openrouterModels, setOpenrouterModels] = useState<string[]>([]);
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [hermesUrl, setHermesUrl] = useState(() =>
+    typeof window !== "undefined" ? localStorage.getItem("hermes_url") || "http://localhost:8000" : "http://localhost:8000"
+  );
+  const [sending, setSending] = useState(false);
 
   const loadConfig = useCallback(async () => {
     try {
       const cfg = await getConciergeConfig();
       setConciergeConfig(cfg);
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.error("Failed to load concierge config", e);
+      // Set defaults so the UI still works
+      setConciergeConfig({
+        enabled: false,
+        provider: "openrouter",
+        openrouterApiKey: "",
+        openrouterModel: "openai/gpt-4o-mini",
+        ollamaBaseUrl: "http://localhost:11434",
+        ollamaModel: "",
+        persona: "",
+        customKnowledge: "",
+      });
+    }
   }, []);
 
   const fetchOpenRouterModels = useCallback(async () => {
@@ -103,11 +120,25 @@ export function WorkforcePanel() {
   }, [conciergeConfig, fetchOllamaModels]);
 
   const handleSend = async () => {
-    if (!chatMessage.trim()) return;
+    if (!chatMessage.trim() || sending) return;
     const msg = chatMessage;
     setChatLog((prev) => [...prev, { role: "user", msg }]);
     setChatMessage("");
-    setChatLog((prev) => [...prev, { role: "agent", msg: `Processing: "${msg}"... Configure your AI provider in AI Concierge settings to enable responses.` }]);
+    setSending(true);
+    try {
+      const res = await fetch(`${hermesUrl}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg, session_id: "admin" }),
+      });
+      if (!res.ok) throw new Error(`Hermes returned ${res.status}`);
+      const data = await res.json();
+      setChatLog((prev) => [...prev, { role: "agent", msg: data.reply || "No response from Hermes." }]);
+    } catch (e: any) {
+      setChatLog((prev) => [...prev, { role: "agent", msg: `Error: ${e.message}. Is the Hermes server running at ${hermesUrl}?` }]);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -139,8 +170,20 @@ export function WorkforcePanel() {
             <CardTitle className="text-sm">AI Provider Settings</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <label className="text-xs font-medium mb-1 block">Hermes Server URL</label>
+              <Input
+                value={hermesUrl}
+                onChange={(e) => setHermesUrl(e.target.value)}
+                placeholder="http://localhost:8000"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Where is the Hermes FastAPI server running?
+              </p>
+            </div>
+
             <p className="text-xs text-muted-foreground">
-              These settings are shared with the AI Concierge. Configure in{" "}
+              AI provider settings are shared with the AI Concierge. Configure in{" "}
               <button onClick={() => setShowSettings(false)} className="underline text-primary">
                 AI Concierge
               </button>{" "}
@@ -211,6 +254,7 @@ export function WorkforcePanel() {
               onClick={async () => {
                 setSaving(true);
                 try {
+                  localStorage.setItem("hermes_url", hermesUrl);
                   await saveConciergeSettings({ data: { config: conciergeConfig } });
                 } finally {
                   setSaving(false);
@@ -284,8 +328,8 @@ export function WorkforcePanel() {
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                   placeholder="Ask Hermes anything about the resort..."
                 />
-                <Button onClick={handleSend} size="icon">
-                  <Send className="h-4 w-4" />
+                <Button onClick={handleSend} size="icon" disabled={sending}>
+                  {sending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
               </div>
             </CardContent>
