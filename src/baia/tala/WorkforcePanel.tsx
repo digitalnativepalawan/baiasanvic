@@ -9,10 +9,7 @@ import {
   Send, Check, X, Clock, Zap, Bot, PlayCircle, PauseCircle,
   AlertCircle, CheckCircle2, XCircle, RefreshCw
 } from "lucide-react";
-
-const DEFAULT_HERMES_URL = "http://127.0.0.1:8100";
-const getHermesUrl = () => localStorage.getItem("hermes_url") || DEFAULT_HERMES_URL;
-const setHermesUrl = (url: string) => localStorage.setItem("hermes_url", url);
+import { getHermesConfig, saveHermesConfig } from "./hermes.config.server";
 
 const AGENT_ICONS: Record<string, typeof Activity> = {
   "command-center": Activity,
@@ -51,27 +48,37 @@ export function WorkforcePanel() {
   const [logs, setLogs] = useState<Array<{ time: string; agent: string; message: string; level: string }>>([]);
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [hermesUrl, setHermesUrlState] = useState(getHermesUrl());
+  const [hermesUrl, setHermesUrlState] = useState("http://127.0.0.1:8100");
   const [showSettings, setShowSettings] = useState(false);
-  const [config, setConfig] = useState<{ model: string; provider: string; base_url: string } | null>(null);
+  const [serverConfig, setServerConfig] = useState<{ model: string; provider: string; base_url: string } | null>(null);
   const [openrouterModels, setOpenrouterModels] = useState<string[]>([]);
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedProvider, setSelectedProvider] = useState("openrouter");
   const [openrouterKey, setOpenrouterKey] = useState("");
   const [ollamaUrl, setOllamaUrl] = useState("http://localhost:11434");
+  const [saving, setSaving] = useState(false);
 
-  const fetchConfig = useCallback(async () => {
+  const loadSupabaseConfig = useCallback(async () => {
     try {
-      const res = await fetch(`${getHermesUrl()}/api/config`);
-      if (res.ok) {
-        const data = await res.json();
-        setConfig(data);
-        setSelectedModel(data.model || "");
-        setSelectedProvider(data.provider || "openrouter");
-      }
+      const cfg = await getHermesConfig();
+      setHermesUrlState(cfg.server_url);
+      setSelectedProvider(cfg.provider);
+      setSelectedModel(cfg.model);
+      setOpenrouterKey(cfg.openrouter_api_key);
+      setOllamaUrl(cfg.ollama_base_url);
     } catch { /* ignore */ }
   }, []);
+
+  const fetchServerConfig = useCallback(async () => {
+    try {
+      const res = await fetch(`${hermesUrl}/api/config`);
+      if (res.ok) {
+        const data = await res.json();
+        setServerConfig(data);
+      }
+    } catch { /* ignore */ }
+  }, [hermesUrl]);
 
   const fetchOpenRouterModels = useCallback(async () => {
     try {
@@ -127,11 +134,17 @@ export function WorkforcePanel() {
   }, []);
 
   useEffect(() => {
+    loadSupabaseConfig();
     fetchData();
-    fetchConfig();
     fetchOpenRouterModels();
-    fetchOllamaModels(ollamaUrl);
-  }, [fetchData, fetchConfig, fetchOpenRouterModels, fetchOllamaModels, ollamaUrl]);
+  }, [loadSupabaseConfig, fetchData, fetchOpenRouterModels]);
+
+  useEffect(() => {
+    if (hermesUrl) {
+      fetchServerConfig();
+      fetchOllamaModels(ollamaUrl);
+    }
+  }, [hermesUrl, fetchServerConfig, fetchOllamaModels, ollamaUrl]);
 
   const handleSend = async () => {
     if (!chatMessage.trim()) return;
@@ -276,16 +289,31 @@ export function WorkforcePanel() {
 
             <Button
               onClick={async () => {
-                await fetch(`${getHermesUrl()}/api/config`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ model: selectedModel, provider: selectedProvider }),
-                });
-                fetchConfig();
+                setSaving(true);
+                try {
+                  // Save to Supabase
+                  await saveHermesConfig({
+                    server_url: hermesUrl,
+                    provider: selectedProvider,
+                    model: selectedModel,
+                    openrouter_api_key: openrouterKey,
+                    ollama_base_url: ollamaUrl,
+                  });
+                  // Apply to running server
+                  await fetch(`${hermesUrl}/api/config`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ model: selectedModel, provider: selectedProvider }),
+                  });
+                  fetchServerConfig();
+                } finally {
+                  setSaving(false);
+                }
               }}
+              disabled={saving}
               className="w-full"
             >
-              Apply Model Settings
+              {saving ? "Saving..." : "Apply Model Settings"}
             </Button>
           </CardContent>
         </Card>
