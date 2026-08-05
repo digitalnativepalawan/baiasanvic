@@ -3,6 +3,7 @@ TALA API — Hermes Agent as BAIA backend.
 This server imports and runs the REAL Hermes agent code.
 """
 
+import asyncio
 import sys
 from pathlib import Path
 
@@ -45,8 +46,16 @@ _agent = None
 def get_agent():
     global _agent
     if _agent is None:
+        import os
         from run_agent import AIAgent
-        _agent = AIAgent()
+        # Ensure we read config from the user's hermes home
+        hermes_home = os.path.expanduser(r"~\AppData\Local\hermes")
+        if os.path.exists(os.path.join(hermes_home, "config.yaml")):
+            os.chdir(hermes_home)
+        _agent = AIAgent(
+            model="nvidia/nemotron-3-ultra-550b-a55b:free",
+            provider="openrouter",
+        )
     return _agent
 
 
@@ -61,8 +70,11 @@ async def chat(req: ChatRequest):
     try:
         agent = get_agent()
         from agent.conversation_loop import run_conversation
-        result = await run_conversation(agent, req.message, session_id=req.session_id)
-        return ChatResponse(reply=result, session_id=req.session_id)
+        result = await asyncio.to_thread(
+            run_conversation, agent, req.message, task_id=req.session_id
+        )
+        reply = result.get("final_response", "") if isinstance(result, dict) else str(result)
+        return ChatResponse(reply=reply, session_id=req.session_id)
     except Exception as e:
         logger.exception("Agent error")
         raise HTTPException(500, str(e))
@@ -134,8 +146,11 @@ async def workforce_command(req: ChatRequest):
     try:
         agent = get_agent()
         from agent.conversation_loop import run_conversation
-        result = await run_conversation(agent, req.message, session_id=req.session_id)
-        return {"reply": result, "session_id": req.session_id}
+        result = await asyncio.to_thread(
+            run_conversation, agent, req.message, task_id=req.session_id
+        )
+        reply = result.get("final_response", "") if isinstance(result, dict) else str(result)
+        return {"reply": reply, "session_id": req.session_id}
     except Exception as e:
         logger.exception("Workforce command error")
         raise HTTPException(500, str(e))
