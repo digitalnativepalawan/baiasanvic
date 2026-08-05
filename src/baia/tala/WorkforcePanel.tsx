@@ -9,7 +9,7 @@ import {
   Send, Check, X, Clock, Zap, Bot, PlayCircle, PauseCircle,
   AlertCircle, CheckCircle2, XCircle, RefreshCw
 } from "lucide-react";
-import { getHermesConfig, saveHermesConfig } from "./hermes.config.server";
+import { getHermesConfig, saveHermesConfig } from "./hermes.config";
 
 const AGENT_ICONS: Record<string, typeof Activity> = {
   "command-center": Activity,
