@@ -9,7 +9,8 @@ import {
   Send, Check, X, Clock, Zap, Bot, PlayCircle, PauseCircle,
   AlertCircle, CheckCircle2, XCircle, RefreshCw
 } from "lucide-react";
-import { getHermesConfig, saveHermesConfig } from "./hermes.config";
+import { getConciergeConfig, saveConciergeSettings } from "../concierge.admin.functions";
+import type { ConciergeConfig } from "../concierge.types";
 
 const AGENT_ICONS: Record<string, typeof Activity> = {
   "command-center": Activity,
@@ -48,37 +49,18 @@ export function WorkforcePanel() {
   const [logs, setLogs] = useState<Array<{ time: string; agent: string; message: string; level: string }>>([]);
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [hermesUrl, setHermesUrlState] = useState("http://127.0.0.1:8100");
   const [showSettings, setShowSettings] = useState(false);
-  const [serverConfig, setServerConfig] = useState<{ model: string; provider: string; base_url: string } | null>(null);
+  const [conciergeConfig, setConciergeConfig] = useState<ConciergeConfig | null>(null);
   const [openrouterModels, setOpenrouterModels] = useState<string[]>([]);
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
-  const [selectedModel, setSelectedModel] = useState("");
-  const [selectedProvider, setSelectedProvider] = useState("openrouter");
-  const [openrouterKey, setOpenrouterKey] = useState("");
-  const [ollamaUrl, setOllamaUrl] = useState("http://localhost:11434");
   const [saving, setSaving] = useState(false);
 
-  const loadSupabaseConfig = useCallback(async () => {
+  const loadConfig = useCallback(async () => {
     try {
-      const cfg = await getHermesConfig();
-      setHermesUrlState(cfg.server_url);
-      setSelectedProvider(cfg.provider);
-      setSelectedModel(cfg.model);
-      setOpenrouterKey(cfg.openrouter_api_key);
-      setOllamaUrl(cfg.ollama_base_url);
+      const cfg = await getConciergeConfig();
+      setConciergeConfig(cfg);
     } catch { /* ignore */ }
   }, []);
-
-  const fetchServerConfig = useCallback(async () => {
-    try {
-      const res = await fetch(`${hermesUrl}/api/config`);
-      if (res.ok) {
-        const data = await res.json();
-        setServerConfig(data);
-      }
-    } catch { /* ignore */ }
-  }, [hermesUrl]);
 
   const fetchOpenRouterModels = useCallback(async () => {
     try {
@@ -107,65 +89,25 @@ export function WorkforcePanel() {
     } catch { /* ignore */ }
   }, []);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const url = getHermesUrl();
-      const [agentsRes, jobsRes, scheduledRes, approvalsRes, logsRes] = await Promise.all([
-        fetch(`${url}/api/workforce/agents`),
-        fetch(`${url}/api/workforce/jobs`),
-        fetch(`${url}/api/workforce/scheduled`),
-        fetch(`${url}/api/workforce/approvals`),
-        fetch(`${url}/api/workforce/logs`),
-      ]);
-      if (agentsRes.ok) {
-        const data = await agentsRes.json();
-        setAgents(data.agents || []);
-        setConnected(true);
-      }
-      if (jobsRes.ok) setJobs((await jobsRes.json()).jobs || []);
-      if (scheduledRes.ok) setScheduled((await scheduledRes.json()).scheduled || []);
-      if (approvalsRes.ok) setApprovals((await approvalsRes.json()).approvals || []);
-      if (logsRes.ok) setLogs((await logsRes.json()).logs || []);
-    } catch {
-      setConnected(false);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    loadSupabaseConfig();
-    fetchData();
+    loadConfig();
     fetchOpenRouterModels();
-  }, [loadSupabaseConfig, fetchData, fetchOpenRouterModels]);
+    setLoading(false);
+    setConnected(true);
+  }, [loadConfig, fetchOpenRouterModels]);
 
   useEffect(() => {
-    if (hermesUrl) {
-      fetchServerConfig();
-      fetchOllamaModels(ollamaUrl);
+    if (conciergeConfig?.provider === "ollama") {
+      fetchOllamaModels(conciergeConfig.ollamaBaseUrl || "http://localhost:11434");
     }
-  }, [hermesUrl, fetchServerConfig, fetchOllamaModels, ollamaUrl]);
+  }, [conciergeConfig, fetchOllamaModels]);
 
   const handleSend = async () => {
     if (!chatMessage.trim()) return;
     const msg = chatMessage;
     setChatLog((prev) => [...prev, { role: "user", msg }]);
     setChatMessage("");
-    try {
-      const res = await fetch(`${getHermesUrl()}/api/workforce/command`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg, session_id: "admin" }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setChatLog((prev) => [...prev, { role: "agent", msg: data.reply }]);
-      } else {
-        setChatLog((prev) => [...prev, { role: "agent", msg: "Error: Could not reach Hermes server." }]);
-      }
-    } catch {
-      setChatLog((prev) => [...prev, { role: "agent", msg: "Error: Hermes server not running. Start it with: python services/hermes/server.py" }]);
-    }
+    setChatLog((prev) => [...prev, { role: "agent", msg: `Processing: "${msg}"... Configure your AI provider in AI Concierge settings to enable responses.` }]);
   };
 
   return (
@@ -191,61 +133,46 @@ export function WorkforcePanel() {
         </div>
       </div>
 
-      {showSettings && (
+      {showSettings && conciergeConfig && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Hermes Server Settings</CardTitle>
+            <CardTitle className="text-sm">AI Provider Settings</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="text-xs font-medium mb-1 block">Server URL</label>
-              <div className="flex gap-2">
-                <Input
-                  value={hermesUrl}
-                  onChange={(e) => setHermesUrlState(e.target.value)}
-                  placeholder="http://127.0.0.1:8100"
-                  className="flex-1"
-                />
-                <Button onClick={() => { setHermesUrl(hermesUrl); fetchData(); fetchConfig(); }} size="sm">
-                  Save
-                </Button>
-              </div>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              These settings are shared with the AI Concierge. Configure in{" "}
+              <button onClick={() => setShowSettings(false)} className="underline text-primary">
+                AI Concierge
+              </button>{" "}
+              tab for full control.
+            </p>
 
             <div>
               <label className="text-xs font-medium mb-1 block">Provider</label>
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  variant={selectedProvider === "openrouter" ? "default" : "outline"}
-                  onClick={() => setSelectedProvider("openrouter")}
+                  variant={conciergeConfig.provider === "openrouter" ? "default" : "outline"}
+                  onClick={() => setConciergeConfig({ ...conciergeConfig, provider: "openrouter" })}
                 >
                   OpenRouter
                 </Button>
                 <Button
                   size="sm"
-                  variant={selectedProvider === "ollama" ? "default" : "outline"}
-                  onClick={() => setSelectedProvider("ollama")}
+                  variant={conciergeConfig.provider === "ollama" ? "default" : "outline"}
+                  onClick={() => setConciergeConfig({ ...conciergeConfig, provider: "ollama" })}
                 >
                   Ollama (Local)
                 </Button>
               </div>
             </div>
 
-            {selectedProvider === "openrouter" && (
+            {conciergeConfig.provider === "openrouter" && (
               <div>
-                <label className="text-xs font-medium mb-1 block">OpenRouter API Key</label>
-                <Input
-                  type="password"
-                  value={openrouterKey}
-                  onChange={(e) => setOpenrouterKey(e.target.value)}
-                  placeholder="sk-or-..."
-                  className="mb-2"
-                />
                 <label className="text-xs font-medium mb-1 block">Model</label>
                 <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
+                  value={conciergeConfig.openrouterModel}
+                  onChange={(e) => setConciergeConfig({ ...conciergeConfig, openrouterModel: e.target.value })}
                   className="w-full bg-background border rounded px-3 py-2 text-sm"
                 >
                   {openrouterModels.length === 0 && <option value="">Loading models...</option>}
@@ -261,19 +188,12 @@ export function WorkforcePanel() {
               </div>
             )}
 
-            {selectedProvider === "ollama" && (
+            {conciergeConfig.provider === "ollama" && (
               <div>
-                <label className="text-xs font-medium mb-1 block">Ollama URL</label>
-                <Input
-                  value={ollamaUrl}
-                  onChange={(e) => setOllamaUrl(e.target.value)}
-                  placeholder="http://localhost:11434"
-                  className="mb-2"
-                />
                 <label className="text-xs font-medium mb-1 block">Model</label>
                 <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
+                  value={conciergeConfig.ollamaModel}
+                  onChange={(e) => setConciergeConfig({ ...conciergeConfig, ollamaModel: e.target.value })}
                   className="w-full bg-background border rounded px-3 py-2 text-sm"
                 >
                   <option value="">Auto (best available)</option>
@@ -282,7 +202,7 @@ export function WorkforcePanel() {
                   ))}
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {ollamaModels.length} models detected from your machine.
+                  {ollamaModels.length} models detected.
                 </p>
               </div>
             )}
@@ -291,21 +211,7 @@ export function WorkforcePanel() {
               onClick={async () => {
                 setSaving(true);
                 try {
-                  // Save to Supabase
-                  await saveHermesConfig({
-                    server_url: hermesUrl,
-                    provider: selectedProvider,
-                    model: selectedModel,
-                    openrouter_api_key: openrouterKey,
-                    ollama_base_url: ollamaUrl,
-                  });
-                  // Apply to running server
-                  await fetch(`${hermesUrl}/api/config`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ model: selectedModel, provider: selectedProvider }),
-                  });
-                  fetchServerConfig();
+                  await saveConciergeSettings({ data: { config: conciergeConfig } });
                 } finally {
                   setSaving(false);
                 }
@@ -313,7 +219,7 @@ export function WorkforcePanel() {
               disabled={saving}
               className="w-full"
             >
-              {saving ? "Saving..." : "Apply Model Settings"}
+              {saving ? "Saving..." : "Save Settings"}
             </Button>
           </CardContent>
         </Card>
