@@ -87,6 +87,60 @@ async def status():
     return {"status": "running", "agent": "hermes"}
 
 
+# ── Workforce endpoints ──────────────────────────────────────
+
+@app.get("/api/workforce/agents")
+async def workforce_agents():
+    """List available workforce agents."""
+    return {
+        "agents": [
+            {"id": "cmd", "role": "command-center", "name": "Command Center", "status": "idle"},
+            {"id": "fin", "role": "financial-agent", "name": "Financial Agent", "status": "idle"},
+            {"id": "lead", "role": "lead-agent", "name": "Lead Agent", "status": "idle"},
+            {"id": "email", "role": "email-agent", "name": "Email Agent", "status": "idle"},
+            {"id": "dev", "role": "developer-agent", "name": "Developer Agent", "status": "idle"},
+            {"id": "ops", "role": "operations-agent", "name": "Operations Agent", "status": "idle"},
+        ]
+    }
+
+
+@app.get("/api/workforce/jobs")
+async def workforce_jobs():
+    """Get active jobs."""
+    return {"jobs": []}
+
+
+@app.get("/api/workforce/scheduled")
+async def workforce_scheduled():
+    """Get scheduled jobs."""
+    return {"scheduled": []}
+
+
+@app.get("/api/workforce/approvals")
+async def workforce_approvals():
+    """Get pending approvals."""
+    return {"approvals": []}
+
+
+@app.get("/api/workforce/logs")
+async def workforce_logs():
+    """Get agent logs."""
+    return {"logs": []}
+
+
+@app.post("/api/workforce/command")
+async def workforce_command(req: ChatRequest):
+    """Send command to workforce agent."""
+    try:
+        agent = get_agent()
+        from agent.conversation_loop import run_conversation
+        result = await run_conversation(agent, req.message, session_id=req.session_id)
+        return {"reply": result, "session_id": req.session_id}
+    except Exception as e:
+        logger.exception("Workforce command error")
+        raise HTTPException(500, str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8100)

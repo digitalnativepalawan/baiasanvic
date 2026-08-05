@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,35 +10,27 @@ import {
   AlertCircle, CheckCircle2, XCircle, RefreshCw
 } from "lucide-react";
 
-const AGENTS = [
-  { id: "cmd", role: "command-center", name: "Command Center", icon: Activity, color: "text-blue-500", description: "Main operations overview" },
-  { id: "fin", role: "financial-agent", name: "Financial Agent", icon: DollarSign, color: "text-green-500", description: "Revenue & expenses" },
-  { id: "lead", role: "lead-agent", name: "Lead Agent", icon: Users, color: "text-purple-500", description: "Nomad discovery" },
-  { id: "email", role: "email-agent", name: "Email Agent", icon: Mail, color: "text-orange-500", description: "Guest communications" },
-  { id: "dev", role: "developer-agent", name: "Developer Agent", icon: Code, color: "text-cyan-500", description: "GitHub & deployments" },
-  { id: "ops", role: "operations-agent", name: "Operations Agent", icon: Settings, color: "text-yellow-500", description: "Staff & inventory" },
-];
+const DEFAULT_HERMES_URL = "http://127.0.0.1:8100";
+const getHermesUrl = () => localStorage.getItem("hermes_url") || DEFAULT_HERMES_URL;
+const setHermesUrl = (url: string) => localStorage.setItem("hermes_url", url);
 
-const MOCK_JOBS = [
-  { id: "job-001", agent: "Command Center", task: "Daily pulse report", status: "completed", time: "6:00 AM", result: "Occupancy: 50%, 2 arrivals" },
-  { id: "job-002", agent: "Lead Agent", task: "Social media scan", status: "completed", time: "7:00 AM", result: "Found 2 new leads" },
-  { id: "job-003", agent: "Financial Agent", task: "Weekly revenue report", status: "running", time: "8:00 AM" },
-  { id: "job-004", agent: "Email Agent", task: "Welcome emails", status: "pending_approval", time: "8:30 AM" },
-];
+const AGENT_ICONS: Record<string, typeof Activity> = {
+  "command-center": Activity,
+  "financial-agent": DollarSign,
+  "lead-agent": Users,
+  "email-agent": Mail,
+  "developer-agent": Code,
+  "operations-agent": Settings,
+};
 
-const MOCK_SCHEDULED = [
-  { name: "Daily Pulse", cron: "6:00 AM daily", agent: "Command Center", enabled: true },
-  { name: "Social Scan", cron: "7:00 AM & 7:00 PM", agent: "Lead Agent", enabled: true },
-  { name: "Inventory Check", cron: "Monday 8:00 AM", agent: "Operations", enabled: true },
-  { name: "Weekly Finance", cron: "Monday 9:00 AM", agent: "Financial", enabled: true },
-  { name: "Email Follow-ups", cron: "10:00 AM daily", agent: "Email Agent", enabled: true },
-];
-
-const MOCK_APPROVALS = [
-  { id: "app-001", type: "email", agent: "Email Agent", description: "Welcome email to Sarah Chen", status: "pending" },
-  { id: "app-002", type: "expense", agent: "Financial Agent", description: "CleanPro order - $240", status: "pending" },
-  { id: "app-003", type: "deployment", agent: "Developer Agent", description: "Deploy concierge update", status: "pending" },
-];
+const AGENT_COLORS: Record<string, string> = {
+  "command-center": "text-blue-500",
+  "financial-agent": "text-green-500",
+  "lead-agent": "text-purple-500",
+  "email-agent": "text-orange-500",
+  "developer-agent": "text-cyan-500",
+  "operations-agent": "text-yellow-500",
+};
 
 const STATUS_COLORS = {
   completed: "bg-green-500/10 text-green-500",
@@ -52,14 +44,64 @@ export function WorkforcePanel() {
   const [chatLog, setChatLog] = useState<Array<{ role: string; msg: string }>>([
     { role: "system", msg: "Hermes Workforce ready. Select an agent or type a command." },
   ]);
+  const [agents, setAgents] = useState<Array<{ id: string; role: string; name: string; status: string }>>([]);
+  const [jobs, setJobs] = useState<Array<{ id: string; agent: string; task: string; status: string; time: string; result?: string }>>([]);
+  const [scheduled, setScheduled] = useState<Array<{ name: string; cron: string; agent: string; enabled: boolean }>>([]);
+  const [approvals, setApprovals] = useState<Array<{ id: string; type: string; agent: string; description: string; status: string }>>([]);
+  const [logs, setLogs] = useState<Array<{ time: string; agent: string; message: string; level: string }>>([]);
+  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [hermesUrl, setHermesUrlState] = useState(getHermesUrl());
+  const [showSettings, setShowSettings] = useState(false);
 
-  const handleSend = () => {
+  const fetchData = useCallback(async () => {
+    try {
+      const url = getHermesUrl();
+      const [agentsRes, jobsRes, scheduledRes, approvalsRes, logsRes] = await Promise.all([
+        fetch(`${url}/api/workforce/agents`),
+        fetch(`${url}/api/workforce/jobs`),
+        fetch(`${url}/api/workforce/scheduled`),
+        fetch(`${url}/api/workforce/approvals`),
+        fetch(`${url}/api/workforce/logs`),
+      ]);
+      if (agentsRes.ok) {
+        const data = await agentsRes.json();
+        setAgents(data.agents || []);
+        setConnected(true);
+      }
+      if (jobsRes.ok) setJobs((await jobsRes.json()).jobs || []);
+      if (scheduledRes.ok) setScheduled((await scheduledRes.json()).scheduled || []);
+      if (approvalsRes.ok) setApprovals((await approvalsRes.json()).approvals || []);
+      if (logsRes.ok) setLogs((await logsRes.json()).logs || []);
+    } catch {
+      setConnected(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleSend = async () => {
     if (!chatMessage.trim()) return;
-    setChatLog((prev) => [...prev, { role: "user", msg: chatMessage }]);
-    setTimeout(() => {
-      setChatLog((prev) => [...prev, { role: "agent", msg: `Processing: "${chatMessage}"... Task assigned to Command Center.` }]);
-    }, 500);
+    const msg = chatMessage;
+    setChatLog((prev) => [...prev, { role: "user", msg }]);
     setChatMessage("");
+    try {
+      const res = await fetch(`${getHermesUrl()}/api/workforce/command`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg, session_id: "admin" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setChatLog((prev) => [...prev, { role: "agent", msg: data.reply }]);
+      } else {
+        setChatLog((prev) => [...prev, { role: "agent", msg: "Error: Could not reach Hermes server." }]);
+      }
+    } catch {
+      setChatLog((prev) => [...prev, { role: "agent", msg: "Error: Hermes server not running. Start it with: python services/hermes/server.py" }]);
+    }
   };
 
   return (
@@ -71,23 +113,62 @@ export function WorkforcePanel() {
           </h2>
           <p className="text-muted-foreground">AI agents managing your resort</p>
         </div>
-        <Badge variant="outline" className="gap-1">
-          <span className="h-2 w-2 rounded-full bg-green-500" />
-          Hermes Connected
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setShowSettings(!showSettings)} size="sm" variant="outline">
+            <Settings className="h-4 w-4" />
+          </Button>
+          <Button onClick={fetchData} size="sm" variant="outline">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+          <Badge variant="outline" className="gap-1">
+            <span className={`h-2 w-2 rounded-full ${connected ? "bg-green-500" : "bg-red-500"}`} />
+            {connected ? "Hermes Connected" : "Disconnected"}
+          </Badge>
+        </div>
       </div>
+
+      {showSettings && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Hermes Server Settings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <Input
+                value={hermesUrl}
+                onChange={(e) => setHermesUrlState(e.target.value)}
+                placeholder="http://127.0.0.1:8100"
+                className="flex-1"
+              />
+              <Button onClick={() => { setHermesUrl(hermesUrl); fetchData(); }} size="sm">
+                Save
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Default: http://127.0.0.1:8100. Start server with: python services/hermes/server.py
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Agent Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {AGENTS.map((agent) => {
-          const Icon = agent.icon;
+        {(agents.length > 0 ? agents : [
+          { id: "cmd", role: "command-center", name: "Command Center", status: "idle" },
+          { id: "fin", role: "financial-agent", name: "Financial Agent", status: "idle" },
+          { id: "lead", role: "lead-agent", name: "Lead Agent", status: "idle" },
+          { id: "email", role: "email-agent", name: "Email Agent", status: "idle" },
+          { id: "dev", role: "developer-agent", name: "Developer Agent", status: "idle" },
+          { id: "ops", role: "operations-agent", name: "Operations Agent", status: "idle" },
+        ]).map((agent) => {
+          const Icon = AGENT_ICONS[agent.role] || Activity;
+          const color = AGENT_COLORS[agent.role] || "text-gray-500";
           return (
             <Card key={agent.id} className="cursor-pointer hover:border-primary transition-colors">
               <CardContent className="p-3 text-center">
-                <Icon className={`h-6 w-6 mx-auto mb-2 ${agent.color}`} />
+                <Icon className={`h-6 w-6 mx-auto mb-2 ${color}`} />
                 <p className="text-xs font-medium">{agent.name}</p>
-                <p className="text-[10px] text-muted-foreground">{agent.description}</p>
-                <Badge variant="secondary" className="mt-2 text-[10px]">Idle</Badge>
+                <Badge variant="secondary" className="mt-2 text-[10px]">{agent.status}</Badge>
               </CardContent>
             </Card>
           );
@@ -146,7 +227,9 @@ export function WorkforcePanel() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {MOCK_JOBS.map((job) => (
+                {jobs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No active jobs</p>
+                ) : jobs.map((job) => (
                   <div key={job.id} className="flex items-center justify-between p-2 border rounded-md">
                     <div className="flex items-center gap-3">
                       {job.status === "completed" && <CheckCircle2 className="h-4 w-4 text-green-500" />}
@@ -176,7 +259,9 @@ export function WorkforcePanel() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {MOCK_SCHEDULED.map((job, i) => (
+                {scheduled.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No scheduled jobs</p>
+                ) : scheduled.map((job, i) => (
                   <div key={i} className="flex items-center justify-between p-2 border rounded-md">
                     <div className="flex items-center gap-3">
                       {job.enabled ? <PlayCircle className="h-4 w-4 text-green-500" /> : <PauseCircle className="h-4 w-4 text-muted-foreground" />}
@@ -204,7 +289,9 @@ export function WorkforcePanel() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {MOCK_APPROVALS.map((approval) => (
+                {approvals.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No pending approvals</p>
+                ) : approvals.map((approval) => (
                   <div key={approval.id} className="flex items-center justify-between p-2 border rounded-md">
                     <div>
                       <p className="text-sm font-medium">{approval.description}</p>
@@ -232,11 +319,17 @@ export function WorkforcePanel() {
             </CardHeader>
             <CardContent>
               <div className="h-64 overflow-y-auto font-mono text-xs bg-muted/30 rounded-md p-3">
-                <p className="text-green-600">[06:00] Command Center: Daily pulse generated</p>
-                <p className="text-green-600">[07:00] Lead Agent: Social scan complete - 2 leads found</p>
-                <p className="text-blue-600">[08:00] Financial Agent: Weekly report in progress...</p>
-                <p className="text-yellow-600">[08:30] Email Agent: Welcome emails queued for approval</p>
-                <p className="text-green-600">[09:00] Operations Agent: Inventory check complete</p>
+                {logs.length === 0 ? (
+                  <p className="text-muted-foreground">No logs yet</p>
+                ) : logs.map((log, i) => (
+                  <p key={i} className={
+                    log.level === "error" ? "text-red-600" :
+                    log.level === "warn" ? "text-yellow-600" :
+                    "text-green-600"
+                  }>
+                    [{log.time}] {log.agent}: {log.message}
+                  </p>
+                ))}
               </div>
             </CardContent>
           </Card>
