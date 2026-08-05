@@ -99,6 +99,38 @@ async def status():
     return {"status": "running", "agent": "hermes"}
 
 
+class ConfigUpdate(BaseModel):
+    model: str | None = None
+    provider: str | None = None
+    openrouter_api_key: str | None = None
+    ollama_base_url: str | None = None
+
+
+@app.get("/api/config")
+async def get_config():
+    """Get current agent config."""
+    agent = get_agent()
+    return {
+        "model": agent.model,
+        "provider": agent.provider,
+        "base_url": agent.base_url,
+    }
+
+
+@app.post("/api/config")
+async def update_config(req: ConfigUpdate):
+    """Update agent config at runtime."""
+    global _agent
+    if req.model or req.provider:
+        _agent = None  # Force re-init with new settings
+        get_agent()
+        if req.model:
+            _agent.model = req.model
+        if req.provider:
+            _agent.provider = req.provider
+    return {"status": "ok", "model": _agent.model, "provider": _agent.provider}
+
+
 # ── Workforce endpoints ──────────────────────────────────────
 
 @app.get("/api/workforce/agents")

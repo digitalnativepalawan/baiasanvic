@@ -53,6 +53,52 @@ export function WorkforcePanel() {
   const [loading, setLoading] = useState(true);
   const [hermesUrl, setHermesUrlState] = useState(getHermesUrl());
   const [showSettings, setShowSettings] = useState(false);
+  const [config, setConfig] = useState<{ model: string; provider: string; base_url: string } | null>(null);
+  const [openrouterModels, setOpenrouterModels] = useState<string[]>([]);
+  const [ollamaModels, setOllamaModels] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState("");
+  const [selectedProvider, setSelectedProvider] = useState("openrouter");
+  const [openrouterKey, setOpenrouterKey] = useState("");
+  const [ollamaUrl, setOllamaUrl] = useState("http://localhost:11434");
+
+  const fetchConfig = useCallback(async () => {
+    try {
+      const res = await fetch(`${getHermesUrl()}/api/config`);
+      if (res.ok) {
+        const data = await res.json();
+        setConfig(data);
+        setSelectedModel(data.model || "");
+        setSelectedProvider(data.provider || "openrouter");
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const fetchOpenRouterModels = useCallback(async () => {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/models");
+      if (res.ok) {
+        const data = await res.json();
+        const models = (data.data || [])
+          .map((m: { id: string }) => m.id)
+          .sort((a: string, b: string) => {
+            const aFree = a.includes(":free") ? 0 : 1;
+            const bFree = b.includes(":free") ? 0 : 1;
+            return aFree - bFree || a.localeCompare(b);
+          });
+        setOpenrouterModels(models);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const fetchOllamaModels = useCallback(async (baseUrl: string) => {
+    try {
+      const res = await fetch(`${baseUrl}/api/tags`);
+      if (res.ok) {
+        const data = await res.json();
+        setOllamaModels((data.models || []).map((m: { name: string }) => m.name));
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -80,7 +126,12 @@ export function WorkforcePanel() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+    fetchConfig();
+    fetchOpenRouterModels();
+    fetchOllamaModels(ollamaUrl);
+  }, [fetchData, fetchConfig, fetchOpenRouterModels, fetchOllamaModels, ollamaUrl]);
 
   const handleSend = async () => {
     if (!chatMessage.trim()) return;
@@ -132,21 +183,110 @@ export function WorkforcePanel() {
           <CardHeader>
             <CardTitle className="text-sm">Hermes Server Settings</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <Input
-                value={hermesUrl}
-                onChange={(e) => setHermesUrlState(e.target.value)}
-                placeholder="http://127.0.0.1:8100"
-                className="flex-1"
-              />
-              <Button onClick={() => { setHermesUrl(hermesUrl); fetchData(); }} size="sm">
-                Save
-              </Button>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-xs font-medium mb-1 block">Server URL</label>
+              <div className="flex gap-2">
+                <Input
+                  value={hermesUrl}
+                  onChange={(e) => setHermesUrlState(e.target.value)}
+                  placeholder="http://127.0.0.1:8100"
+                  className="flex-1"
+                />
+                <Button onClick={() => { setHermesUrl(hermesUrl); fetchData(); fetchConfig(); }} size="sm">
+                  Save
+                </Button>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Default: http://127.0.0.1:8100. Start server with: python services/hermes/server.py
-            </p>
+
+            <div>
+              <label className="text-xs font-medium mb-1 block">Provider</label>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={selectedProvider === "openrouter" ? "default" : "outline"}
+                  onClick={() => setSelectedProvider("openrouter")}
+                >
+                  OpenRouter
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedProvider === "ollama" ? "default" : "outline"}
+                  onClick={() => setSelectedProvider("ollama")}
+                >
+                  Ollama (Local)
+                </Button>
+              </div>
+            </div>
+
+            {selectedProvider === "openrouter" && (
+              <div>
+                <label className="text-xs font-medium mb-1 block">OpenRouter API Key</label>
+                <Input
+                  type="password"
+                  value={openrouterKey}
+                  onChange={(e) => setOpenrouterKey(e.target.value)}
+                  placeholder="sk-or-..."
+                  className="mb-2"
+                />
+                <label className="text-xs font-medium mb-1 block">Model</label>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="w-full bg-background border rounded px-3 py-2 text-sm"
+                >
+                  {openrouterModels.length === 0 && <option value="">Loading models...</option>}
+                  {openrouterModels.map((m) => (
+                    <option key={m} value={m}>
+                      {m} {m.includes(":free") ? "· FREE" : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {openrouterModels.length} models loaded. Free ones flagged.
+                </p>
+              </div>
+            )}
+
+            {selectedProvider === "ollama" && (
+              <div>
+                <label className="text-xs font-medium mb-1 block">Ollama URL</label>
+                <Input
+                  value={ollamaUrl}
+                  onChange={(e) => setOllamaUrl(e.target.value)}
+                  placeholder="http://localhost:11434"
+                  className="mb-2"
+                />
+                <label className="text-xs font-medium mb-1 block">Model</label>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="w-full bg-background border rounded px-3 py-2 text-sm"
+                >
+                  <option value="">Auto (best available)</option>
+                  {ollamaModels.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {ollamaModels.length} models detected from your machine.
+                </p>
+              </div>
+            )}
+
+            <Button
+              onClick={async () => {
+                await fetch(`${getHermesUrl()}/api/config`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ model: selectedModel, provider: selectedProvider }),
+                });
+                fetchConfig();
+              }}
+              className="w-full"
+            >
+              Apply Model Settings
+            </Button>
           </CardContent>
         </Card>
       )}
