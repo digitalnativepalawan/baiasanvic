@@ -273,6 +273,7 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
                   className={`${inputCls} mt-2`}
                 />
               </div>
+              {renderGallery({ list: "projects", id: p.id }, "Additional images / floor plans")}
             </div>
           ))}
           <button
@@ -359,6 +360,7 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
                 className={`${inputCls} mt-2`}
               />
             </div>
+            {renderGallery({ list: "units", id: u.id }, "Floor plans & extra renderings")}
           </div>
         ))}
         <button
@@ -382,6 +384,17 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
         >
           <Plus size={12} /> Add unit type
         </button>
+      </Block>
+
+      {/* SECTION GALLERY */}
+      <Block title={`Plans & renderings gallery (${(inv.gallery ?? []).length})`}>
+        <Field
+          label="Eyebrow"
+          value={inv.galleryEyebrow ?? ""}
+          onChange={(v) => updateInvestors({ galleryEyebrow: v })}
+        />
+        <Field label="Title" value={inv.galleryTitle ?? ""} onChange={(v) => updateInvestors({ galleryTitle: v })} />
+        {renderGallery({ list: "section" }, "Gallery images")}
       </Block>
 
       {/* BUDGET */}
