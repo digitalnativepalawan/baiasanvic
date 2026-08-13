@@ -16,13 +16,15 @@ interface NavbarProps {
 export default function Navbar({ onBookClick, onSectionClick }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { logo, header } = useSite();
+  const { logo, header, investors } = useSite();
 
   // Ensure the Investors chapter is always reachable, even for saved header
   // configs created before the section existed.
-  const navLinks = header.links.some((l) => l.id === "investors")
-    ? header.links
-    : [...header.links, { id: "investors", label: "Investors" }];
+  const navLinks = !investors.enabled
+    ? header.links.filter((l) => l.id !== "investors")
+    : header.links.some((l) => l.id === "investors")
+      ? header.links
+      : [...header.links, { id: "investors", label: investors.navLabel || "INVESTORS" }];
 
   useEffect(() => {
     const handleScroll = () => {
