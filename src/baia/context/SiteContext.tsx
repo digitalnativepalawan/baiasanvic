@@ -247,6 +247,91 @@ export interface GalleryItem {
   category: "Nature" | "Resort" | "Surf" | "Sanctuary" | string;
 }
 
+
+/* ── INVESTORS SECTION ─────────────────────────────────────────────
+   Fully admin-editable investor layout: projects, unit typologies with
+   pricing, budget injection tracking, capital snapshot, timeline,
+   circle model and closing call-to-action. */
+
+export interface InvestorStat { id: string; value: string; label: string }
+export interface InvestorProject {
+  id: string;
+  name: string;
+  location: string;
+  status: string;
+  description: string;
+  imageUrl: string;
+}
+export interface InvestorUnit {
+  id: string;
+  name: string;
+  code: string;
+  imageUrl: string;
+  footprint: string;
+  interior: string;
+  guests: string;
+  priceUsd: number;
+  quantityNote: string;
+}
+export interface InvestorBudgetItem {
+  id: string;
+  label: string;
+  allocatedPhp: number;
+  injectedPhp: number;
+  note: string;
+}
+export interface InvestorCapitalRow { id: string; label: string; value: string; note: string }
+export interface InvestorTimelineItem { id: string; year: string; title: string; points: string[] }
+export interface InvestorBenefit { id: string; title: string; copy: string }
+
+export interface InvestorsData {
+  enabled: boolean;
+  navLabel: string;
+  phpPerUsd: number;
+
+  eyebrow: string;
+  title: string;
+  intro: string;
+  ctaLabel: string;
+
+  projectsEyebrow: string;
+  projectsTitle: string;
+  projectsBody: string;
+  projects: InvestorProject[];
+  stats: InvestorStat[];
+
+  unitsEyebrow: string;
+  unitsTitle: string;
+  units: InvestorUnit[];
+
+  budgetEyebrow: string;
+  budgetTitle: string;
+  budgetNote: string;
+  budgetItems: InvestorBudgetItem[];
+
+  capitalEyebrow: string;
+  capitalTitle: string;
+  capitalRows: InvestorCapitalRow[];
+  capitalFootnote: string;
+
+  timelineEyebrow: string;
+  timelineTitle: string;
+  timeline: InvestorTimelineItem[];
+
+  circleEyebrow: string;
+  circleTitle: string;
+  circleBody: string;
+  circlePrimaryLabel: string;
+  circleSecondaryLabel: string;
+  benefits: InvestorBenefit[];
+
+  closingEyebrow: string;
+  closingTitle: string;
+  closingBody: string;
+  disclaimer: string;
+  formTitle: string;
+}
+
 interface SiteContextType {
   hero: HeroData;
   philosophy: PhilosophyData;
@@ -259,6 +344,7 @@ interface SiteContextType {
   rooms: RoomTier[];
   activities: Activity[];
   testimonials: Testimonial[];
+  investors: InvestorsData;
   updateHero: (data: Partial<HeroData>) => void;
   updatePhilosophy: (data: Partial<PhilosophyData>) => void;
   updateIslandIntro: (data: Partial<IslandIntroData>) => void;
@@ -266,6 +352,7 @@ interface SiteContextType {
   updateHeader: (data: Partial<HeaderData>) => void;
   updateFooter: (data: Partial<FooterData>) => void;
   updateTheme: (data: Partial<ThemeData>) => void;
+  updateInvestors: (data: Partial<InvestorsData>) => void;
   // Gallery Management
   addGalleryItem: (item: Omit<GalleryItem, "id">) => void;
   updateGalleryItem: (id: string, data: Partial<GalleryItem>) => void;
@@ -321,6 +408,125 @@ const DEFAULT_ISLAND_INTRO: IslandIntroData = {
   playback: { ...DEFAULT_SECTION_PLAYBACK },
 };
 
+
+
+export const DEFAULT_INVESTORS: InvestorsData = {
+  enabled: true,
+  navLabel: "INVESTORS",
+  phpPerUsd: 58.4,
+
+  eyebrow: "Investors",
+  title: "From proven places to visionary expansion",
+  intro:
+    "We built BAIA and Marina Terrace. AMUMA takes everything we learned and builds a constellation of barefoot boutique resorts across the Philippines — beginning on Long Beach, San Vicente.",
+  ctaLabel: "Request Investor Deck",
+
+  projectsEyebrow: "What we're building",
+  projectsTitle: "AMUMA San Vicente",
+  projectsBody:
+    "Land is secured in San Vicente and Balabac. Private courtyards, plunge pools and open living spaces built from wood, stone and earth tones — operated with the same team behind BAIA Beachfront Boutique Lodge and Marina Terrace.",
+  projects: [
+    {
+      id: "prj-sanvicente",
+      name: "AMUMA San Vicente",
+      location: "Long Beach, San Vicente, Palawan",
+      status: "In development — opening 2028",
+      description: "4 suites and 2 villas on secured beachfront land, with private courtyards and plunge pools.",
+      imageUrl: "",
+    },
+    {
+      id: "prj-balabac",
+      name: "AMUMA Balabac",
+      location: "Balabac, Palawan",
+      status: "Land secured — groundbreaking 2029",
+      description: "Beachfront flagship destination, the second chapter of the AMUMA Collection.",
+      imageUrl: "",
+    },
+  ],
+  stats: [
+    { id: "st-1", value: "4", label: "Suites" },
+    { id: "st-2", value: "2", label: "Villas" },
+    { id: "st-3", value: "San Vicente", label: "Palawan, Philippines" },
+    { id: "st-4", value: "Balabac", label: "In development" },
+  ],
+
+  unitsEyebrow: "Unit typologies",
+  unitsTitle: "Two forms of shelter",
+  units: [
+    {
+      id: "unit-gemini",
+      name: "Gemini Suite",
+      code: "TS62",
+      imageUrl: "",
+      footprint: "6.5 × 11 m",
+      interior: "62 sqm interior · 120 sqm footprint",
+      guests: "2 guests · bedroom, lounge, bathroom",
+      priceUsd: 17850,
+      quantityNote: "2 units planned",
+    },
+    {
+      id: "unit-villa",
+      name: "Villa",
+      code: "ALT24",
+      imageUrl: "",
+      footprint: "3.3 × 8.5 m",
+      interior: "24 sqm interior",
+      guests: "2 guests · bedroom, bathroom",
+      priceUsd: 12460,
+      quantityNote: "2 units planned",
+    },
+  ],
+
+  budgetEyebrow: "Budget injected",
+  budgetTitle: "Capital deployed to date",
+  budgetNote: "Figures are updated by AMUMA Holding as capital is deployed.",
+  budgetItems: [
+    { id: "bud-land", label: "Land acquisition & titling", allocatedPhp: 12000000, injectedPhp: 12000000, note: "San Vicente parcel secured" },
+    { id: "bud-design", label: "Design, permits & site studies", allocatedPhp: 3500000, injectedPhp: 1800000, note: "Ongoing" },
+    { id: "bud-units", label: "Unit procurement", allocatedPhp: 3540000, injectedPhp: 0, note: "Deposit scheduled 2026" },
+    { id: "bud-siteworks", label: "Site development & utilities", allocatedPhp: 6000000, injectedPhp: 0, note: "Begins 2027" },
+  ],
+
+  capitalEyebrow: "Capital snapshot",
+  capitalTitle: "Indicative unit costs",
+  capitalRows: [
+    { id: "cap-1", label: "Gemini Suite", value: "", note: "≈ $17,850 USD each" },
+    { id: "cap-2", label: "Villa", value: "", note: "≈ $12,460 USD each" },
+    { id: "cap-3", label: "Shipping & install", value: "Quoted separately", note: "Per shipment, on request" },
+  ],
+  capitalFootnote:
+    "All unit costs are EXW Guangzhou, China, excluding freight, duties and site works. Peso figures are indicative.",
+
+  timelineEyebrow: "Project timeline",
+  timelineTitle: "2026 — 2029",
+  timeline: [
+    { id: "tl-2026", year: "2026", title: "Planning & Founding Circle", points: ["Circle launch", "Permits and site works", "Unit procurement"] },
+    { id: "tl-2027", year: "2027", title: "Construction", points: ["Site development", "Suites and villas installed", "Landscaping"] },
+    { id: "tl-2028", year: "2028", title: "AMUMA San Vicente opens", points: ["First guests welcomed", "Rental income begins", "Pebbles activated"] },
+    { id: "tl-2029", year: "2029", title: "Balabac groundbreaking", points: ["Second destination", "New Circle offering", "Regional expansion"] },
+  ],
+
+  circleEyebrow: "The Circle model",
+  circleTitle: "60 / 40",
+  circleBody:
+    "Circle Units are membership shares that entitle holders to rental profit distributions. Sixty percent of rental profits are distributed to Circle Members, forty percent is retained by AMUMA as operator. Pebbles — the internal lifestyle credit — are issued annually for stays and experiences.",
+  circlePrimaryLabel: "60% Circle Members",
+  circleSecondaryLabel: "40% AMUMA operator",
+  benefits: [
+    { id: "bn-1", title: "Shared Growth", copy: "60% of rental profits distributed to Circle Members." },
+    { id: "bn-2", title: "Lifestyle Access", copy: "Annual Pebbles for stays and experiences across AMUMA." },
+    { id: "bn-3", title: "Aligned Values", copy: "Low-impact builds that nurture the land and the community." },
+    { id: "bn-4", title: "Long-term Value", copy: "Land secured, TIEZA-registered, 60% Filipino-owned structure." },
+  ],
+
+  closingEyebrow: "Founding Circle",
+  closingTitle: "Be part of something rare and enduring",
+  closingBody:
+    "Founding Circle members receive early access, a name on the founding plaque and an invitation to the founders' dinner at BAIA. Limited memberships available.",
+  disclaimer:
+    "This section is informational only and is not an offer to sell securities. Securities are not offered or sold in the United States or to U.S. persons. Projections are forward-looking and subject to construction, market and regulatory risk.",
+  formTitle: "Request the investor deck",
+};
 
 const DEFAULT_LOGO: LogoData = {
   text: "BAIA",
@@ -558,6 +764,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [rooms, setRooms] = useState<RoomTier[]>(DEFAULT_ROOMS);
   const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(DEFAULT_TESTIMONIALS);
+  const [investors, setInvestors] = useState<InvestorsData>(DEFAULT_INVESTORS);
   const [loaded, setLoaded] = useState(false);
   const [adminPasskey, setAdminPasskey] = useState<string | null>(null);
   const adminPasskeyRef = useRef<string | null>(null);
@@ -586,6 +793,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (Array.isArray(d.rooms)) setRooms(d.rooms);
         if (Array.isArray(d.activities)) setActivities(d.activities);
         if (Array.isArray(d.testimonials)) setTestimonials(d.testimonials);
+        if (d.investors) setInvestors({ ...DEFAULT_INVESTORS, ...d.investors });
       }
       if (!cancelled) setLoaded(true);
     })();
@@ -605,7 +813,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await saveSiteState({
           data: {
             passkey,
-            state: { hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities, testimonials },
+            state: { hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities, testimonials, investors },
           },
         });
       } catch (err) {
@@ -613,7 +821,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }, 600);
     return () => clearTimeout(timer);
-  }, [loaded, adminPasskey, hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities, testimonials]);
+  }, [loaded, adminPasskey, hero, philosophy, islandIntro, logo, header, footer, theme, galleryItems, rooms, activities, testimonials, investors]);
 
   // Load Google Fonts and apply CSS custom properties dynamically
   useEffect(() => {
@@ -724,6 +932,10 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLogo((prev) => ({ ...prev, ...data }));
   };
 
+  const updateInvestors = (data: Partial<InvestorsData>) => {
+    setInvestors((prev) => ({ ...prev, ...data }));
+  };
+
   const updateHeader = (data: Partial<HeaderData>) => {
     setHeader((prev) => ({ ...prev, ...data }));
   };
@@ -832,6 +1044,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRooms(DEFAULT_ROOMS);
       setActivities(DEFAULT_ACTIVITIES);
       setTestimonials(DEFAULT_TESTIMONIALS);
+      setInvestors(DEFAULT_INVESTORS);
 
     }
   };
@@ -850,6 +1063,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         rooms,
         activities,
         testimonials,
+        investors,
         updateHero,
         updatePhilosophy,
         updateIslandIntro,
@@ -857,6 +1071,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateHeader,
         updateFooter,
         updateTheme,
+        updateInvestors,
         addGalleryItem,
         updateGalleryItem,
         deleteGalleryItem,
