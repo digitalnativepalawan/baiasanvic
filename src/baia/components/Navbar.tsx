@@ -18,6 +18,12 @@ export default function Navbar({ onBookClick, onSectionClick }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { logo, header } = useSite();
 
+  // Ensure the Investors chapter is always reachable, even for saved header
+  // configs created before the section existed.
+  const navLinks = header.links.some((l) => l.id === "investors")
+    ? header.links
+    : [...header.links, { id: "investors", label: "Investors" }];
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
@@ -87,7 +93,7 @@ export default function Navbar({ onBookClick, onSectionClick }: NavbarProps) {
 
         {/* Desktop Navigation Links */}
         <div id="desktop-nav" className="hidden md:flex items-center space-x-10">
-          {header.links.map((link) => (
+          {navLinks.map((link) => (
             <button
               key={link.id}
               onClick={() => handleLinkClick(link.id)}
@@ -141,7 +147,7 @@ export default function Navbar({ onBookClick, onSectionClick }: NavbarProps) {
             }`}
           >
             <div className="px-6 py-8 flex flex-col space-y-6">
-              {header.links.map((link) => (
+              {navLinks.map((link) => (
                 <button
                   key={link.id}
                   onClick={() => handleLinkClick(link.id)}

@@ -12,6 +12,7 @@ import BookingModal from "./components/BookingModal";
 import Activities from "./components/Activities";
 import IslandPerspectives from "./components/IslandPerspectives";
 import Testimonials from "./components/Testimonials";
+import Investors from "./components/Investors";
 import AdminGate from "./components/AdminGate";
 import ConciergeWidget from "./components/ConciergeWidget";
 import RoomCard from "./components/RoomCard";
@@ -438,6 +439,9 @@ export default function App() {
 
       {/* 6. GUEST TESTIMONIALS SECTION */}
       <Testimonials />
+
+      {/* 7. INVESTORS SECTION — AMUMA Collection */}
+      <Investors />
 
       {/* Active Guest Reservation Lookup Board / Dashboard */}
       {reservations.length > 0 && (
