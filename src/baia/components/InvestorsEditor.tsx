@@ -21,7 +21,6 @@ import {
   InvestorStat,
   InvestorImage,
   InvestorTier,
-  InvestorMapNode,
   InvestorMediaItem,
 } from "../context/SiteContext";
 
@@ -434,42 +433,6 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
           onClick={() => patchList("tiers", [...inv.tiers, { id: uid("tier"), name: "New tier", investmentPhp: 500000, circleUnits: 50, annualPebbles: 1000, roiLowPct: 14, roiHighPct: 17 }])}
         >
           <Plus size={12} /> Add tier
-        </button>
-      </Block>
-
-      {/* MAP */}
-      <Block title={`Destination map (${inv.mapNodes.length})`}>
-        <Field label="Eyebrow" value={inv.mapEyebrow ?? ""} onChange={(v) => updateInvestors({ mapEyebrow: v })} />
-        <Field label="Title" value={inv.mapTitle ?? ""} onChange={(v) => updateInvestors({ mapTitle: v })} />
-        {inv.mapNodes.map((n: InvestorMapNode) => (
-          <div key={n.id} className={cardCls}>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] tracking-[0.2em] uppercase text-gold-300 font-sans">{n.name || "Node"}</span>
-              <button className={delBtnCls} onClick={() => removeItem("mapNodes", inv.mapNodes, n.id)}>
-                <Trash2 size={14} />
-              </button>
-            </div>
-            <Field label="Name" value={n.name} onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { name: v })} />
-            <Field label="Detail" value={n.detail} onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { detail: v })} textarea />
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="X (0–100)" type="number" value={n.x} onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { x: parseFloat(v) || 0 })} />
-              <Field label="Y (0–100)" type="number" value={n.y} onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { y: parseFloat(v) || 0 })} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Opening year" type="number" value={n.openingYear} onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { openingYear: parseFloat(v) || 0 })} />
-              <Field
-                label="Status"
-                value={n.status}
-                onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { status: (v === "Open" || v === "Construction" ? v : "Planned") as InvestorMapNode["status"] })}
-              />
-            </div>
-          </div>
-        ))}
-        <button
-          className={addBtnCls}
-          onClick={() => patchList("mapNodes", [...inv.mapNodes, { id: uid("map"), name: "New place", x: 50, y: 50, status: "Planned", openingYear: 2030, detail: "" }])}
-        >
-          <Plus size={12} /> Add map node
         </button>
       </Block>
 

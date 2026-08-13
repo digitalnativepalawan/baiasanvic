@@ -22,7 +22,6 @@ import { SectionStamp, TideDivider } from "./Editorial";
 import geminiImg from "@/assets/amuma-gemini-suite.jpg";
 import villaImg from "@/assets/amuma-villa.jpg";
 import InvestorCalculator from "./investors/InvestorCalculator";
-import InvestorMap from "./investors/InvestorMap";
 import InvestorTimeline from "./investors/InvestorTimeline";
 import InvestorMedia from "./investors/InvestorMedia";
 
@@ -194,14 +193,7 @@ export default function Investors() {
           )}
         </motion.div>
 
-        {/* 2b. INTERACTIVE DESTINATION MAP */}
-        {inv.mapNodes.length > 0 && (
-          <InvestorMap
-            eyebrow={inv.mapEyebrow}
-            title={inv.mapTitle}
-            nodes={inv.mapNodes}
-          />
-        )}
+        {/* 2b. removed: interactive destination map */}
 
         {/* 3. UNIT TYPOLOGIES */}
         {inv.units.length > 0 && (

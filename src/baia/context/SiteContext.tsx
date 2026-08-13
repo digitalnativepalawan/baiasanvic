@@ -297,15 +297,6 @@ export interface InvestorTier {
   roiHighPct: number;
   perUnitPhp?: number;
 }
-export interface InvestorMapNode {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  status: "Planned" | "Construction" | "Open";
-  openingYear: number;
-  detail: string;
-}
 export interface InvestorMediaItem {
   id: string;
   kind: "image" | "video";
@@ -368,10 +359,6 @@ export interface InvestorsData {
   calculatorNote?: string;
   calculatorPerUnitPhp: number;
   tiers: InvestorTier[];
-
-  mapEyebrow?: string;
-  mapTitle?: string;
-  mapNodes: InvestorMapNode[];
 
   mediaEyebrow?: string;
   mediaTitle?: string;
@@ -575,15 +562,6 @@ export const DEFAULT_INVESTORS: InvestorsData = {
     { id: "tier-aurora", name: "Aurora", investmentPhp: 1248000, circleUnits: 120, annualPebbles: 2600, roiLowPct: 15, roiHighPct: 18, perUnitPhp: 10400 },
     { id: "tier-orion", name: "Orion", investmentPhp: 2184000, circleUnits: 210, annualPebbles: 4800, roiLowPct: 16, roiHighPct: 19, perUnitPhp: 10400 },
     { id: "tier-polaris", name: "Polaris", investmentPhp: 4160000, circleUnits: 400, annualPebbles: 9600, roiLowPct: 16, roiHighPct: 20, perUnitPhp: 10400 },
-  ],
-
-  mapEyebrow: "Future destinations",
-  mapTitle: "The AMUMA map",
-  mapNodes: [
-    { id: "map-sv", name: "San Vicente", x: 27, y: 30, status: "Construction", openingYear: 2028, detail: "Long Beach beachfront — 4 suites and 2 villas. Opening 2028." },
-    { id: "map-balabac", name: "Balabac", x: 24, y: 78, status: "Planned", openingYear: 2029, detail: "Southern Palawan flagship. Groundbreaking 2029." },
-    { id: "map-sagada", name: "Sagada", x: 58, y: 22, status: "Planned", openingYear: 2031, detail: "Cordillera highlands retreat. Land study underway." },
-    { id: "map-togean", name: "Togean", x: 70, y: 64, status: "Planned", openingYear: 2033, detail: "Sulawesi Sea island chapter. Identified for expansion." },
   ],
 
   mediaEyebrow: "Progress & updates",
