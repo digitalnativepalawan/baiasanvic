@@ -3,13 +3,14 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   X, Lock, Eye, Check, RefreshCw, Upload, Image as ImageIcon, 
   Trash2, Plus, Edit2, Sliders, Menu, FileText, Download, Shield,
-  Layers, Coffee, Home, HelpCircle, Save, Info, Palette, MessageSquare, Star
+  Layers, Coffee, Home, HelpCircle, Save, Info, Palette, MessageSquare, Star, TrendingUp
 } from "lucide-react";
 import { useSite, GalleryItem, DEFAULT_THEME, MediaPlayback, DEFAULT_HERO_PLAYBACK, DEFAULT_SECTION_PLAYBACK } from "../context/SiteContext";
 import { RoomTier, Activity, Testimonial } from "../types";
 import { uploadSiteAsset } from "../admin.functions";
 import ConciergeSettings from "./ConciergeSettings";
 import KnowledgeManager from "./KnowledgeManager";
+import InvestorsEditor from "./InvestorsEditor";
 import { WorkforcePanel } from "../tala/WorkforcePanel";
 
 
@@ -28,7 +29,7 @@ const isVideo = (url: string) => {
          url.includes("video");
 };
 
-type AdminTab = "hero_logo" | "sections" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "testimonials" | "system" | "concierge" | "knowledge" | "hermes";
+type AdminTab = "hero_logo" | "sections" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "testimonials" | "investors" | "system" | "concierge" | "knowledge" | "hermes";
 
 const ACCEPTED_IMAGE_TYPES = "image/webp,image/png,image/jpeg,image/svg+xml,.webp,.png,.jpg,.jpeg,.svg";
 const ACCEPTED_IMAGE_GUIDANCE = "Accepted image types: WEBP, PNG, JPG/JPEG, SVG. Max 5 MB.";
@@ -566,6 +567,18 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     >
                       <MessageSquare size={14} />
                       <span>Guest Journal</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("investors")}
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-sm font-sans text-xs tracking-wider uppercase transition-all text-left ${
+                        activeTab === "investors"
+                          ? "bg-gold-500/10 text-gold-300 border-l-2 border-gold-300 font-medium"
+                          : "text-luxury-400 hover:text-luxury-100 hover:bg-luxury-900/50"
+                      }`}
+                    >
+                      <TrendingUp size={14} />
+                      <span>Investors</span>
                     </button>
 
 
@@ -2927,6 +2940,13 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   )}
 
                   {/* -------------------- TAB: SYSTEM SETTINGS -------------------- */}
+                  {activeTab === "investors" && (
+                    <InvestorsEditor
+                      onUpload={(file, cb) => handleImageUpload(file, cb)}
+                      acceptImage={ACCEPTED_IMAGE_TYPES}
+                      imageGuidance={ACCEPTED_IMAGE_GUIDANCE}
+                    />
+                  )}
                   {activeTab === "concierge" && <ConciergeSettings />}
                   {activeTab === "knowledge" && <KnowledgeManager />}
                   {activeTab === "hermes" && <WorkforcePanel />}
