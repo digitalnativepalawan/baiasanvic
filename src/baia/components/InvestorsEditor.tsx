@@ -7,8 +7,8 @@
  * timeline, circle model, benefits and the closing call-to-action.
  */
 
-import React, { useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Images } from "lucide-react";
 import {
   useSite,
   DEFAULT_INVESTORS,
@@ -19,6 +19,7 @@ import {
   InvestorTimelineItem,
   InvestorBenefit,
   InvestorStat,
+  InvestorImage,
 } from "../context/SiteContext";
 
 interface Props {
