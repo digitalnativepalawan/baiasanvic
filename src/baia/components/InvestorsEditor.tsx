@@ -136,7 +136,7 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
     );
   };
 
-  const GalleryEditor = ({ target, label }: { target: GalleryTarget; label: string }) => {
+  const renderGallery = (target: GalleryTarget, label: string) => {
     const images = readGallery(target);
     return (
       <div>
