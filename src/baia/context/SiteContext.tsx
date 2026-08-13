@@ -486,6 +486,12 @@ export const DEFAULT_INVESTORS: InvestorsData = {
     },
   ],
 
+  galleryEyebrow: "Plans & renderings",
+  galleryTitle: "Floor plans, elevations and site studies",
+  gallery: [],
+
+
+
   budgetEyebrow: "Budget injected",
   budgetTitle: "Capital deployed to date",
   budgetNote: "Figures are updated by AMUMA Holding as capital is deployed.",
