@@ -247,6 +247,91 @@ export interface GalleryItem {
   category: "Nature" | "Resort" | "Surf" | "Sanctuary" | string;
 }
 
+
+/* ── INVESTORS SECTION ─────────────────────────────────────────────
+   Fully admin-editable investor layout: projects, unit typologies with
+   pricing, budget injection tracking, capital snapshot, timeline,
+   circle model and closing call-to-action. */
+
+export interface InvestorStat { id: string; value: string; label: string }
+export interface InvestorProject {
+  id: string;
+  name: string;
+  location: string;
+  status: string;
+  description: string;
+  imageUrl: string;
+}
+export interface InvestorUnit {
+  id: string;
+  name: string;
+  code: string;
+  imageUrl: string;
+  footprint: string;
+  interior: string;
+  guests: string;
+  priceUsd: number;
+  quantityNote: string;
+}
+export interface InvestorBudgetItem {
+  id: string;
+  label: string;
+  allocatedPhp: number;
+  injectedPhp: number;
+  note: string;
+}
+export interface InvestorCapitalRow { id: string; label: string; value: string; note: string }
+export interface InvestorTimelineItem { id: string; year: string; title: string; points: string[] }
+export interface InvestorBenefit { id: string; title: string; copy: string }
+
+export interface InvestorsData {
+  enabled: boolean;
+  navLabel: string;
+  phpPerUsd: number;
+
+  eyebrow: string;
+  title: string;
+  intro: string;
+  ctaLabel: string;
+
+  projectsEyebrow: string;
+  projectsTitle: string;
+  projectsBody: string;
+  projects: InvestorProject[];
+  stats: InvestorStat[];
+
+  unitsEyebrow: string;
+  unitsTitle: string;
+  units: InvestorUnit[];
+
+  budgetEyebrow: string;
+  budgetTitle: string;
+  budgetNote: string;
+  budgetItems: InvestorBudgetItem[];
+
+  capitalEyebrow: string;
+  capitalTitle: string;
+  capitalRows: InvestorCapitalRow[];
+  capitalFootnote: string;
+
+  timelineEyebrow: string;
+  timelineTitle: string;
+  timeline: InvestorTimelineItem[];
+
+  circleEyebrow: string;
+  circleTitle: string;
+  circleBody: string;
+  circlePrimaryLabel: string;
+  circleSecondaryLabel: string;
+  benefits: InvestorBenefit[];
+
+  closingEyebrow: string;
+  closingTitle: string;
+  closingBody: string;
+  disclaimer: string;
+  formTitle: string;
+}
+
 interface SiteContextType {
   hero: HeroData;
   philosophy: PhilosophyData;
@@ -259,6 +344,7 @@ interface SiteContextType {
   rooms: RoomTier[];
   activities: Activity[];
   testimonials: Testimonial[];
+  investors: InvestorsData;
   updateHero: (data: Partial<HeroData>) => void;
   updatePhilosophy: (data: Partial<PhilosophyData>) => void;
   updateIslandIntro: (data: Partial<IslandIntroData>) => void;
@@ -266,6 +352,7 @@ interface SiteContextType {
   updateHeader: (data: Partial<HeaderData>) => void;
   updateFooter: (data: Partial<FooterData>) => void;
   updateTheme: (data: Partial<ThemeData>) => void;
+  updateInvestors: (data: Partial<InvestorsData>) => void;
   // Gallery Management
   addGalleryItem: (item: Omit<GalleryItem, "id">) => void;
   updateGalleryItem: (id: string, data: Partial<GalleryItem>) => void;
