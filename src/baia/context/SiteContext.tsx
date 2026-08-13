@@ -307,6 +307,12 @@ export interface InvestorsData {
   unitsTitle: string;
   units: InvestorUnit[];
 
+  galleryEyebrow?: string;
+  galleryTitle?: string;
+  gallery?: InvestorImage[];
+
+
+
   budgetEyebrow: string;
   budgetTitle: string;
   budgetNote: string;
