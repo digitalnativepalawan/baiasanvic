@@ -46,7 +46,7 @@ export interface Approval {
   type: "email" | "expense" | "deployment" | "code_change";
   agent: AgentRole;
   description: string;
-  details: Record<string, unknown>;
+  details: Record<string, string | number | boolean | null>;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
 }
