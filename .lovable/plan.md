@@ -34,3 +34,7 @@ The reference image is light-toned; the section will use the site's own palette 
 - Static content in the component for now (no schema change, no admin fields) — matching the current section-by-section pattern; admin editability can follow in a later pass if wanted.
 - Uses existing tokens (`gold-*`, `luxury-*`, `.eyebrow`, `.display-heading`, `.glass-panel`) and `lucide-react` icons; no new dependencies.
 - Images: placeholder slots wired to easily swappable URLs so real renderings can be dropped in later.
+
+## Pre-existing build error to fix first
+
+`src/baia/tala/workforce.server.ts` fails typecheck: the `Approval.details` field (`Record<string, unknown>`) is not accepted as a serializable server-function return. Fix by typing `details` as a JSON-serializable value type. This is unrelated to the Investors work but blocks the build, so it goes first.
