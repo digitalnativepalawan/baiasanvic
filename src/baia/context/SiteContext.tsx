@@ -254,6 +254,7 @@ export interface GalleryItem {
    circle model and closing call-to-action. */
 
 export interface InvestorStat { id: string; value: string; label: string }
+export interface InvestorImage { id: string; url: string; caption: string }
 export interface InvestorProject {
   id: string;
   name: string;
@@ -261,6 +262,7 @@ export interface InvestorProject {
   status: string;
   description: string;
   imageUrl: string;
+  gallery?: InvestorImage[];
 }
 export interface InvestorUnit {
   id: string;
@@ -272,6 +274,7 @@ export interface InvestorUnit {
   guests: string;
   priceUsd: number;
   quantityNote: string;
+  gallery?: InvestorImage[];
 }
 export interface InvestorBudgetItem {
   id: string;
@@ -303,6 +306,12 @@ export interface InvestorsData {
   unitsEyebrow: string;
   unitsTitle: string;
   units: InvestorUnit[];
+
+  galleryEyebrow?: string;
+  galleryTitle?: string;
+  gallery?: InvestorImage[];
+
+
 
   budgetEyebrow: string;
   budgetTitle: string;
@@ -476,6 +485,12 @@ export const DEFAULT_INVESTORS: InvestorsData = {
       quantityNote: "2 units planned",
     },
   ],
+
+  galleryEyebrow: "Plans & renderings",
+  galleryTitle: "Floor plans, elevations and site studies",
+  gallery: [],
+
+
 
   budgetEyebrow: "Budget injected",
   budgetTitle: "Capital deployed to date",

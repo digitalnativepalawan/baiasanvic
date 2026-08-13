@@ -7,8 +7,8 @@
  * timeline, circle model, benefits and the closing call-to-action.
  */
 
-import React, { useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Images } from "lucide-react";
 import {
   useSite,
   DEFAULT_INVESTORS,
@@ -19,6 +19,7 @@ import {
   InvestorTimelineItem,
   InvestorBenefit,
   InvestorStat,
+  InvestorImage,
 } from "../context/SiteContext";
 
 interface Props {
@@ -97,6 +98,101 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
 
   const removeItem = <T extends { id: string }>(key: keyof typeof inv, list: T[], id: string) =>
     patchList(key, list.filter((i) => i.id !== id));
+
+  /* ── Multi-image galleries ──────────────────────────────────────────
+     invRef always points at the newest state so several uploads finishing
+     one after another all append instead of overwriting each other. */
+  const invRef = useRef(inv);
+  invRef.current = inv;
+
+  type GalleryTarget = { list: "projects" | "units"; id: string } | { list: "section" };
+
+  const readGallery = (t: GalleryTarget): InvestorImage[] => {
+    const cur = invRef.current;
+    if (t.list === "section") return cur.gallery ?? [];
+    const items = (cur[t.list] as Array<InvestorProject | InvestorUnit>) || [];
+    return items.find((i) => i.id === t.id)?.gallery ?? [];
+  };
+
+  const writeGallery = (t: GalleryTarget, gallery: InvestorImage[]) => {
+    const cur = invRef.current;
+    if (t.list === "section") {
+      updateInvestors({ gallery });
+      invRef.current = { ...cur, gallery };
+      return;
+    }
+    const items = (cur[t.list] as Array<InvestorProject | InvestorUnit>) || [];
+    const next = items.map((i) => (i.id === t.id ? { ...i, gallery } : i));
+    updateInvestors({ [t.list]: next } as never);
+    invRef.current = { ...cur, [t.list]: next } as typeof cur;
+  };
+
+  const addImages = (t: GalleryTarget, files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).forEach((file) =>
+      onUpload(file, (url) =>
+        writeGallery(t, [...readGallery(t), { id: uid("img"), url, caption: "" }]),
+      ),
+    );
+  };
+
+  const renderGallery = (target: GalleryTarget, label: string) => {
+    const images = readGallery(target);
+    return (
+      <div>
+        <label className={labelCls}>
+          <span className="inline-flex items-center gap-2">
+            <Images size={11} /> {label} ({images.length})
+          </span>
+        </label>
+        {images.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+            {images.map((img) => (
+              <div key={img.id} className="space-y-1.5">
+                <div className="relative">
+                  <img src={img.url} alt="" className="w-full h-20 object-cover rounded-sm border border-luxury-800" />
+                  <button
+                    type="button"
+                    title="Remove image"
+                    onClick={() => writeGallery(target, readGallery(target).filter((i) => i.id !== img.id))}
+                    className="absolute top-1 right-1 bg-luxury-950/80 border border-luxury-700 text-luxury-300 hover:text-red-400 p-1 rounded-sm"
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                </div>
+                <input
+                  value={img.caption}
+                  placeholder="Caption (e.g. Ground floor plan)"
+                  onChange={(e) =>
+                    writeGallery(
+                      target,
+                      readGallery(target).map((i) => (i.id === img.id ? { ...i, caption: e.target.value } : i)),
+                    )
+                  }
+                  className={`${inputCls} !py-1.5 text-[10px]`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        <input
+          type="file"
+          multiple
+          accept={acceptImage}
+          onChange={(e) => {
+            addImages(target, e.target.files);
+            e.target.value = "";
+          }}
+          className="w-full text-xs text-luxury-200"
+        />
+        <p className="mt-1 text-[9px] tracking-wider text-luxury-500 font-sans uppercase">
+          Select multiple files at once · {imageGuidance}
+        </p>
+      </div>
+    );
+  };
+
+
 
   return (
     <div className="space-y-6">
@@ -177,6 +273,7 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
                   className={`${inputCls} mt-2`}
                 />
               </div>
+              {renderGallery({ list: "projects", id: p.id }, "Additional images / floor plans")}
             </div>
           ))}
           <button
@@ -263,6 +360,7 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
                 className={`${inputCls} mt-2`}
               />
             </div>
+            {renderGallery({ list: "units", id: u.id }, "Floor plans & extra renderings")}
           </div>
         ))}
         <button
@@ -286,6 +384,17 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
         >
           <Plus size={12} /> Add unit type
         </button>
+      </Block>
+
+      {/* SECTION GALLERY */}
+      <Block title={`Plans & renderings gallery (${(inv.gallery ?? []).length})`}>
+        <Field
+          label="Eyebrow"
+          value={inv.galleryEyebrow ?? ""}
+          onChange={(v) => updateInvestors({ galleryEyebrow: v })}
+        />
+        <Field label="Title" value={inv.galleryTitle ?? ""} onChange={(v) => updateInvestors({ galleryTitle: v })} />
+        {renderGallery({ list: "section" }, "Gallery images")}
       </Block>
 
       {/* BUDGET */}

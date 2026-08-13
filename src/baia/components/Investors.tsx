@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Check,
   MapPin,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSite } from "../context/SiteContext";
@@ -33,10 +34,37 @@ export default function Investors() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [lightbox, setLightbox] = useState<{ url: string; caption: string } | null>(null);
 
   if (!inv.enabled) return null;
 
   const usdToPhp = (usd: number) => peso(usd * (inv.phpPerUsd || 1));
+
+  const thumbs = (images?: { id: string; url: string; caption: string }[], cols = "grid-cols-3") =>
+    images && images.length > 0 ? (
+      <div className={`grid ${cols} gap-2`}>
+        {images.map((img) => (
+          <button
+            key={img.id}
+            type="button"
+            onClick={() => setLightbox({ url: img.url, caption: img.caption })}
+            className="group/thumb text-left"
+          >
+            <img
+              src={img.url}
+              alt={img.caption || "Project image"}
+              loading="lazy"
+              className="w-full h-20 md:h-24 object-cover transition-opacity duration-500 opacity-80 group-hover/thumb:opacity-100"
+            />
+            {img.caption && (
+              <span className="mt-1 block text-[9px] tracking-[0.18em] uppercase text-luxury-400 font-sans truncate">
+                {img.caption}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    ) : null;
 
   const totalAllocated = inv.budgetItems.reduce((s, b) => s + (b.allocatedPhp || 0), 0);
   const totalInjected = inv.budgetItems.reduce((s, b) => s + (b.injectedPhp || 0), 0);
@@ -154,6 +182,7 @@ export default function Investors() {
                     <p className="text-xs md:text-sm text-luxury-300 font-sans font-light leading-relaxed whitespace-pre-line">
                       {p.description}
                     </p>
+                    {thumbs(p.gallery)}
                   </div>
                 </article>
               ))}
@@ -198,8 +227,43 @@ export default function Investors() {
                         ≈ ${Number(u.priceUsd || 0).toLocaleString()} USD each{u.quantityNote ? ` · ${u.quantityNote}` : ""}
                       </div>
                     </div>
+                    {thumbs(u.gallery)}
                   </div>
                 </article>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* 3b. PLANS & RENDERINGS GALLERY */}
+        {(inv.gallery ?? []).length > 0 && (
+          <motion.div {...fade} className="space-y-10">
+            <div className="space-y-4 max-w-2xl">
+              <span className="eyebrow text-gold-300 block">{inv.galleryEyebrow}</span>
+              <h3 className="display-heading text-3xl md:text-5xl text-luxury-100">{inv.galleryTitle}</h3>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {(inv.gallery ?? []).map((img) => (
+                <button
+                  key={img.id}
+                  type="button"
+                  onClick={() => setLightbox({ url: img.url, caption: img.caption })}
+                  className="group text-left"
+                >
+                  <div className="overflow-hidden">
+                    <img
+                      src={img.url}
+                      alt={img.caption || "Plan"}
+                      loading="lazy"
+                      className="w-full h-40 md:h-52 object-cover transition-transform duration-[1400ms] ease-(--ease-editorial) group-hover:scale-105"
+                    />
+                  </div>
+                  {img.caption && (
+                    <span className="mt-2 block text-[10px] tracking-[0.2em] uppercase text-luxury-400 font-sans">
+                      {img.caption}
+                    </span>
+                  )}
+                </button>
               ))}
             </div>
           </motion.div>
