@@ -255,6 +255,7 @@ export interface GalleryItem {
 
 export interface InvestorStat { id: string; value: string; label: string }
 export interface InvestorImage { id: string; url: string; caption: string }
+export interface InvestorVideo { id: string; url: string; caption: string; poster?: string }
 export interface InvestorProject {
   id: string;
   name: string;
@@ -284,8 +285,35 @@ export interface InvestorBudgetItem {
   note: string;
 }
 export interface InvestorCapitalRow { id: string; label: string; value: string; note: string }
-export interface InvestorTimelineItem { id: string; year: string; title: string; points: string[] }
+export interface InvestorTimelineItem { id: string; year: string; title: string; points: string[]; detail?: string }
 export interface InvestorBenefit { id: string; title: string; copy: string }
+export interface InvestorTier {
+  id: string;
+  name: string;
+  investmentPhp: number;
+  circleUnits: number;
+  annualPebbles: number;
+  roiLowPct: number;
+  roiHighPct: number;
+  perUnitPhp?: number;
+}
+export interface InvestorMapNode {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  status: "Planned" | "Construction" | "Open";
+  openingYear: number;
+  detail: string;
+}
+export interface InvestorMediaItem {
+  id: string;
+  kind: "image" | "video";
+  url: string;
+  caption: string;
+  poster?: string;
+  date?: string;
+}
 
 export interface InvestorsData {
   enabled: boolean;
@@ -326,6 +354,7 @@ export interface InvestorsData {
   timelineEyebrow: string;
   timelineTitle: string;
   timeline: InvestorTimelineItem[];
+  timelineDetailLabel?: string;
 
   circleEyebrow: string;
   circleTitle: string;
@@ -333,6 +362,20 @@ export interface InvestorsData {
   circlePrimaryLabel: string;
   circleSecondaryLabel: string;
   benefits: InvestorBenefit[];
+
+  calculatorEyebrow?: string;
+  calculatorTitle?: string;
+  calculatorNote?: string;
+  calculatorPerUnitPhp: number;
+  tiers: InvestorTier[];
+
+  mapEyebrow?: string;
+  mapTitle?: string;
+  mapNodes: InvestorMapNode[];
+
+  mediaEyebrow?: string;
+  mediaTitle?: string;
+  media: InvestorMediaItem[];
 
   closingEyebrow: string;
   closingTitle: string;
@@ -514,11 +557,40 @@ export const DEFAULT_INVESTORS: InvestorsData = {
 
   timelineEyebrow: "Project timeline",
   timelineTitle: "2026 — 2029",
+  timelineDetailLabel: "Tap a milestone for details",
   timeline: [
-    { id: "tl-2026", year: "2026", title: "Planning & Founding Circle", points: ["Circle launch", "Permits and site works", "Unit procurement"] },
-    { id: "tl-2027", year: "2027", title: "Construction", points: ["Site development", "Suites and villas installed", "Landscaping"] },
-    { id: "tl-2028", year: "2028", title: "AMUMA San Vicente opens", points: ["First guests welcomed", "Rental income begins", "Pebbles activated"] },
-    { id: "tl-2029", year: "2029", title: "Balabac groundbreaking", points: ["Second destination", "New Circle offering", "Regional expansion"] },
+    { id: "tl-2026", year: "2026", title: "Planning & Founding Circle", points: ["Circle launch", "Permits and site works", "Unit procurement"], detail: "Founding Circle opens, permits lodged with LGU San Vicente and design set for the first 4 suites and 2 villas." },
+    { id: "tl-2027", year: "2027", title: "Construction", points: ["Site development", "Suites and villas installed", "Landscaping"], detail: "Beachfront site works, utilities and the modular suite/villa units installed and finished." },
+    { id: "tl-2028", year: "2028", title: "AMUMA San Vicente opens", points: ["First guests welcomed", "Rental income begins", "Pebbles activated"], detail: "First guests welcomed; rental income begins and annual Pebbles are activated for Circle Members." },
+    { id: "tl-2029", year: "2029", title: "Balabac groundbreaking", points: ["Second destination", "New Circle offering", "Regional expansion"], detail: "Groundbreaking on the Balabac flagship and a new Circle offering for the second destination." },
+  ],
+
+  calculatorEyebrow: "Model your participation",
+  calculatorTitle: "Circle participation calculator",
+  calculatorNote:
+    "Indicative only. Amounts are illustrative and not an offer. Return ranges reflect management projections and are not guaranteed.",
+  calculatorPerUnitPhp: 10400,
+  tiers: [
+    { id: "tier-nova", name: "Nova", investmentPhp: 520000, circleUnits: 50, annualPebbles: 1000, roiLowPct: 14, roiHighPct: 17, perUnitPhp: 10400 },
+    { id: "tier-aurora", name: "Aurora", investmentPhp: 1248000, circleUnits: 120, annualPebbles: 2600, roiLowPct: 15, roiHighPct: 18, perUnitPhp: 10400 },
+    { id: "tier-orion", name: "Orion", investmentPhp: 2184000, circleUnits: 210, annualPebbles: 4800, roiLowPct: 16, roiHighPct: 19, perUnitPhp: 10400 },
+    { id: "tier-polaris", name: "Polaris", investmentPhp: 4160000, circleUnits: 400, annualPebbles: 9600, roiLowPct: 16, roiHighPct: 20, perUnitPhp: 10400 },
+  ],
+
+  mapEyebrow: "Future destinations",
+  mapTitle: "The AMUMA map",
+  mapNodes: [
+    { id: "map-sv", name: "San Vicente", x: 27, y: 30, status: "Construction", openingYear: 2028, detail: "Long Beach beachfront — 4 suites and 2 villas. Opening 2028." },
+    { id: "map-balabac", name: "Balabac", x: 24, y: 78, status: "Planned", openingYear: 2029, detail: "Southern Palawan flagship. Groundbreaking 2029." },
+    { id: "map-sagada", name: "Sagada", x: 58, y: 22, status: "Planned", openingYear: 2031, detail: "Cordillera highlands retreat. Land study underway." },
+    { id: "map-togean", name: "Togean", x: 70, y: 64, status: "Planned", openingYear: 2033, detail: "Sulawesi Sea island chapter. Identified for expansion." },
+  ],
+
+  mediaEyebrow: "Progress & updates",
+  mediaTitle: "From the build",
+  media: [
+    { id: "media-1", kind: "image", url: "", caption: "Site survey, Long Beach", date: "2026-06" },
+    { id: "media-2", kind: "video", url: "", caption: "Drone flyover", poster: "", date: "2026-07" },
   ],
 
   circleEyebrow: "The Circle model",

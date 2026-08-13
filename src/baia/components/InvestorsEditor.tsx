@@ -20,6 +20,9 @@ import {
   InvestorBenefit,
   InvestorStat,
   InvestorImage,
+  InvestorTier,
+  InvestorMapNode,
+  InvestorMediaItem,
 } from "../context/SiteContext";
 
 interface Props {
@@ -397,6 +400,129 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
         {renderGallery({ list: "section" }, "Gallery images")}
       </Block>
 
+      {/* CALCULATOR + TIERS */}
+      <Block title={`Circle calculator & tiers (${inv.tiers.length})`}>
+        <Field label="Eyebrow" value={inv.calculatorEyebrow ?? ""} onChange={(v) => updateInvestors({ calculatorEyebrow: v })} />
+        <Field label="Title" value={inv.calculatorTitle ?? ""} onChange={(v) => updateInvestors({ calculatorTitle: v })} />
+        <Field label="Note" value={inv.calculatorNote ?? ""} onChange={(v) => updateInvestors({ calculatorNote: v })} textarea />
+        <Field
+          label="Per-Unit price (PHP) — drives Circle Units from slider"
+          type="number"
+          value={inv.calculatorPerUnitPhp}
+          onChange={(v) => updateInvestors({ calculatorPerUnitPhp: parseFloat(v) || 0 })}
+        />
+        {inv.tiers.map((t: InvestorTier) => (
+          <div key={t.id} className={cardCls}>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] tracking-[0.2em] uppercase text-gold-300 font-sans">{t.name || "Tier"}</span>
+              <button className={delBtnCls} onClick={() => removeItem("tiers", inv.tiers, t.id)}>
+                <Trash2 size={14} />
+              </button>
+            </div>
+            <Field label="Name" value={t.name} onChange={(v) => editItem("tiers", inv.tiers, t.id, { name: v })} />
+            <Field label="Investment (PHP)" type="number" value={t.investmentPhp} onChange={(v) => editItem("tiers", inv.tiers, t.id, { investmentPhp: parseFloat(v) || 0 })} />
+            <Field label="Circle Units" type="number" value={t.circleUnits} onChange={(v) => editItem("tiers", inv.tiers, t.id, { circleUnits: parseFloat(v) || 0 })} />
+            <Field label="Annual Pebbles" type="number" value={t.annualPebbles} onChange={(v) => editItem("tiers", inv.tiers, t.id, { annualPebbles: parseFloat(v) || 0 })} />
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="ROI low %" type="number" value={t.roiLowPct} onChange={(v) => editItem("tiers", inv.tiers, t.id, { roiLowPct: parseFloat(v) || 0 })} />
+              <Field label="ROI high %" type="number" value={t.roiHighPct} onChange={(v) => editItem("tiers", inv.tiers, t.id, { roiHighPct: parseFloat(v) || 0 })} />
+            </div>
+          </div>
+        ))}
+        <button
+          className={addBtnCls}
+          onClick={() => patchList("tiers", [...inv.tiers, { id: uid("tier"), name: "New tier", investmentPhp: 500000, circleUnits: 50, annualPebbles: 1000, roiLowPct: 14, roiHighPct: 17 }])}
+        >
+          <Plus size={12} /> Add tier
+        </button>
+      </Block>
+
+      {/* MAP */}
+      <Block title={`Destination map (${inv.mapNodes.length})`}>
+        <Field label="Eyebrow" value={inv.mapEyebrow ?? ""} onChange={(v) => updateInvestors({ mapEyebrow: v })} />
+        <Field label="Title" value={inv.mapTitle ?? ""} onChange={(v) => updateInvestors({ mapTitle: v })} />
+        {inv.mapNodes.map((n: InvestorMapNode) => (
+          <div key={n.id} className={cardCls}>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] tracking-[0.2em] uppercase text-gold-300 font-sans">{n.name || "Node"}</span>
+              <button className={delBtnCls} onClick={() => removeItem("mapNodes", inv.mapNodes, n.id)}>
+                <Trash2 size={14} />
+              </button>
+            </div>
+            <Field label="Name" value={n.name} onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { name: v })} />
+            <Field label="Detail" value={n.detail} onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { detail: v })} textarea />
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="X (0–100)" type="number" value={n.x} onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { x: parseFloat(v) || 0 })} />
+              <Field label="Y (0–100)" type="number" value={n.y} onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { y: parseFloat(v) || 0 })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Opening year" type="number" value={n.openingYear} onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { openingYear: parseFloat(v) || 0 })} />
+              <Field
+                label="Status"
+                value={n.status}
+                onChange={(v) => editItem("mapNodes", inv.mapNodes, n.id, { status: (v === "Open" || v === "Construction" ? v : "Planned") as InvestorMapNode["status"] })}
+              />
+            </div>
+          </div>
+        ))}
+        <button
+          className={addBtnCls}
+          onClick={() => patchList("mapNodes", [...inv.mapNodes, { id: uid("map"), name: "New place", x: 50, y: 50, status: "Planned", openingYear: 2030, detail: "" }])}
+        >
+          <Plus size={12} /> Add map node
+        </button>
+      </Block>
+
+      {/* MEDIA WALL */}
+      <Block title={`Progress media (${inv.media.length})`}>
+        <Field label="Eyebrow" value={inv.mediaEyebrow ?? ""} onChange={(v) => updateInvestors({ mediaEyebrow: v })} />
+        <Field label="Title" value={inv.mediaTitle ?? ""} onChange={(v) => updateInvestors({ mediaTitle: v })} />
+        {inv.media.map((m: InvestorMediaItem) => (
+          <div key={m.id} className={cardCls}>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] tracking-[0.2em] uppercase text-gold-300 font-sans">{m.caption || m.kind}</span>
+              <button className={delBtnCls} onClick={() => removeItem("media", inv.media, m.id)}>
+                <Trash2 size={14} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <label className={labelCls}>Type</label>
+              <select
+                value={m.kind}
+                onChange={(e) => editItem("media", inv.media, m.id, { kind: e.target.value as InvestorMediaItem["kind"] })}
+                className={inputCls}
+              >
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+              </select>
+            </div>
+            <Field label="Caption" value={m.caption} onChange={(v) => editItem("media", inv.media, m.id, { caption: v })} />
+            <Field label="Date (optional)" value={m.date ?? ""} onChange={(v) => editItem("media", inv.media, m.id, { date: v })} />
+            <div>
+              <label className={labelCls}>Media URL (image link or YouTube/Vimeo/mp4)</label>
+              <input
+                value={m.url}
+                onChange={(e) => editItem("media", inv.media, m.id, { url: e.target.value })}
+                placeholder="https://…"
+                className={inputCls}
+              />
+              {m.kind === "image" && m.url && (
+                <img src={m.url} alt="" className="w-full h-24 object-cover mt-2 rounded-sm" />
+              )}
+              {m.kind === "video" && (
+                <Field label="Poster URL (optional)" value={m.poster ?? ""} onChange={(v) => editItem("media", inv.media, m.id, { poster: v })} />
+              )}
+            </div>
+          </div>
+        ))}
+        <button
+          className={addBtnCls}
+          onClick={() => patchList("media", [...inv.media, { id: uid("media"), kind: "image", url: "", caption: "", date: "" }])}
+        >
+          <Plus size={12} /> Add media item
+        </button>
+      </Block>
+
       {/* BUDGET */}
       <Block title={`Budget injected (${inv.budgetItems.length})`}>
         <Field label="Eyebrow" value={inv.budgetEyebrow} onChange={(v) => updateInvestors({ budgetEyebrow: v })} />
@@ -488,6 +614,12 @@ export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }
             </div>
             <Field label="Year" value={t.year} onChange={(v) => editItem("timeline", inv.timeline, t.id, { year: v })} />
             <Field label="Title" value={t.title} onChange={(v) => editItem("timeline", inv.timeline, t.id, { title: v })} />
+            <Field
+              label="Detail (shown when the milestone is tapped)"
+              value={t.detail ?? ""}
+              onChange={(v) => editItem("timeline", inv.timeline, t.id, { detail: v })}
+              textarea
+            />
             <Field
               label="Bullet points (one per line)"
               value={t.points.join("\n")}

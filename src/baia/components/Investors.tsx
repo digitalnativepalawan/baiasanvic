@@ -21,6 +21,10 @@ import { useSite } from "../context/SiteContext";
 import { SectionStamp, TideDivider } from "./Editorial";
 import geminiImg from "@/assets/amuma-gemini-suite.jpg";
 import villaImg from "@/assets/amuma-villa.jpg";
+import InvestorCalculator from "./investors/InvestorCalculator";
+import InvestorMap from "./investors/InvestorMap";
+import InvestorTimeline from "./investors/InvestorTimeline";
+import InvestorMedia from "./investors/InvestorMedia";
 
 const FALLBACK_UNIT_IMAGES = [geminiImg, villaImg];
 
@@ -190,6 +194,15 @@ export default function Investors() {
           )}
         </motion.div>
 
+        {/* 2b. INTERACTIVE DESTINATION MAP */}
+        {inv.mapNodes.length > 0 && (
+          <InvestorMap
+            eyebrow={inv.mapEyebrow}
+            title={inv.mapTitle}
+            nodes={inv.mapNodes}
+          />
+        )}
+
         {/* 3. UNIT TYPOLOGIES */}
         {inv.units.length > 0 && (
           <motion.div {...fade} className="space-y-10">
@@ -341,31 +354,26 @@ export default function Investors() {
           </motion.div>
         )}
 
-        {/* 6. PROJECT TIMELINE */}
+        {/* 5b. INTERACTIVE CALCULATOR */}
+        {inv.tiers.length > 0 && (
+          <InvestorCalculator
+            eyebrow={inv.calculatorEyebrow}
+            title={inv.calculatorTitle}
+            note={inv.calculatorNote}
+            perUnitPhp={inv.calculatorPerUnitPhp}
+            tiers={inv.tiers}
+            ctaLabel={inv.ctaLabel}
+          />
+        )}
+
+        {/* 6. PROJECT TIMELINE (interactive) */}
         {inv.timeline.length > 0 && (
-          <motion.div {...fade} className="space-y-12">
-            <div className="space-y-4 max-w-2xl">
-              <span className="eyebrow text-gold-300 block">{inv.timelineEyebrow}</span>
-              <h3 className="display-heading text-3xl md:text-5xl text-luxury-100">{inv.timelineTitle}</h3>
-            </div>
-            <div className="relative grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-6">
-              <div className="hidden md:block absolute left-0 right-0 top-[7px] h-px bg-gradient-to-r from-gold-500/50 via-gold-500/20 to-transparent" />
-              {inv.timeline.map((t) => (
-                <div key={t.id} className="relative space-y-4">
-                  <span className="block w-3.5 h-3.5 rounded-full border border-gold-500 bg-luxury-950" />
-                  <div className="font-serif text-3xl text-gold-300 font-light">{t.year}</div>
-                  <div className="text-sm text-luxury-100 font-sans font-medium">{t.title}</div>
-                  <ul className="space-y-1.5">
-                    {t.points.map((p, idx) => (
-                      <li key={idx} className="text-xs text-luxury-400 font-sans font-light flex gap-2">
-                        <span className="text-gold-500/70">—</span> {p}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+          <InvestorTimeline
+            eyebrow={inv.timelineEyebrow}
+            title={inv.timelineTitle}
+            detailLabel={inv.timelineDetailLabel}
+            items={inv.timeline}
+          />
         )}
 
         {/* 7. CIRCLE MODEL */}
@@ -396,6 +404,18 @@ export default function Investors() {
             ))}
           </div>
         </motion.div>
+
+        <TideDivider />
+
+        {/* 7b. PROGRESS MEDIA WALL (images + video) */}
+        {inv.media.length > 0 && (
+          <InvestorMedia
+            eyebrow={inv.mediaEyebrow}
+            title={inv.mediaTitle}
+            items={inv.media}
+            onOpen={(url, caption) => setLightbox({ url, caption })}
+          />
+        )}
 
         <TideDivider />
 
