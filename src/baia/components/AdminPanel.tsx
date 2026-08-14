@@ -2943,7 +2943,9 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   {activeTab === "investors" && (
                     <InvestorsEditor
                       onUpload={(file, cb) => handleImageUpload(file, cb)}
+                      onUploadVideo={(file, cb) => handleImageUpload(file, cb, { allowVideo: true })}
                       acceptImage={ACCEPTED_IMAGE_TYPES}
+                      acceptVideo={ACCEPTED_VIDEO_TYPES}
                       imageGuidance={ACCEPTED_IMAGE_GUIDANCE}
                     />
                   )}
