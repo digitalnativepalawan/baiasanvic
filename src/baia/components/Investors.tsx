@@ -467,6 +467,36 @@ export default function Investors() {
           </form>
         </motion.div>
       </div>
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[120] bg-luxury-950/95 backdrop-blur-sm flex items-center justify-center p-6"
+          onClick={() => setLightbox(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            aria-label="Close image"
+            className="absolute top-6 right-6 text-luxury-300 hover:text-gold-300 transition-colors"
+          >
+            <X size={24} />
+          </button>
+          <figure className="max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={lightbox.url}
+              alt={lightbox.caption || "Investor image"}
+              className="w-full max-h-[80vh] object-contain"
+            />
+            {lightbox.caption && (
+              <figcaption className="mt-4 text-center text-[11px] tracking-[0.2em] uppercase text-luxury-300 font-sans">
+                {lightbox.caption}
+              </figcaption>
+            )}
+          </figure>
+        </div>
+      )}
     </section>
   );
 }
