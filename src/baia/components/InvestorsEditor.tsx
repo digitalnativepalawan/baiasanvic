@@ -470,7 +470,19 @@ export default function InvestorsEditor({
             <Field label="Caption" value={m.caption} onChange={(v) => editItem("media", inv.media, m.id, { caption: v })} />
             <Field label="Date (optional)" value={m.date ?? ""} onChange={(v) => editItem("media", inv.media, m.id, { date: v })} />
             <div>
-              <label className={labelCls}>Media URL (image link or YouTube/Vimeo/mp4)</label>
+              <label className={labelCls}>Upload from this device</label>
+              <input
+                type="file"
+                accept={m.kind === "video" ? acceptVideo ?? acceptImage : acceptImage}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  const up = m.kind === "video" && onUploadVideo ? onUploadVideo : onUpload;
+                  up(f, (url) => editItem("media", inv.media, m.id, { url }));
+                }}
+                className="w-full text-xs text-luxury-200"
+              />
+              <label className={`${labelCls} mt-3`}>…or paste a URL (image link or YouTube/Vimeo/mp4)</label>
               <input
                 value={m.url}
                 onChange={(e) => editItem("media", inv.media, m.id, { url: e.target.value })}
@@ -481,9 +493,27 @@ export default function InvestorsEditor({
                 <img src={m.url} alt="" className="w-full h-24 object-cover mt-2 rounded-sm" />
               )}
               {m.kind === "video" && (
-                <Field label="Poster URL (optional)" value={m.poster ?? ""} onChange={(v) => editItem("media", inv.media, m.id, { poster: v })} />
+                <>
+                  <label className={`${labelCls} mt-3`}>Poster image (optional)</label>
+                  <input
+                    type="file"
+                    accept={acceptImage}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) onUpload(f, (url) => editItem("media", inv.media, m.id, { poster: url }));
+                    }}
+                    className="w-full text-xs text-luxury-200"
+                  />
+                  <input
+                    value={m.poster ?? ""}
+                    onChange={(e) => editItem("media", inv.media, m.id, { poster: e.target.value })}
+                    placeholder="…or paste a poster URL"
+                    className={`${inputCls} mt-2`}
+                  />
+                </>
               )}
             </div>
+
           </div>
         ))}
         <button
