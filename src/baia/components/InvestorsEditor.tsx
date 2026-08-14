@@ -92,7 +92,13 @@ function Block({
   );
 }
 
-export default function InvestorsEditor({ onUpload, acceptImage, imageGuidance }: Props) {
+export default function InvestorsEditor({
+  onUpload,
+  onUploadVideo,
+  acceptImage,
+  acceptVideo,
+  imageGuidance,
+}: Props) {
   const { investors: inv, updateInvestors } = useSite();
 
   const patchList = <T,>(key: keyof typeof inv, list: T[]) => updateInvestors({ [key]: list } as never);
