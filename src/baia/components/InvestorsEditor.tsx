@@ -26,7 +26,9 @@ import {
 
 interface Props {
   onUpload: (file: File, cb: (url: string) => void) => void;
+  onUploadVideo?: (file: File, cb: (url: string) => void) => void;
   acceptImage: string;
+  acceptVideo?: string;
   imageGuidance: string;
 }
 
