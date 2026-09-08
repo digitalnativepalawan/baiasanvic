@@ -263,9 +263,27 @@ export default function InvestorsEditor({
                 onChange={(v) => editItem("projects", inv.projects, p.id, { description: v })}
                 textarea
               />
-              <div>
-                <label className={labelCls}>Image</label>
-                {p.imageUrl && <img src={p.imageUrl} alt="" className="w-full h-28 object-cover mb-2 rounded-sm" />}
+              <div className="border border-luxury-800 rounded-sm p-4 bg-luxury-900/50">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-[10px] tracking-[0.2em] uppercase text-gold-300 font-sans font-bold">
+                    Project Image
+                  </label>
+                  {p.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => editItem("projects", inv.projects, p.id, { imageUrl: "" })}
+                      className="inline-flex items-center gap-1.5 text-[10px] tracking-wider uppercase text-red-400 hover:text-red-300 font-sans transition-colors"
+                    >
+                      <Trash2 size={11} />
+                      Delete Image
+                    </button>
+                  )}
+                </div>
+                {p.imageUrl && (
+                  <div className="relative mb-3">
+                    <img src={p.imageUrl} alt="" className="w-full h-32 object-cover rounded-sm border border-luxury-800" />
+                  </div>
+                )}
                 <input
                   type="file"
                   accept={acceptImage}
@@ -320,7 +338,7 @@ export default function InvestorsEditor({
       </Block>
 
       {/* UNITS */}
-      <Block title={`Unit typologies & prices (${inv.units.length})`}>
+      <Block title={`Unit typologies & prices (${inv.units.length})`} defaultOpen>
         <Field label="Eyebrow" value={inv.unitsEyebrow} onChange={(v) => updateInvestors({ unitsEyebrow: v })} />
         <Field label="Title" value={inv.unitsTitle} onChange={(v) => updateInvestors({ unitsTitle: v })} />
         {inv.units.map((u: InvestorUnit) => (
@@ -350,9 +368,27 @@ export default function InvestorsEditor({
               value={u.quantityNote}
               onChange={(v) => editItem("units", inv.units, u.id, { quantityNote: v })}
             />
-            <div>
-              <label className={labelCls}>Rendering / photo</label>
-              {u.imageUrl && <img src={u.imageUrl} alt="" className="w-full h-28 object-cover mb-2 rounded-sm" />}
+            <div className="border border-luxury-800 rounded-sm p-4 bg-luxury-900/50">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-[10px] tracking-[0.2em] uppercase text-gold-300 font-sans font-bold">
+                  Unit Image
+                </label>
+                {u.imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => editItem("units", inv.units, u.id, { imageUrl: "" })}
+                    className="inline-flex items-center gap-1.5 text-[10px] tracking-wider uppercase text-red-400 hover:text-red-300 font-sans transition-colors"
+                  >
+                    <Trash2 size={11} />
+                    Delete Image
+                  </button>
+                )}
+              </div>
+              {u.imageUrl && (
+                <div className="relative mb-3">
+                  <img src={u.imageUrl} alt="" className="w-full h-32 object-cover rounded-sm border border-luxury-800" />
+                </div>
+              )}
               <input
                 type="file"
                 accept={acceptImage}

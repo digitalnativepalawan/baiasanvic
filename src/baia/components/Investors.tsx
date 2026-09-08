@@ -19,13 +19,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSite } from "../context/SiteContext";
 import { SectionStamp, TideDivider } from "./Editorial";
-import geminiImg from "@/assets/amuma-gemini-suite.jpg";
-import villaImg from "@/assets/amuma-villa.jpg";
 import InvestorCalculator from "./investors/InvestorCalculator";
 import InvestorTimeline from "./investors/InvestorTimeline";
 import InvestorMedia from "./investors/InvestorMedia";
-
-const FALLBACK_UNIT_IMAGES = [geminiImg, villaImg];
 
 const peso = (amount: number) =>
   `₱${Math.round(amount).toLocaleString("en-US")}`;
@@ -203,15 +199,21 @@ export default function Investors() {
               <h3 className="display-heading text-3xl md:text-5xl text-luxury-100">{inv.unitsTitle}</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-14">
-              {inv.units.map((u, i) => (
+              {inv.units.map((u) => (
                 <article key={u.id} className="group space-y-6">
                   <div className="overflow-hidden">
-                    <img
-                      src={u.imageUrl || FALLBACK_UNIT_IMAGES[i % FALLBACK_UNIT_IMAGES.length]}
-                      alt={`${u.name} rendering`}
-                      loading="lazy"
-                      className="w-full h-64 md:h-80 object-cover transition-transform duration-[1400ms] ease-(--ease-editorial) group-hover:scale-105"
-                    />
+                    {u.imageUrl ? (
+                      <img
+                        src={u.imageUrl}
+                        alt={`${u.name} rendering`}
+                        loading="lazy"
+                        className="w-full h-64 md:h-80 object-cover transition-transform duration-[1400ms] ease-(--ease-editorial) group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-64 md:h-80 bg-luxury-900 border border-luxury-800 flex items-center justify-center">
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-luxury-500 font-sans">Upload unit image in admin</span>
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-baseline justify-between gap-4">
