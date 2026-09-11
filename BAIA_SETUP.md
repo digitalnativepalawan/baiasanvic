@@ -49,3 +49,39 @@ On Lovable Cloud these are injected automatically — nothing to configure.
 
 Only signed-in admins can edit content, and only their edits are written back
 to `site_state`. Anonymous visitors keep the read-only public view.
+
+## TALA — the AI agent (guest chat + backend admin)
+
+TALA is the in-app agent that powers both the guest-facing chat and, behind
+the admin passkey, backend operations. Full architecture: `docs/TALA.md`.
+
+**Guest surface** (bottom-right chat bubble): answers from the resort's
+knowledge, checks live site data with tools, captures booking inquiries,
+never quotes prices.
+
+**Admin surface** (admin panel → *TALA Agent* tab): the same brain with write
+tools — edit site content, manage the knowledge base, triage booking
+inquiries, update room statuses, create housekeeping tasks. Every tool
+execution is recorded in the action trail with evidence.
+
+### Enabling the agentic loop
+
+1. Admin panel → **AI Concierge** → switch on and set a provider:
+   an OpenRouter API key (any tool-capable model) or a local Ollama model.
+2. Without a provider, TALA still answers guests deterministically from the
+   approved knowledge base — the provider only unlocks the agentic
+   tool-calling loop and the admin write tools.
+
+### Operations tables (optional, recommended)
+
+Paste `supabase/manual_sql/004_tala_agent.sql` into **Cloud → SQL editor** to
+create `tala_action_log` (evidence trail), `tala_rooms` (room status board),
+`tala_tasks` (task board), and `tala_events`. All TALA tools degrade
+gracefully until this is applied.
+
+### Tests
+
+```bash
+npm test          # unit tests — no DB or provider needed
+npm run test:rls  # live RLS integration test (needs .env; run after migrations)
+```

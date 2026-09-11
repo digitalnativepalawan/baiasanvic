@@ -1,14 +1,62 @@
-import { useState, useRef, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, Mic, MicOff, X, MessageCircle } from "lucide-react";
+/**
+ * TalaVoiceWidget — voice front-end for TALA.
+ *
+ * The old version POSTed audio to /api/tala/voice, a route that proxied to a
+ * Python service on localhost:8100 — it could never work deployed. This
+ * version uses the browser's built-in Web Speech APIs (SpeechRecognition for
+ * listening, speechSynthesis for speaking) and sends the recognized text
+ * through the same `talaChat` server function the admin console uses — one
+ * brain, every surface, no external service.
+ *
+ * Where Web Speech isn't available (e.g. Firefox), the widget silently
+ * degrades to text chat with a small note — voice is an enhancement, never a
+ * requirement. TypeScript definitions for the speech APIs are declared
+ * locally below so no extra dependency is needed.
+ */
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Send, Mic, MicOff, X, Sparkles, Loader2, Volume2 } from "lucide-react";
+import { talaChat } from "./tala.server";
 
 interface Message {
   role: "guest" | "agent";
   content: string;
-  timestamp: Date;
 }
+
+// ---- Minimal Web Speech typings (not in lib.dom for all TS versions) --------
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  0: { transcript: string };
+}
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: { length: number } & Record<number, SpeechRecognitionResultLike>;
+}
+interface SpeechRecognitionLike {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start: () => void;
+  stop: () => void;
+  onresult: ((e: SpeechRecognitionEventLike) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((e: { error?: string }) => void) | null;
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+
+function getRecognition(): SpeechRecognitionCtor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionCtor;
+    webkitSpeechRecognition?: SpeechRecognitionCtor;
+  };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
+
+const SUGGESTIONS = [
+  "What rooms do you have?",
+  "What can I do around the island?",
+  "How do I get there from Puerto Princesa?",
+];
 
 export function TalaVoiceWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,170 +64,222 @@ export function TalaVoiceWidget() {
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const mediaRecorder = useRef<MediaRecorder | null>(null);
-  const audioChunks = useRef<Blob[]>([]);
-  const sessionId = useRef(`session_${Date.now()}`);
+  const [speakReplies, setSpeakReplies] = useState(true);
+  const sessionId = useRef(`voice_${Date.now().toString(36)}`);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim()) return;
+  const speechAvailable = !!getRecognition();
 
-    const guestMsg: Message = { role: "guest", content: text, timestamp: new Date() };
-    setMessages((prev) => [...prev, guestMsg]);
-    setInput("");
-    setIsLoading(true);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
 
-    try {
-      const res = await fetch("/api/tala/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, sessionId: sessionId.current }),
-      });
+  const speak = useCallback(
+    (text: string) => {
+      if (!speakReplies || typeof window === "undefined" || !window.speechSynthesis) return;
+      // Strip markdown-ish characters so it reads naturally.
+      const clean = text.replace(/[*_`#>]/g, "");
+      const utter = new SpeechSynthesisUtterance(clean);
+      utter.rate = 1.02;
+      utter.pitch = 1.0;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+    },
+    [speakReplies],
+  );
 
-      if (res.ok) {
-        const data = await res.json();
-        const agentMsg: Message = { role: "agent", content: data.reply, timestamp: new Date() };
-        setMessages((prev) => [...prev, agentMsg]);
+  const sendMessage = useCallback(
+    async (text: string) => {
+      const q = text.trim();
+      if (!q || isLoading) return;
+      setMessages((prev) => [...prev, { role: "guest", content: q }]);
+      setInput("");
+      setIsLoading(true);
+      try {
+        const res = await talaChat({
+          data: {
+            message: q,
+            sessionId: sessionId.current,
+            surface: "guest",
+            history: [],
+          },
+        });
+        if (res.reply) {
+          setMessages((prev) => [...prev, { role: "agent", content: res.reply }]);
+          speak(res.reply);
+        }
+      } catch (err) {
+        console.error("TALA chat error:", err);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "agent",
+            content:
+              "I couldn't reach the team just now — please email hello@baiapalawan.com or use Book Your Stay.",
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error("TALA chat error:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [isLoading, speak],
+  );
 
-  const startRecording = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder.current = new MediaRecorder(stream);
-      audioChunks.current = [];
-
-      mediaRecorder.current.ondataavailable = (e) => {
-        audioChunks.current.push(e.data);
-      };
-
-      mediaRecorder.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const base64 = (reader.result as string).split(",")[1];
-          try {
-            const res = await fetch("/api/tala/voice", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                audioBase64: base64,
-                sessionId: sessionId.current,
-              }),
-            });
-
-            if (res.ok) {
-              const data = await res.json();
-              if (data.transcription) {
-                setMessages((prev) => [
-                  ...prev,
-                  { role: "guest", content: data.transcription, timestamp: new Date() },
-                ]);
-              }
-              if (data.reply) {
-                setMessages((prev) => [
-                  ...prev,
-                  { role: "agent", content: data.reply, timestamp: new Date() },
-                ]);
-              }
-              if (data.audioBase64) {
-                const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`);
-                audio.play();
-              }
-            }
-          } catch (err) {
-            console.error("Voice error:", err);
-          }
-        };
-        reader.readAsDataURL(audioBlob);
-        stream.getTracks().forEach((t) => t.stop());
-      };
-
-      mediaRecorder.current.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error("Mic error:", err);
-    }
-  }, []);
+  const startRecording = useCallback(() => {
+    const Ctor = getRecognition();
+    if (!Ctor || isRecording) return;
+    const rec = new Ctor();
+    rec.lang = "en-US";
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.onresult = (e) => {
+      const result = e.results[e.results.length - 1];
+      if (result?.isFinal) {
+        const transcript = result[0].transcript.trim();
+        if (transcript) sendMessage(transcript);
+      }
+    };
+    rec.onend = () => setIsRecording(false);
+    rec.onerror = () => setIsRecording(false);
+    recognitionRef.current = rec;
+    setIsRecording(true);
+    rec.start();
+  }, [isRecording, sendMessage]);
 
   const stopRecording = useCallback(() => {
-    mediaRecorder.current?.stop();
+    recognitionRef.current?.stop();
     setIsRecording(false);
   }, []);
 
   if (!isOpen) {
     return (
-      <Button
+      <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
-        size="icon"
+        className="fixed bottom-24 right-6 z-[54] bg-luxury-950 border border-gold-500/40 hover:border-gold-400 text-gold-300 rounded-full shadow-xl w-11 h-11 flex items-center justify-center cursor-pointer transition-all"
+        title="Talk to TALA"
+        aria-label="Open TALA voice chat"
       >
-        <MessageCircle className="h-6 w-6" />
-      </Button>
+        <Mic size={18} />
+      </button>
     );
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 h-[500px] shadow-xl z-50 flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between py-3">
-        <CardTitle className="text-lg">TALA Assistant</CardTitle>
-        <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-          <X className="h-4 w-4" />
-        </Button>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto pb-2">
-        {messages.length === 0 && (
-          <p className="text-muted-foreground text-sm text-center py-8">
-            Hi! I'm TALA, your BAIA assistant. Ask me anything about the resort, activities, or San Vicente.
-          </p>
-        )}
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`mb-3 flex ${msg.role === "guest" ? "justify-end" : "justify-start"}`}
+    <div className="fixed bottom-24 right-6 z-[54] w-[min(92vw,360px)] h-[min(75vh,520px)] bg-luxury-950 border border-luxury-800 rounded-sm shadow-2xl flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-luxury-900 border-b border-luxury-800">
+        <div className="flex items-center gap-2 text-gold-300">
+          <Sparkles size={15} />
+          <span className="text-[11px] tracking-widest uppercase font-sans font-bold">
+            TALA · Voice
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setSpeakReplies((v) => !v)}
+            className={`cursor-pointer transition-colors ${speakReplies ? "text-gold-300" : "text-luxury-600"}`}
+            title={speakReplies ? "Replies are spoken" : "Replies are silent"}
+            aria-label="Toggle spoken replies"
           >
+            <Volume2 size={15} />
+          </button>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="text-luxury-400 hover:text-gold-300 cursor-pointer"
+            aria-label="Close TALA voice"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {messages.length === 0 && (
+          <div className="text-luxury-400 text-xs font-sans font-light leading-relaxed">
+            <p className="mb-3">
+              Kumusta! I'm TALA.{" "}
+              {speechAvailable
+                ? "Tap the mic and speak, or type below."
+                : "Type below — voice input isn't supported in this browser."}
+            </p>
+            <div className="flex flex-col gap-2">
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => sendMessage(s)}
+                  className="text-left text-[11px] text-luxury-100 border border-luxury-800 hover:border-gold-300 hover:text-gold-300 rounded-sm px-3 py-2 transition-all cursor-pointer"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === "guest" ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                msg.role === "guest"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
+              className={`max-w-[85%] text-xs font-sans font-light leading-relaxed px-3 py-2 rounded-sm ${
+                m.role === "guest"
+                  ? "bg-gold-500 text-white"
+                  : "bg-luxury-900 text-luxury-100 border border-luxury-800"
               }`}
             >
-              {msg.content}
+              {m.content}
             </div>
           </div>
         ))}
         {isLoading && (
-          <div className="flex justify-start mb-3">
-            <div className="bg-muted rounded-lg px-3 py-2 text-sm animate-pulse">
-              Thinking...
+          <div className="flex justify-start">
+            <div className="bg-luxury-900 border border-luxury-800 rounded-sm px-3 py-2 flex items-center gap-2 text-luxury-400">
+              <Loader2 size={12} className="animate-spin" />
+              <span className="text-xs font-sans font-light">Listening for the answer…</span>
             </div>
           </div>
         )}
-      </CardContent>
-      <div className="p-3 border-t flex gap-2">
-        <Input
+      </div>
+
+      {/* Input */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          sendMessage(input);
+        }}
+        className="border-t border-luxury-800 p-3 flex items-center gap-2 bg-luxury-950"
+      >
+        {speechAvailable && (
+          <button
+            type="button"
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={isLoading}
+            className={`rounded-sm p-2 transition-all cursor-pointer disabled:opacity-40 ${
+              isRecording
+                ? "bg-red-500 text-white animate-pulse"
+                : "bg-luxury-900 border border-luxury-800 text-gold-300 hover:border-gold-300"
+            }`}
+            aria-label={isRecording ? "Stop recording" : "Start recording"}
+          >
+            {isRecording ? <MicOff size={14} /> : <Mic size={14} />}
+          </button>
+        )}
+        <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-          placeholder="Ask TALA..."
-          className="flex-1"
+          placeholder="Ask TALA…"
+          className="flex-1 bg-luxury-900 border border-luxury-800 rounded-sm px-3 py-2 text-xs text-luxury-100 focus:outline-none focus:border-gold-300 font-sans"
         />
-        <Button
-          variant={isRecording ? "destructive" : "outline"}
-          size="icon"
-          onClick={isRecording ? stopRecording : startRecording}
+        <button
+          type="submit"
+          disabled={isLoading || !input.trim()}
+          className="bg-gold-500 hover:bg-gold-600 text-white rounded-sm px-3 py-2 disabled:opacity-40 cursor-pointer"
+          aria-label="Send message"
         >
-          {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-        </Button>
-        <Button size="icon" onClick={() => sendMessage(input)}>
-          <Send className="h-4 w-4" />
-        </Button>
-      </div>
-    </Card>
+          <Send size={14} />
+        </button>
+      </form>
+    </div>
   );
 }

@@ -57,10 +57,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/api/onyx/status'
-    | '/api/ops/guest-lead'
-    | '/api/site-assets/$'
+    '/' | '/api/onyx/status' | '/api/ops/guest-lead' | '/api/site-assets/$'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/api/onyx/status' | '/api/ops/guest-lead' | '/api/site-assets/$'
   id:

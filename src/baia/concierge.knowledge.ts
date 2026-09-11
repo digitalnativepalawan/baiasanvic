@@ -384,6 +384,124 @@ function alimanguanSurfingChunkText(): string {
   ].join("\n");
 }
 
+// ---------------------------------------------------------------------------
+// Expanded TALA knowledge pack — topics added with the agentic upgrade so
+// TALA can hold its own on the questions guests actually ask. Same rules as
+// every other chunk: approved facts only, no prices (stripMonetary runs
+// downstream regardless, but don't put them here in the first place).
+// ---------------------------------------------------------------------------
+
+function seasonsChunkText(): string {
+  return [
+    "SEASONS & WEATHER",
+    "Dry season (roughly November to May): sunniest, calmest seas, best for island hopping and beach days. December to February is the coolest and breeziest.",
+    "Transition (roughly May to June): hot and humid before the rains settle in.",
+    "Green season (roughly June to October): occasional rain and passing storms; landscapes are at their greenest and stays are quieter. Boat trips still run between weather windows — the team checks conditions daily.",
+    "Temperatures sit around 26–33°C year-round; evenings by the water can feel breezy, so a light layer is handy.",
+    "Typhoons occasionally affect Palawan this far west — if one is forecast, the team coordinates rescheduling and safety guidance directly with booked guests.",
+  ].join("\n");
+}
+
+function packingChunkText(): string {
+  return [
+    "WHAT TO PACK",
+    "Reef-safe sunscreen (non-negotiable — regular sunscreen harms the coral we snorkel over), sunglasses, and a hat.",
+    "Light, breathable clothing; swimwear; a light jacket or sarong for breezy evenings and boat rides.",
+    "Reef shoes or water shoes for coral and rock entries.",
+    "A dry bag for boat trips and a flashlight or headlamp for beach evenings.",
+    "Any personal medications plus basics (motion-sickness tablets for boat days, after-sun, insect repellent).",
+    "Cash: San Vicente town has limited ATM access — bring enough cash for sundries, tips, and incidentals. The resort confirms payment options at booking.",
+    "Adapters not needed for most guests (Philippines uses Type A/B sockets, 220V) — bring a suitable charger.",
+  ].join("\n");
+}
+
+function healthSafetyChunkText(): string {
+  return [
+    "HEALTH, SAFETY & MEDICAL",
+    "Nearest medical: a rural health unit operates in San Vicente town (about 10 minutes away); the nearest full hospitals are in Puerto Princesa (2.5–3 hours by road). For anything serious the team helps coordinate transport.",
+    "Emergencies: the resort team is trained in first response and can call for local assistance; guests should have travel insurance that covers remote areas and boat activities.",
+    "Water: drinking water is provided by the resort; avoid drinking untreated tap water.",
+    "Sun and heat: hydrate generously; the tropical sun is strongest 10:00–15:00.",
+    "Marine safety: snorkel with a buddy, never touch coral or chase wildlife, and listen to the boat crew's briefing. Jellyfish are occasionally present — tell the crew immediately if stung.",
+    "Malaria/dengue: San Vicente is low-risk, but standard mosquito precautions (repellent, long sleeves at dusk) are wise in the tropics.",
+  ].join("\n");
+}
+
+function nomadsChunkText(): string {
+  return [
+    "DIGITAL NOMADS & REMOTE WORK",
+    "BAIA welcomes remote workers looking for a slow, focused stretch by the sea — long-stay inquiries are welcome and the team tailors arrangements for extended visits.",
+    "Connectivity: free WiFi covers the rooms, restaurant, and common areas, targeting 50+ Mbps over fiber where stable, with Smart and Globe cellular hotspots as backup. Local grid realities mean occasional drops — it's reliable for messaging, email, and calls scheduled around conditions, but plan important video calls with a fallback.",
+    "Workspaces: the beach lounge, restaurant terrace, and shaded beachfront spots all work well with a laptop; there is no dedicated co-working room.",
+    "Long stays: ask about extended-stay arrangements, laundry, and weekly housekeeping when inquiring — the team confirms current terms directly.",
+    "Time zone: Philippines is UTC+8 — a practical overlap with Asia-Pacific mornings and European afternoons.",
+  ].join("\n");
+}
+
+function specialOccasionsChunkText(): string {
+  return [
+    "SPECIAL OCCASIONS & PRIVATE MOMENTS",
+    "BAIA specializes in intimate, bespoke moments: beachfront proposals, private candle-lit dinners, surprise picnics, sunrise yoga sessions, and quiet celebrations for two.",
+    "Tell the concierge the occasion and the dream — the team arranges setup, timing with tides and sunset, flowers, and menus.",
+    "Private in-villa or beachfront dining can be arranged for special occasions with advance notice.",
+    "Note: BAIA is a quiet, small-property retreat — large groups, parties, and loud events are not hosted. The setting is designed for privacy and calm.",
+  ].join("\n");
+}
+
+function wellnessChunkText(): string {
+  return [
+    "WELLNESS & SPA",
+    "Complimentary for guests: sunrise vinyasa and sound-healing sessions in the beachfront shala — check the schedule on arrival.",
+    "Additional wellness can be arranged through the concierge: massage, breathwork, and guided meditation sessions, subject to practitioner availability.",
+    "The beachfront shala — an open-air platform facing the sea — is available for guests' own practice outside scheduled sessions.",
+    "Wellness retreats and multi-day programs (detox, yoga immersions) can be bespoke-arranged for groups booking the property — describe the vision and the team will design it.",
+  ].join("\n");
+}
+
+function sustainabilityChunkText(): string {
+  return [
+    "SUSTAINABILITY & REEF ETIQUETTE",
+    "BAIA sits beside living reef — reef-safe sunscreen only, and never stand on or touch coral while snorkeling.",
+    "Marine park rules apply in Port Barton Bay: listen to crew briefings, no anchoring on coral, no feeding or chasing fish and turtles.",
+    "The resort minimizes single-use plastics; refillable water is provided — bring a refillable bottle.",
+    "Towels and linens are changed on request rather than daily to save water and energy.",
+    "Wildlife sightings are a gift, not a guarantee — keep respectful distance, no flash photography at close range, and let sea turtles surface to breathe undisturbed.",
+  ].join("\n");
+}
+
+function paymentsChunkText(): string {
+  return [
+    "PAYMENTS & DEPOSITS (PROCESS)",
+    "No payment is taken online through this website — every stay starts as an inquiry.",
+    "After you inquire: the team confirms availability and current rates by email, then shares payment options (bank transfer, PayPal, or cash on arrival).",
+    "Deposits: a deposit may be requested to hold dates in peak season — the exact terms are confirmed by email at booking time.",
+    "Booking channels: BAIA also lists on Booking.com, Agoda, and Airbnb; those platforms' payment and cancellation terms apply to bookings made there.",
+    "Never send payment details through the chat — the concierge will always point you to the official email channel.",
+  ].join("\n");
+}
+
+function houseRulesChunkText(): string {
+  return [
+    "HOUSE RULES",
+    "Quiet, low-key atmosphere — quiet hours are respected in the evenings and early mornings for all guests' comfort.",
+    "No pets, no parties, no bachelor/bachelorette groups — BAIA is a quiet boutique retreat.",
+    "Smoking is not permitted inside the villas.",
+    "Day visitors and outside guests on the property are arranged through the front desk in advance.",
+    "Beach furniture and shala are shared spaces — the team is happy to help reserve for private moments with notice.",
+  ].join("\n");
+}
+
+function cultureChunkText(): string {
+  return [
+    "LANGUAGE & LOCAL CULTURE",
+    "Filipino and English are widely spoken; many locals in San Vicente also speak Cuyonon, the native language of northern Palawan.",
+    "A few warm Filipino words guests love: salamat (thank you), kumusta (hello/how are you), and magandang umaga (good morning).",
+    "Tipping is appreciated but not obligatory; rounding up for boat crews and drivers is a kind gesture.",
+    "Sundays are relaxed in town — many small shops open late or close; the sari-sari stores are the everyday lifeline for snacks and basics.",
+    "Respect local customs around church gatherings and community events — San Vicente is a small, close-knit town and guests are welcomed as neighbors.",
+  ].join("\n");
+}
+
 // Topics the owner authors over time. Append new entries here (unique id!).
 const OWNER_TOPICS: { id: string; label: string; text: string }[] = [
   { id: "dining", label: "Food & dining", text: diningChunkText() },
@@ -407,6 +525,25 @@ const OWNER_TOPICS: { id: string; label: string; text: string }[] = [
   { id: "island_hopping", label: "Island hopping details", text: islandHoppingChunkText() },
   { id: "waterfalls", label: "Waterfalls", text: waterfallsChunkText() },
   { id: "alimanguan_surfing", label: "Alimanguan surfing", text: alimanguanSurfingChunkText() },
+  // Expanded pack (TALA upgrade):
+  { id: "seasons", label: "Seasons & weather", text: seasonsChunkText() },
+  { id: "packing", label: "What to pack", text: packingChunkText() },
+  { id: "health_safety", label: "Health, safety & medical", text: healthSafetyChunkText() },
+  { id: "nomads", label: "Digital nomads & remote work", text: nomadsChunkText() },
+  {
+    id: "special_occasions",
+    label: "Special occasions & private moments",
+    text: specialOccasionsChunkText(),
+  },
+  { id: "wellness", label: "Wellness & spa", text: wellnessChunkText() },
+  {
+    id: "sustainability",
+    label: "Sustainability & reef etiquette",
+    text: sustainabilityChunkText(),
+  },
+  { id: "payments", label: "Payments & deposits (process)", text: paymentsChunkText() },
+  { id: "house_rules", label: "House rules", text: houseRulesChunkText() },
+  { id: "culture", label: "Language & local culture", text: cultureChunkText() },
 ];
 
 /** Static chunks built once from site data + owner-authored topics. */
