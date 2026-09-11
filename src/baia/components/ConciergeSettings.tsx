@@ -36,10 +36,7 @@ export default function ConciergeSettings() {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [syncResult, setSyncResult] = useState<{
-    onyxSynced: boolean;
-    onyxError?: string;
-  } | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [liveStatus, setLiveStatus] = useState<ConciergeStatus | null>(null);
 
@@ -107,7 +104,7 @@ export default function ConciergeSettings() {
     setCfg(next);
     setDirty(true);
     setSaved(false);
-    setSyncResult(null);
+    setSaveError(null);
     // If provider just switched, trigger the right discovery.
     if (patch.provider && patch.provider !== cfg.provider) {
       if (patch.provider === "openrouter") {
@@ -122,14 +119,14 @@ export default function ConciergeSettings() {
     if (!cfg) return;
     setSaving(true);
     try {
-      const res = await saveConciergeSettings({ data: { config: cfg } });
+      await saveConciergeSettings({ data: { config: cfg } });
       setDirty(false);
       setSaved(true);
-      setSyncResult({ onyxSynced: res.onyxSynced, onyxError: res.onyxError });
+      setSaveError(null);
       void refreshLiveStatus();
     } catch (e) {
       console.error(e);
-      setSyncResult({ onyxSynced: false, onyxError: e instanceof Error ? e.message : String(e) });
+      setSaveError(e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
     }
@@ -192,20 +189,13 @@ export default function ConciergeSettings() {
           </label>
         </div>
 
-        {/* Live status — what is ACTUALLY answering guests right now, independent
-            of the transient post-Save persona-sync message below. A failed
-            Onyx persona sync never implies the concierge itself is down. */}
+        {/* Live status — what is ACTUALLY answering guests right now: the
+            agentic loop's provider, or the deterministic layer. */}
         {liveStatus && (
           <div className="space-y-1.5">
             <p className="text-[9px] tracking-widest text-luxury-500 font-sans uppercase">
               Live status
             </p>
-            {liveStatus.activeProvider === "onyx" && (
-              <div className="flex items-center gap-2 text-[11px] text-emerald-400 font-sans bg-emerald-500/5 border border-emerald-500/20 p-3 rounded">
-                <Check size={14} />
-                <span>Concierge active through Onyx.</span>
-              </div>
-            )}
             {liveStatus.activeProvider === "openrouter" && (
               <div className="flex items-center gap-2 text-[11px] text-emerald-400 font-sans bg-emerald-500/5 border border-emerald-500/20 p-3 rounded">
                 <Check size={14} />
@@ -224,15 +214,6 @@ export default function ConciergeSettings() {
                 <span>
                   Concierge is not currently answering guests — add an OpenRouter key or enable
                   Ollama.
-                </span>
-              </div>
-            )}
-            {!liveStatus.onyxConfigured && (
-              <div className="flex items-center gap-2 text-[11px] text-luxury-400 font-sans bg-luxury-900/60 border border-luxury-800 p-3 rounded">
-                <Info size={14} className="shrink-0 text-luxury-400" />
-                <span>
-                  Onyx not connected. This is expected — OpenRouter/Ollama fallback is serving
-                  guests.
                 </span>
               </div>
             )}
@@ -443,29 +424,16 @@ export default function ConciergeSettings() {
             </span>
           </div>
         )}
-        {saved && syncResult && (
-          <div
-            className={`flex items-center gap-2 text-[11px] font-sans p-3 rounded ${
-              syncResult.onyxSynced
-                ? "text-emerald-400 bg-emerald-500/5 border border-emerald-500/20"
-                : "text-amber-400 bg-amber-500/5 border border-amber-500/20"
-            }`}
-          >
-            {syncResult.onyxSynced ? (
-              <>
-                <Check size={14} />
-                <span>Persona sync: settings saved and synced to live Onyx persona.</span>
-              </>
-            ) : (
-              <>
-                <AlertTriangle size={14} />
-                <span>
-                  Persona sync: settings saved to Supabase, but the Onyx persona sync failed (
-                  {syncResult.onyxError ?? "unknown error"}). This does not mean the concierge is
-                  down for guests — see Live status above.
-                </span>
-              </>
-            )}
+        {saved && !saveError && (
+          <div className="flex items-center gap-2 text-[11px] text-emerald-400 font-sans bg-emerald-500/5 border border-emerald-500/20 p-3 rounded">
+            <Check size={14} />
+            <span>Settings saved — TALA reads them fresh on every turn.</span>
+          </div>
+        )}
+        {saved && saveError && (
+          <div className="flex items-center gap-2 text-[11px] text-amber-400 font-sans bg-amber-500/5 border border-amber-500/20 p-3 rounded">
+            <AlertTriangle size={14} />
+            <span>Save failed: {saveError}. Check that Supabase is reachable.</span>
           </div>
         )}
       </div>

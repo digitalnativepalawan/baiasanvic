@@ -4,7 +4,7 @@
  * each knowledge chunk with keyword overlap and inject only the best matches —
  * not the entire knowledge base on every turn.
  */
-import { buildStaticChunks, KnowledgeChunk, stripMonetary } from "./concierge.knowledge";
+import { buildStaticChunks, stripMonetary, type KnowledgeChunk } from "./concierge.knowledge";
 
 const STATIC_CHUNKS = buildStaticChunks();
 
@@ -107,9 +107,15 @@ const SYNONYMS: Record<string, string[]> = {
 // short guest questions ("Where is BAIA?", "How much?", "Any pets OK?")
 // pick up the topic keywords that actually live in the chunks.
 const QUESTION_HINTS: Array<{ re: RegExp; add: string[] }> = [
-  { re: /\bwhere\b|\blocated\b|\baddress\b|\bmap\b/i, add: ["location", "san", "vicente", "penanindigan"] },
+  {
+    re: /\bwhere\b|\blocated\b|\baddress\b|\bmap\b/i,
+    add: ["location", "san", "vicente", "penanindigan"],
+  },
   { re: /\bhow far\b|\bdistance\b/i, add: ["location", "san", "vicente"] },
-  { re: /\bwhat time\b|\bwhen.*(check|open|close|arriv|depart)\b/i, add: ["check", "front", "desk"] },
+  {
+    re: /\bwhat time\b|\bwhen.*(check|open|close|arriv|depart)\b/i,
+    add: ["check", "front", "desk"],
+  },
   { re: /\bwho\b/i, add: ["baia", "team"] },
 ];
 
@@ -157,10 +163,7 @@ export interface ScoredChunk {
  * against the question by keyword overlap, best match first. Dynamic chunks
  * are indexed on the fly per request.
  */
-export function scoreChunks(
-  question: string,
-  extraChunks: KnowledgeChunk[] = [],
-): ScoredChunk[] {
+export function scoreChunks(question: string, extraChunks: KnowledgeChunk[] = []): ScoredChunk[] {
   const qTokens = tokenize(question, true);
   const index = extraChunks.length
     ? [...CHUNK_TOKEN_INDEX, ...buildIndex(extraChunks)]
@@ -220,4 +223,3 @@ export function retrieveRelevant(
 export function chunksToText(chunks: KnowledgeChunk[]): string {
   return chunks.map((c) => `## ${c.label}\n${c.text}`).join("\n\n");
 }
-

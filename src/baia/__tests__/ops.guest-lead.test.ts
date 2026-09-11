@@ -8,7 +8,6 @@ import assert from "node:assert/strict";
 import {
   handleCreateGuestLead,
   validateGuestLead,
-  verifyOnyxOpsSecret,
   OpsError,
   type GuestLeadInput,
 } from "../ops/guest-lead.server.ts";
@@ -46,10 +45,12 @@ test("idempotency: same key returns same lead, no duplicate", async () => {
 test("rejects monetary fields anywhere (absolute pricing rule)", () => {
   assert.throws(
     () => validateGuestLead(baseInput({ stay: { price: 5000 } as never })),
-    (e: unknown) => e instanceof OpsError && e.status === 422 && /Monetary/.test((e as OpsError).message),
+    (e: unknown) =>
+      e instanceof OpsError && e.status === 422 && /Monetary/.test((e as OpsError).message),
   );
   assert.throws(
-    () => validateGuestLead(baseInput({ notes: "ok" , guest: { name: "x", discount: 10 } as never })),
+    () =>
+      validateGuestLead(baseInput({ notes: "ok", guest: { name: "x", discount: 10 } as never })),
     (e: unknown) => e instanceof OpsError && e.status === 422,
   );
 });
@@ -75,25 +76,11 @@ test("rejects a lead that confirms availability/booking", () => {
   );
 });
 
-test("auth: missing header rejected", () => {
-  process.env.ONYX_OPERATIONS_API_SECRET = "unit-secret-000";
-  assert.throws(() => verifyOnyxOpsSecret(null), (e: unknown) => e instanceof OpsError && (e as OpsError).status === 401);
-});
-
-test("auth: wrong secret rejected, correct accepted", () => {
-  process.env.ONYX_OPERATIONS_API_SECRET = "unit-secret-000";
-  assert.throws(
-    () => verifyOnyxOpsSecret("Bearer wrong"),
-    (e: unknown) => e instanceof OpsError && (e as OpsError).status === 403,
-  );
-  assert.doesNotThrow(() => verifyOnyxOpsSecret("Bearer unit-secret-000"));
-});
-
 test("handleCreateGuestLead preserves internal email/adults mapping (test adapter)", async () => {
   const res = await handleCreateGuestLead({
     resort_id: "baia-san-vicente",
     idempotency_key: "unit-idem-" + Math.random().toString(36).slice(2),
-    channel: "onyx_agent",
+    channel: "website-chat",
     guest: { name: "Unit Tester", email: "unit@test.com" },
     stay: { adults: 2, children: 1 },
   });

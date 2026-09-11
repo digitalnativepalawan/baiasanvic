@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   X, Lock, Eye, Check, RefreshCw, Upload, Image as ImageIcon, 
   Trash2, Plus, Edit2, Sliders, Menu, FileText, Download, Shield,
-  Layers, Coffee, Home, HelpCircle, Save, Info, Palette, MessageSquare, Star, TrendingUp
+  Layers, Coffee, Home, HelpCircle, Save, Info, Palette, MessageSquare, Star, TrendingUp, Bot
 } from "lucide-react";
 import { useSite, GalleryItem, DEFAULT_THEME, MediaPlayback, DEFAULT_HERO_PLAYBACK, DEFAULT_SECTION_PLAYBACK } from "../context/SiteContext";
 import { RoomTier, Activity, Testimonial } from "../types";
@@ -11,7 +11,7 @@ import { uploadSiteAsset } from "../admin.functions";
 import ConciergeSettings from "./ConciergeSettings";
 import KnowledgeManager from "./KnowledgeManager";
 import InvestorsEditor from "./InvestorsEditor";
-import { WorkforcePanel } from "../tala/WorkforcePanel";
+import { TalaConsole } from "./TalaConsole";
 
 
 interface AdminPanelProps {
@@ -29,7 +29,7 @@ const isVideo = (url: string) => {
          url.includes("video");
 };
 
-type AdminTab = "hero_logo" | "sections" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "testimonials" | "investors" | "system" | "concierge" | "knowledge" | "hermes";
+type AdminTab = "hero_logo" | "sections" | "header_footer" | "theme_colors" | "gallery" | "rooms_activities" | "testimonials" | "investors" | "system" | "concierge" | "knowledge" | "tala";
 
 const ACCEPTED_IMAGE_TYPES = "image/webp,image/png,image/jpeg,image/svg+xml,.webp,.png,.jpg,.jpeg,.svg";
 const ACCEPTED_IMAGE_GUIDANCE = "Accepted image types: WEBP, PNG, JPG/JPEG, SVG. Max 5 MB.";
@@ -616,15 +616,15 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       <span>Knowledge Base</span>
                     </button>
                     <button
-                      onClick={() => setActiveTab("hermes")}
+                      onClick={() => setActiveTab("tala")}
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-sm font-sans text-xs tracking-wider uppercase transition-all text-left ${
-                        activeTab === "hermes"
+                        activeTab === "tala"
                           ? "bg-gold-500/10 text-gold-300 border-l-2 border-gold-300 font-medium"
                           : "text-luxury-400 hover:text-luxury-100 hover:bg-luxury-900/50"
                       }`}
                     >
-                      <Coffee size={14} />
-                      <span>Hermes Workforce</span>
+                      <Bot size={14} />
+                      <span>TALA Agent</span>
                     </button>
 
                   </div>
@@ -638,7 +638,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       </span>
                     </div>
                     <p className="text-[8px] text-luxury-500 font-mono">
-                      v1.4.2 // LocalStorage
+                      v2.0 // Supabase
                     </p>
                   </div>
                 </div>
@@ -2951,7 +2951,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   )}
                   {activeTab === "concierge" && <ConciergeSettings />}
                   {activeTab === "knowledge" && <KnowledgeManager />}
-                  {activeTab === "hermes" && <WorkforcePanel />}
+                  {activeTab === "tala" && <TalaConsole />}
 
 
                   {activeTab === "system" && (

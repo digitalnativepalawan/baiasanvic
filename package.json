@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "node --experimental-strip-types --import ./scripts/test-register.mjs --test src/baia/__tests__/tala.agent.test.ts src/baia/__tests__/concierge.guardrails.test.ts src/baia/__tests__/ops.guest-lead.test.ts",
+    "test:rls": "node --experimental-strip-types --import ./scripts/load-env.ts --import ./scripts/test-register.mjs --test src/baia/__tests__/booking-inquiries.rls.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

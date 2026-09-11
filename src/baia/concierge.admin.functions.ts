@@ -19,15 +19,8 @@ export const getConciergeConfig = createServerFn({ method: "GET" }).handler(
 );
 
 export interface ConciergeStatus {
-  /** ONYX_BASE_URL + ONYX_API_KEY are both set in this environment. */
-  onyxConfigured: boolean;
-  /**
-   * A live reachability probe to Onyx succeeded just now (same call shape a
-   * real guest turn depends on). Only meaningful when onyxConfigured is true.
-   */
-  onyxReachable: boolean;
   /** Which brain is actually serving guest turns right now. */
-  activeProvider: "onyx" | "openrouter" | "ollama" | "unavailable";
+  activeProvider: "openrouter" | "ollama" | "unavailable";
   /** cfg.provider === "openrouter" and an API key is saved. */
   openrouterReady: boolean;
   /** cfg.provider === "ollama" and a model name is saved. */
@@ -37,20 +30,17 @@ export interface ConciergeStatus {
 /**
  * Live "who is actually answering guests" status for the admin panel.
  *
- * Mirrors the exact precedence used in concierge.server.ts's conciergeChat:
- * Onyx is preferred only when it's configured AND a live reachability probe
- * to it succeeds right now (not just when the env vars happen to be set —
- * a stale Cloudflare tunnel returning a 403 is treated as unreachable, same
- * as guests would experience it). Otherwise the core (OpenRouter/Ollama) is
- * used if the concierge is enabled and the provider is ready; otherwise the
- * concierge is not currently answering guests at all.
+ * Mirrors the precedence used by TALA's guest turn: the agentic loop runs
+ * when the concierge is enabled and the configured provider (OpenRouter or
+ * Ollama) is ready; otherwise guests are served by the deterministic
+ * knowledge layer and the contact fallback ("unavailable" here means no
+ * agentic loop — the concierge itself still answers known topics).
  *
  * Never returns any secret value — only booleans/enums.
  */
 export const getConciergeStatus = createServerFn({ method: "GET" }).handler(
   async (): Promise<ConciergeStatus> => {
     const cfg = await loadConciergeConfig();
-    const onyxConfigured = !!(process.env.ONYX_BASE_URL && process.env.ONYX_API_KEY);
     // Real OpenRouter keys are long ("sk-or-v1-..." plus 60+ hex chars). A short
     // placeholder/typo value (e.g. a handful of digits) will always fail
     // OpenRouter auth with a 401 — do not report the provider as "ready" for
@@ -61,48 +51,24 @@ export const getConciergeStatus = createServerFn({ method: "GET" }).handler(
       cfg.openrouterApiKey.trim().length >= 20;
     const ollamaConfigured = cfg.provider === "ollama" && !!cfg.ollamaModel;
 
-    let onyxReachable = false;
-    if (onyxConfigured) {
-      const { probeOnyxReachable } = await import("./onyx/client.server");
-      onyxReachable = await probeOnyxReachable();
-    }
-
     let activeProvider: ConciergeStatus["activeProvider"] = "unavailable";
-    if (onyxConfigured && onyxReachable) {
-      activeProvider = "onyx";
-    } else if (cfg.enabled && openrouterReady) {
+    if (cfg.enabled && openrouterReady) {
       activeProvider = "openrouter";
     } else if (cfg.enabled && ollamaConfigured) {
       activeProvider = "ollama";
     }
 
-    return { onyxConfigured, onyxReachable, activeProvider, openrouterReady, ollamaConfigured };
+    return { activeProvider, openrouterReady, ollamaConfigured };
   },
 );
 
 export const saveConciergeSettings = createServerFn({ method: "POST" })
   .inputValidator((data: { config: ConciergeConfig }) => data)
-  .handler(async ({ data }): Promise<{ ok: boolean; onyxSynced: boolean; onyxError?: string }> => {
-    // 1. Always save to Supabase first.
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    // Save to Supabase; TALA reads the config fresh on every turn, so admin
+    // changes take effect immediately — no persona sync step needed.
     await saveConciergeConfig(data.config);
-
-    // 2. If Onyx is configured (env vars present), also push the updated
-    // system prompt to the live Onyx persona so admin changes take effect
-    // immediately. The persona id comes from ONYX_RESORT_PERSONA_ID (default 1).
-    const onyxBaseUrl = process.env.ONYX_BASE_URL;
-    const onyxApiKey = process.env.ONYX_API_KEY;
-    const onyxPersonaId = Number(process.env.ONYX_RESORT_PERSONA_ID ?? "1");
-
-    if (onyxBaseUrl && onyxApiKey) {
-      const { buildOnyxSystemPrompt, syncPersonaToOnyx } =
-        await import("./onyx/persona-sync.server");
-      const systemPrompt = buildOnyxSystemPrompt(data.config);
-      const result = await syncPersonaToOnyx(onyxBaseUrl, onyxApiKey, onyxPersonaId, systemPrompt);
-      if (!result.ok) {
-        return { ok: true, onyxSynced: false, onyxError: result.error };
-      }
-    }
-    return { ok: true, onyxSynced: true };
+    return { ok: true };
   });
 
 /**

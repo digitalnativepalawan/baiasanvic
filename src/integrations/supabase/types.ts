@@ -368,6 +368,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tala_action_log: {
+        Row: {
+          id: string
+          session_id: string
+          surface: string
+          tool: string
+          status: string
+          arguments: unknown
+          result_summary: string | null
+          duration_ms: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          surface: string
+          tool: string
+          status: string
+          arguments?: unknown
+          result_summary?: string | null
+          duration_ms?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          surface?: string
+          tool?: string
+          status?: string
+          arguments?: unknown
+          result_summary?: string | null
+          duration_ms?: number | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

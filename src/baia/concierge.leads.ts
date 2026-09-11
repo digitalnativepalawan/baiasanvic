@@ -1,13 +1,13 @@
 /**
  * Core-path (OpenRouter / Ollama) guest-lead capture.
  *
- * Onyx's own tool-calling can create a lead when it's the active brain, but
- * the goal is a concierge that works end to end WITHOUT depending on Onyx.
+ * TALA's create_booking_lead tool can capture a lead mid-conversation, but
+ * the goal is a concierge that works end to end WITHOUT any LLM at all.
  * This module gives the core path the same capability: when a guest message
  * contains enough qualified detail (contact info + dates + explicit consent),
  * extract it deterministically (no LLM call, so it never accidentally invents
  * or confirms anything) and hand it to the same guest-lead write boundary
- * Onyx uses (`ops/guest-lead.server.ts`), so idempotency and the no-price /
+ * TALA uses (`ops/guest-lead.server.ts`), so idempotency and the no-price /
  * no-booking-confirmation rules are enforced identically either way.
  *
  * This is intentionally conservative: if the message doesn't clearly contain
