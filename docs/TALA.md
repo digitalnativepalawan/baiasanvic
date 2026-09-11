@@ -40,12 +40,11 @@ src/baia/tala/
    Never sent to a model.
 3. **Deterministic knowledge** — `answerKnownTopic` answers approved topics
    from static + admin-authored knowledge. No LLM involved.
-4. **Onyx** (optional) — only when `ONYX_ENABLED=true` and configured.
-5. **TALA agentic loop** — model + tools. Retrieval builds the knowledge
+4. **TALA agentic loop** — model + tools. Retrieval builds the knowledge
    block; the model may call guest tools (`search_knowledge`, `list_rooms`,
    `list_experiences`, `get_site_info`, `create_booking_lead`); replies pass
    `sanitizeReply` (monetary guardrail) before the guest sees them.
-6. **Contact fallback** — guests always land on a real path forward.
+5. **Contact fallback** — guests always land on a real path forward.
 
 **Design principle:** TALA works with zero providers configured. The
 deterministic layers (1–3) cover every approved topic on their own; the
@@ -98,6 +97,10 @@ npm run test:rls  # live integration: booking_inquiries RLS (needs .env, run aft
 
 ## What was removed (2026-09 cleanup)
 
+- **Onyx** — the earlier external-brain experiment (self-hosted Onyx
+  assistant platform: client, persona-sync, status route, ops callback
+  endpoint, and its env vars). TALA replaced it as the only brain; the shared
+  lead handler (`ops/guest-lead.server.ts`) stays as TALA's write boundary.
 - `services/hermes/` — 30 MB vendored Python agent framework that could only
   run on one local Windows machine; the localhost:8100 proxy returned empty
   replies everywhere else. Preserved in git history.

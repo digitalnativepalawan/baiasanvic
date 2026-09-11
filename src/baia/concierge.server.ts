@@ -9,7 +9,6 @@
  *   -> detect qualified lead and save it          (concierge.leads.ts)
  *   -> detect price question and refuse it        (concierge.guardrails.ts)
  *   -> answer known BAIA topics deterministically (concierge.answer.ts)
- *   -> try Onyx (optional, opt-in via ONYX_ENABLED=true)
  *   -> TALA agentic loop: model + tools           (tala/agent/tala.loop.ts)
  *   -> otherwise return the BAIA contact fallback
  *
@@ -27,14 +26,11 @@ import type { ConciergeMessage, ConciergeResponse } from "./concierge.types";
 import { runGuestTurn } from "./tala/agent/tala.loop";
 
 export const conciergeChat = createServerFn({ method: "POST" })
-  .inputValidator(
-    (data: { messages: ConciergeMessage[]; sessionId: string; onyxSessionId?: string }) => data,
-  )
+  .inputValidator((data: { messages: ConciergeMessage[]; sessionId: string }) => data)
   .handler(async ({ data }): Promise<ConciergeResponse> => {
     const turn = await runGuestTurn({
       messages: data.messages,
       sessionId: data.sessionId,
-      onyxSessionId: data.onyxSessionId,
     });
 
     return {
@@ -44,8 +40,6 @@ export const conciergeChat = createServerFn({ method: "POST" })
       approvalRequired: turn.approvalRequired,
       databaseWriteDeferred: turn.databaseWriteDeferred,
       sanitized: turn.sanitized,
-      onyxSessionId: turn.onyxSessionId,
-      runId: turn.runId,
       actions: turn.actions.map((a) => ({
         name: a.name,
         status: a.status,

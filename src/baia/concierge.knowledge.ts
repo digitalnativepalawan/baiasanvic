@@ -121,10 +121,9 @@ function diningChunkText(): string {
 }
 
 /**
- * Guest-facing answer for dining/menu questions. Used when the Onyx brain
- * cannot answer from its own knowledge (its persona knowledge may be
- * incomplete) so the concierge never falls back to a "we don't have a menu"
- * dead end. Built only from the owner-supplied cuisine categories — no prices,
+ * Guest-facing answer for dining/menu questions. Used when a model reply is a
+ * no-knowledge dead end so the concierge never falls back to a "we don't have
+ * a menu" answer. Built only from the owner-supplied cuisine categories — no prices,
  * and availability is explicitly flagged as live-check-required.
  */
 export function buildMenuAnswer(): string {
@@ -135,7 +134,7 @@ export function buildMenuAnswer(): string {
   ].join(" ");
 }
 
-/** True when an Onyx/agent reply is a non-answer that should be bypassed. */
+/** True when a model reply is a non-answer that should be bypassed. */
 export function isNoKnowledgeFallback(reply: string): boolean {
   return /we (don'?t|do not) have (a |the )?menu|provided details|knowledge base|don'?t have (that|any) (information|detail)/i.test(
     reply,

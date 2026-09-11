@@ -1,41 +1,34 @@
 /**
- * MerQato Operations API — guest lead handler (SERVER-ONLY).
+ * Guest lead handler (SERVER-ONLY) — the single controlled write boundary
+ * every lead-creating path shares: TALA's deterministic lead layer, TALA's
+ * create_booking_lead tool, and the booking flow's server functions.
  *
- * This is the controlled write boundary that Onyx tools call. Onyx NEVER gets
- * Supabase service-role credentials; it only sees this endpoint's contract and
- * authenticates with ONYX_OPERATIONS_API_SECRET.
- *
- * Responsibilities (per stage spec):
- *   - Authenticate the request (bearer secret)
- *   - Validate resort_id
- *   - Validate the tool payload
+ * Responsibilities:
+ *   - Validate resort_id and the lead payload
  *   - Reject monetary fields (absolute pricing rule)
- *   - Reject unsupported actions
  *   - Enforce idempotency (same idempotency_key => same lead, no duplicate)
  *   - Write through the server-side repository (Supabase when confirmed, else
  *     a clearly-labelled TEST persistence adapter)
  *   - Return structured evidence (record id + verification)
  *   - Never expose the Supabase service-role key
  *
- * Persistence status: Supabase is used only when David has applied the
- * booking_inquiries extension (adds resort_id, idempotency_key, channel, phone,
- * room_preference, children_count, transport_needed, notes; relaxes NOT NULL for
- * partial Onyx leads; partial-unique idempotency index) AND sets
- * MERQATO_SUPABASE_OPS_CONFIRMED=1. Until then this uses the TEST adapter
- * (in-process, clearly labelled) so the end-to-end path is provable without
- * inventing a fake success.
+ * Persistence status: Supabase is used only when the booking_inquiries
+ * extension has been applied (adds resort_id, idempotency_key, channel,
+ * phone, room_preference, children_count, transport_needed, notes; relaxes
+ * NOT NULL for partial leads; partial-unique idempotency index) AND
+ * MERQATO_SUPABASE_OPS_CONFIRMED=1 is set. Until then this uses the TEST
+ * adapter (in-process, clearly labelled) so the end-to-end path is provable
+ * without inventing a fake success.
  */
 
-// ---- Idempotency key (shared by every caller: Onyx tool, core/OpenRouter path) --
+// ---- Idempotency key (shared by every caller that creates a lead) ------------
 
 import { createHash } from "node:crypto";
 
 /**
- * Deterministic idempotency key for a guest inquiry, shared by every caller
- * that can create a lead (Onyx's create_guest_lead tool AND the core/
- * OpenRouter path in concierge.server.ts). Same conversation + same
+ * Deterministic idempotency key for a guest inquiry. Same conversation + same
  * normalized inquiry text => same key => the same confirmed inquiry never
- * creates a second lead, regardless of which brain answered the turn.
+ * creates a second lead, regardless of which path captured it.
  */
 export function deriveGuestLeadIdempotencyKey(conversationId: string, message: string): string {
   const normalized = message.toLowerCase().replace(/\s+/g, " ").trim();
@@ -125,20 +118,6 @@ const FORBIDDEN_MONETARY_KEYS = [
 ];
 
 // ---- Auth -------------------------------------------------------------------
-
-export function verifyOnyxOpsSecret(authHeader: string | null): void {
-  const expected = process.env.ONYX_OPERATIONS_API_SECRET;
-  if (!expected) {
-    throw new OpsError(500, "ONYX_OPERATIONS_API_SECRET not configured on server");
-  }
-  if (!authHeader) throw new OpsError(401, "Missing Authorization header");
-  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  // Constant-time-ish comparison.
-  if (token.length !== expected.length) throw new OpsError(403, "Invalid operations secret");
-  let diff = 0;
-  for (let i = 0; i < token.length; i++) diff |= token.charCodeAt(i) ^ expected.charCodeAt(i);
-  if (diff !== 0) throw new OpsError(403, "Invalid operations secret");
-}
 
 export class OpsError extends Error {
   status: number;

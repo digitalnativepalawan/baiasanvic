@@ -3,11 +3,10 @@
  *
  * This is the brain. One agent, two surfaces:
  *
- *   runGuestTurn()  — the full guest pipeline. The order of layers is the
- *                     battle-tested concierge flow (lead capture → price
- *                     guardrail → deterministic knowledge → Onyx → LLM →
- *                     contact fallback); the LLM layer is now an AGENTIC LOOP
- *                     with real tools instead of a single-pass completion.
+ *   runGuestTurn()  — the full guest pipeline: lead capture → price
+ *                     guardrail → deterministic knowledge → TALA agentic
+ *                     loop → contact fallback. Every layer before the loop
+ *                     works with zero providers configured.
  *
  *   runAdminTurn()  — passkey-gated owner console turn with write tools.
  *
@@ -191,9 +190,7 @@ export interface GuestTurnResult {
   approvalRequired?: boolean;
   databaseWriteDeferred?: boolean;
   sanitized?: boolean;
-  brain: "deterministic" | "onyx" | "tala" | "fallback";
-  onyxSessionId?: string;
-  runId?: string;
+  brain: "deterministic" | "tala" | "fallback";
   actions: TalaAction[];
 }
 
@@ -206,15 +203,12 @@ function trimHistory(messages: ConciergeMessage[]): ConciergeMessage[] {
 export async function runGuestTurn(params: {
   messages: ConciergeMessage[];
   sessionId: string;
-  onyxSessionId?: string;
 }): Promise<GuestTurnResult> {
   const history = trimHistory(params.messages);
   const lastGuest = [...history].reverse().find((m) => m.role === "guest");
   const question = lastGuest?.content ?? "";
 
   const cfg = await loadConciergeConfig();
-  const onyxEnabled = process.env.ONYX_ENABLED === "true";
-  const onyxConfigured = onyxEnabled && !!(process.env.ONYX_BASE_URL && process.env.ONYX_API_KEY);
 
   // -----------------------------------------------------------------------
   // 1. Qualified-lead detection & capture — deterministic, no LLM.
@@ -300,62 +294,7 @@ export async function runGuestTurn(params: {
   }
 
   // -----------------------------------------------------------------------
-  // 4. Onyx (optional external brain) — kept on standby unless explicitly
-  //    enabled via ONYX_ENABLED=true.
-  // -----------------------------------------------------------------------
-  if (onyxConfigured) {
-    try {
-      const { createOnyxResortAgentClient } = await import("../../onyx/client.server");
-      const onyx = createOnyxResortAgentClient();
-      const onyxRes = await onyx.sendGuestEvent({
-        resortId: BAIA_RESORT_ID,
-        conversationId: params.sessionId,
-        messageId: `m_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        channel: "website",
-        message: question,
-        onyxSessionId: params.onyxSessionId,
-      });
-      const onyxReply = (onyxRes.reply ?? "").trim();
-      if (!onyxRes.error && onyxReply.length > 0) {
-        await logConciergeTurn(params.sessionId, "guest", question);
-        await logConciergeTurn(params.sessionId, "agent", onyxReply);
-        const finalReply =
-          onyxRes.intent !== "booking_inquiry" &&
-          isMenuQuestion(question) &&
-          isNoKnowledgeFallback(onyxReply)
-            ? buildMenuAnswer()
-            : onyxReply;
-        return {
-          reply: finalReply,
-          intent: onyxRes.intent,
-          approvalRequired: onyxRes.approvalRequired,
-          onyxSessionId: onyxRes.onyxSessionId,
-          runId: onyxRes.runId,
-          sanitized: false,
-          brain: "onyx",
-          actions: onyxRes.actions.map((a) => ({
-            name: a.name,
-            status: a.status === "success" ? ("success" as const) : ("error" as const),
-            evidenceJson: a.evidence ? JSON.stringify(a.evidence).slice(0, 400) : undefined,
-          })),
-        };
-      }
-      if (onyxRes.error) {
-        await logConciergeTurn(params.sessionId, "agent", "", {
-          source: "onyx",
-          onyxError: onyxRes.error,
-        });
-      }
-      console.warn("Onyx returned no usable reply, trying TALA agentic loop:", onyxRes.error);
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      await logConciergeTurn(params.sessionId, "agent", "", { source: "onyx", onyxError: errMsg });
-      console.error("Onyx enhancer failed, trying TALA agentic loop:", err);
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  // 5. TALA agentic loop — model + tools (guest surface: read-only lookups
+  // 4. TALA agentic loop — model + tools (guest surface: read-only lookups
   //    + lead capture). Replies pass the same guardrail sanitizer as before.
   // -----------------------------------------------------------------------
   const modelFn = await makeModelFn(cfg).catch(() => null);
@@ -401,7 +340,7 @@ export async function runGuestTurn(params: {
   }
 
   // -----------------------------------------------------------------------
-  // 6. Nothing could answer — always give the guest a real path forward.
+  // 5. Nothing could answer — always give the guest a real path forward.
   // -----------------------------------------------------------------------
   await logConciergeTurn(params.sessionId, "guest", question);
   await logConciergeTurn(params.sessionId, "agent", CONTACT_FALLBACK_REPLY);
@@ -495,7 +434,7 @@ export async function runAdminTurn(params: {
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     console.error("TALA admin turn failed:", err);
-    await logConciergeTurn(params.sessionId, "agent", "", { onyxError: errMsg });
+    await logConciergeTurn(params.sessionId, "agent", `TALA admin turn failed: ${errMsg}`);
     return {
       reply: ADMIN_UNAVAILABLE_REPLY,
       brain: "error",

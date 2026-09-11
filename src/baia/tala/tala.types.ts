@@ -38,7 +38,7 @@ export interface TalaChatRequest {
 export interface TalaChatResponse {
   reply: string;
   /** Which brain produced the reply. */
-  brain: "tala" | "onyx" | "deterministic" | "fallback" | "error";
+  brain: "tala" | "deterministic" | "fallback" | "error";
   /** Tool calls executed this turn (evidence trail for the UI). */
   actions: TalaAction[];
   /** Present only for admin-surface errors (bad passkey, provider down…). */

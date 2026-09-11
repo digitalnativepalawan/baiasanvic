@@ -2,7 +2,7 @@
  * Concierge monetary guardrails — defense in depth.
  *
  * These helpers are dependency-free and transport-agnostic so they can be
- * reused later by Onyx/Hermes integrations and other channels. They are the
+ * reused by any channel (chat, voice, future integrations). They are the
  * second and third layers of protection after the prompt rules in
  * `concierge.prompt.ts` and the sanitized knowledge in `concierge.knowledge.ts`.
  *

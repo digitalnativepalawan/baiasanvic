@@ -7,10 +7,10 @@
  *   -> detect qualified lead and save it        (concierge.leads.ts)
  *   -> detect price question and refuse it      (concierge.guardrails.ts)
  *   -> answer known BAIA topics deterministically (THIS FILE)
- *   -> use Onyx/OpenRouter only for unknown questions
+ *   -> use the TALA agentic loop for unknown questions
  *   -> otherwise return BAIA contact fallback
  *
- * Onyx and OpenRouter are optional quality enhancers for open-ended
+ * The LLM loop is an optional quality enhancer for open-ended
  * questions the static knowledge base doesn't confidently cover. They must
  * never be a requirement for the concierge to answer BAIA's own core
  * topics: location, rooms, dining/menu, transport, experiences, booking
@@ -82,7 +82,7 @@ export interface DeterministicAnswer {
  * Answer a guest question directly from BAIA's approved static knowledge
  * when we're confident which topic it's about. Returns null when no chunk
  * clears the confidence bar — callers should then try an optional
- * LLM-backed brain (Onyx/OpenRouter) if one is configured, and fall back to
+ * LLM-backed agentic loop (TALA) if a provider is configured, and fall back to
  * the contact message if not.
  *
  * Defense in depth: even though the source chunks are already price-free by
