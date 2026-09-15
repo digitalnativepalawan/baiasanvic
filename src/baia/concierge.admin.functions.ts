@@ -3,8 +3,8 @@
  * the OpenRouter key is never exposed to the browser bundle. The admin panel
  * calls these to load config, save config, and list OpenRouter models.
  *
- * Ollama model discovery is intentionally NOT server-side: the server runs in
- * a Cloudflare Worker and cannot reach the admin's localhost. The admin panel
+ * Ollama model discovery is intentionally NOT server-side: the server is
+ * hosted server-side and cannot reach the admin's localhost. The admin panel
  * fetches Ollama's /api/tags directly from the browser via
  * `listOllamaModelsBrowser` in concierge.discovery.ts.
  */

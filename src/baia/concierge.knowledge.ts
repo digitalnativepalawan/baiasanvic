@@ -34,31 +34,33 @@ export function stripMonetary(text: string): string {
 }
 
 function roomChunkText(): string {
-  const lines = ROOMS.map((r) => {
+  const blocks = ROOMS.map((r) => {
     // Inventory count is property inventory ONLY — never current availability.
     const inventory = r.availabilityCount ?? 0;
     return [
-      `ROOM: ${r.name}`,
-      `Sleeps: ${r.capacity}`,
-      `Size: ${r.size}`,
-      `Description: ${r.description}`,
-      `Amenities: ${r.amenities.join(", ")}`,
+      `## ${r.name}`,
+      `Sleeps ${r.capacity}. Size: ${r.size}.`,
+      r.description,
+      "Amenities:",
+      ...r.amenities.map((a) => `- ${a}`),
       `Property inventory: ${inventory} unit(s) of this room type. Current availability requires confirmation.`,
     ].join("\n");
   });
-  return lines.join("\n\n");
+  return blocks.join("\n\n");
 }
 
 function experienceChunkText(): string {
   const activities = ACTIVITIES.map((a) => {
     return [
-      `EXPERIENCE: ${a.title} (${a.category}, ${a.difficulty}, ${a.duration})`,
+      `## ${a.title}`,
+      `Category: ${a.category} · ${a.difficulty} · ${a.duration}`,
       a.description,
     ].join("\n");
   });
   const attractions = ATTRACTIONS.map((at) => {
     return [
-      `NEARBY: ${at.name} — ${at.category}, ${at.distanceFromResort}`,
+      `## ${at.name}`,
+      `Nearby — ${at.category}, ${at.distanceFromResort}`,
       at.description,
       `Tip: ${at.tips}`,
     ].join("\n");
@@ -171,9 +173,9 @@ function stayChunkText(): string {
   return [
     "STAY DETAILS",
     "Standard check-in is 2:00 PM; check-out is 12:00 PM. Early check-in or late check-out can be requested and is subject to availability — we'll confirm by email. We can safely hold luggage if you arrive early.",
-    "What's included: daily housekeeping, WiFi in common areas, beach loungers, use of the beachfront shala, and the complimentary sunrise vinyasa & sound healing session. Government taxes are included in the quoted rate.",
+    "What's included: daily housekeeping, WiFi in common areas, beach loungers, use of the beachfront shala, and the complimentary sunrise vinyasa & sound healing session.",
     "WiFi is free in the restaurant and common areas; signal in the villas is fair but lighter — this is a place to unplug. Mobile signal (Globe/Smart) reaches most of the property.",
-    "We don't take payment online. After your inquiry we confirm availability and send bank-transfer / PayPal details, or you may pay cash on arrival. A deposit may be requested to hold peak-season dates.",
+    "We don't take payment online. After your inquiry we confirm availability and send payment options (bank transfer, PayPal, or cash on arrival). A prepayment may be required to hold peak-season dates — the resort confirms current terms by email at booking.",
     "Best time to visit: Palawan's dry season is roughly November to May (sunniest, calmest seas). June to October is greener with occasional rain; boat trips still run but check the weather. Pack reef-safe sunscreen, light clothing, reef shoes, and a light jacket for breezy evenings.",
   ].join("\n");
 }
@@ -200,8 +202,8 @@ function breakfastChunkText(): string {
     "BREAKFAST",
     "Hours: 08:30–10:30 daily.",
     "Formats: Continental, Full English, Asian — all cooked to order.",
-    "Price: ₱400 per adult, ₱400 per child when breakfast is NOT explicitly bundled in the booked room rate.",
-    "Rule: Charge applies only when the room package does not already include breakfast. Confirm inclusion at booking.",
+    "Available for guests; vegetarian, vegan, and most dietary needs can be accommodated if told in advance. Fresh fruit and coconut water are daily staples.",
+    "Rule: Breakfast inclusion depends on the room package booked. Confirm inclusion at booking — the resort confirms current rates and availability by email, and never quotes them here.",
   ].join("\n");
 }
 
@@ -222,8 +224,8 @@ function cancellationChunkText(): string {
     "Varies by booking channel.",
     "OTA bookings (Booking.com, Agoda, Airbnb): Often non-refundable — check the specific rate conditions at time of booking.",
     "Direct bookings: Flexible with 48–72 hours notice required for free cancellation.",
-    "Late cancellation (within 48–72 hours): 100% of first night may be charged.",
-    "No-show: 100% of first night charged.",
+    "Late cancellation (within 48–72 hours): cancellation charges may apply — the resort confirms the current terms by email at booking.",
+    "No-show: the resort's no-show terms apply — confirm current policy by email.",
     "Modifications: Subject to availability and rate difference; contact resort directly via email.",
   ].join("\n");
 }
@@ -242,13 +244,13 @@ function petsEventsChunkText(): string {
 function airportTransferChunkText(): string {
   return [
     "AIRPORT TRANSFER DETAILS",
-    "Private van (capacity 12 passengers): ₱6,000 one-way per vehicle.",
+    "Private van (capacity 12 passengers): one-way per vehicle — the resort confirms current rates by email, never quoted here.",
     "Advance notice required: 48 hours minimum with complete flight details.",
     "Required information: exact flight number, arrival airport (PPS), arrival date, arrival time, guest count, luggage count, contact phone number.",
     "Pickup: Driver meets at Puerto Princesa International Airport (PPS) arrivals.",
     "Duration: ~2.5–3 hours by road to San Vicente.",
     "Flights to PPS: Daily from Manila and Cebu.",
-    "Rate is per vehicle (not per person) for up to 12 guests + luggage.",
+    "Billed per vehicle, up to 12 guests plus luggage — the resort confirms current terms by email.",
   ].join("\n");
 }
 
@@ -301,17 +303,17 @@ function faqsChunkText(): string {
   return [
     "FREQUENTLY ASKED QUESTIONS",
     "Q: How do I get an exact package total?",
-    "A: Provide exact check-in date, check-out date, number of guests, preferred room type, and whether you need the airport van. BAIA management will prepare the final quote.",
+    "A: Provide exact check-in date, check-out date, number of guests, preferred room type, and whether you need the airport van. BAIA management will prepare the final quote by email.",
     "Q: What time is check-in?",
     "A: Check-in is 14:00–21:00. Guests arriving after 18:00 must contact BAIA in advance.",
     "Q: What time is check-out?",
     "A: Check-out is 07:00–12:00.",
     "Q: How much is the private airport van?",
-    "A: ₱6,000 one way per vehicle (up to 12 passengers), requested 48+ hours in advance with complete flight details.",
+    "A: The private van (up to 12 passengers) is arranged on request with 48+ hours notice and complete flight details — the resort confirms the current rate by email, and never quotes it here.",
     "Q: What time is breakfast?",
     "A: Breakfast served daily 08:30–10:30.",
     "Q: How much is breakfast when not included?",
-    "A: Approximately ₱400 per adult and ₱400 per child (cooked to order).",
+    "A: Breakfast inclusion depends on the room package. The resort confirms the current rate by email at booking time, and never quotes it here.",
     "Q: How fast is the WiFi?",
     "A: Target 50+ Mbps over fiber where stable. Local outages and drops occur; Smart/Globe cellular hotspots serve as backup.",
     "Q: Does BAIA have backup power?",
@@ -470,10 +472,10 @@ function sustainabilityChunkText(): string {
 
 function paymentsChunkText(): string {
   return [
-    "PAYMENTS & DEPOSITS (PROCESS)",
+    "PAYMENTS & BOOKING (PROCESS)",
     "No payment is taken online through this website — every stay starts as an inquiry.",
     "After you inquire: the team confirms availability and current rates by email, then shares payment options (bank transfer, PayPal, or cash on arrival).",
-    "Deposits: a deposit may be requested to hold dates in peak season — the exact terms are confirmed by email at booking time.",
+    "A prepayment may be requested to hold dates in peak season — the exact terms are confirmed by email at booking time.",
     "Booking channels: BAIA also lists on Booking.com, Agoda, and Airbnb; those platforms' payment and cancellation terms apply to bookings made there.",
     "Never send payment details through the chat — the concierge will always point you to the official email channel.",
   ].join("\n");
@@ -502,6 +504,39 @@ function cultureChunkText(): string {
 }
 
 // Topics the owner authors over time. Append new entries here (unique id!).
+//
+// HOW TALA'S KNOWLEDGE WORKS — three surfaces, one pipeline:
+//
+//  1. STATIC TOPICS (this file, OWNER_TOPICS + the site-data chunks above).
+//     This is the real BAIA knowledge base — rooms, dining, transfers, FAQ,
+//     nearby, policies. Edit here to change what TALA tells guests about the
+//     resort. Each entry is a { id, label, text } where text is newline-
+//     separated headings + paragraphs + bullet list items (start lines with
+//     "## " for a heading, "- " for a bullet). Never put prices in here — the
+//     concierge never quotes rates; it redirects to the resort's email/Book
+//     Now path. The deterministic layer (concierge.answer.ts) and the agentic
+//     loop both read from these chunks through retrieveRelevant() and
+//     chunksToText(), and both run the text through stripMonetary + the price
+//     guardrails before a guest sees anything.
+//
+//  2. ADMIN DB KNOWLEDGE (concierge_knowledge table, loaded by
+//     loadDbKnowledgeChunks()). Runtime-authored extras the owner creates from
+//     the admin panel → Knowledge Manager / upsertKnowledgeEntry tool. Same
+//     chunk shape { id, label, text }, same no-price rule — upsertKnowledgeEntry
+//     runs stripMonetary on save. These are prefixed "db:" so the deterministic
+//     layer can treat them alongside static topics.
+//
+//  3. OWNER CUSTOM KNOWLEDGE (ConciergeSettings "Extra knowledge" box → cfg.
+//     customKnowledge). Ad-hoc notes appended at request time as a single
+//     "custom" chunk. Also price-stripped at retrieval time. Good for one-off
+//     promos or seasonal notes without editing the static base.
+//
+// All three feed the same KnowledgeChunk[] pipeline, the same renderer, and the
+// same guardrails. Add a topic by appending to OWNER_TOPICS with a unique id;
+// the concierge picks it up automatically — no rebuild step, no deploy needed
+// for static edits (the file is bundled into the SSR server). For runtime-
+// authored content, use the admin panel or the TALA console's upsertKnowledgeEntry
+// tool.
 const OWNER_TOPICS: { id: string; label: string; text: string }[] = [
   { id: "dining", label: "Food & dining", text: diningChunkText() },
   { id: "transfers", label: "Transfers & getting here", text: transfersChunkText() },

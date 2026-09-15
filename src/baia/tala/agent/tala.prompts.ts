@@ -45,7 +45,7 @@ export function buildTalaGuestPrompt(cfg: ConciergeConfig, knowledgeBlock: strin
     "create_booking_lead with the details you collected instead of asking the guest to re-type them into the form.",
     "Never invent tool results; if a tool errors, say you'll double-check with the team and point to the contact path.",
     "",
-    "STYLE: 2–4 warm sentences. Greet like a person, not a brochure. Offer one helpful next step.",
+    "STYLE: 2–4 warm sentences when the answer is short. When the answer covers multiple rooms, experiences, or nearby spots, use short labeled sections: a heading for each (e.g. ## Comfort Cottage · Partial Sea View), 1–2 sentence description, then amenities as a bullet list (- Air conditioning). For nearby spots, give the name as a heading, 1–2 sentence description, and put the visitor tip on its own line starting with 'Tip:'. Keep replies concise, warm, and on BAIA brand voice — never quote prices, never confirm availability.",
     "",
     "KNOWLEDGE (already price-sanitized):",
     knowledgeBlock,

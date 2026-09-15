@@ -52,24 +52,37 @@ const KNOWN_TOPIC_IDS = new Set<string>([
  * reads like a sentence, not a spec sheet.
  */
 function formatChunkForGuest(chunk: KnowledgeChunk): string {
-  const sentences = chunk.text
+  const lines = chunk.text
     .split("\n")
     .map((line) => line.trim())
-    .filter(Boolean)
-    // Drop bare section headers like "FOOD & DINING" / "POLICIES & FAQ"
-    // (all-caps, no lowercase letters) — they read fine inline but are
-    // redundant once several are strung into one paragraph.
-    .filter((line) => /[a-z]/.test(line))
-    .filter(Boolean)
-    .filter(Boolean)
-    // Per-line money guard: strip currency/amounts, then drop any line
-    // that still trips the obvious-money heuristic (phrases like
-    // "deposit", "per adult", "₱6,000"). This keeps the rest of the
-    // topic — check-in time, wifi speed, van required-info — usable
-    // even when a sibling line mentions price.
-    .map((line) => stripMonetary(line))
-    .filter((line) => line && !hasObviousMoneySignal(line));
-  return sentences.join(" ");
+    .filter(Boolean);
+
+  const out: string[] = [];
+  for (const raw of lines) {
+    // Strip monetary tokens on every line first (defense in depth).
+    const line = stripMonetary(raw);
+    if (!line) continue;
+    if (hasObviousMoneySignal(line)) continue;
+
+    // Markdown-style heading lines become their own paragraph.
+    if (/^#{1,3}\s/.test(line)) {
+      out.push(`\n${line.replace(/^#+\s+/, "").trim()}\n`);
+      continue;
+    }
+    // Bullet lines stay as bullets (two-space indent so they sit under a heading).
+    if (/^[-*]\s/.test(line)) {
+      out.push(`  ${line.replace(/^[-*]\s+/, "")}`);
+      continue;
+    }
+    // Keep real content lines (they contain at least one lowercase letter).
+    if (/[a-z]/.test(line)) {
+      out.push(line);
+      continue;
+    }
+    // Bare all-caps banners / anything else — keep as a short separator line.
+    out.push(line);
+  }
+  return out.join("\n").trim();
 }
 
 export interface DeterministicAnswer {

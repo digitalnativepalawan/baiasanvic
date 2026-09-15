@@ -49,6 +49,61 @@ function ActionChip({ name, ok }: { name: string; ok: boolean }) {
   );
 }
 
+/** Split a (possibly structured) agent reply into renderable blocks.
+ * Auto-detects the markdown-style headings + bullets the knowledge + TALA
+ * pipelines produce (## Room name, - amenity, Tip: ...), while still rendering
+ * plain paragraphs normally. A "plain" reply with no headings stays one block. */
+function formatAgentReply(text: string): Array<{ kind: "heading" | "para" | "bullet"; text: string }> {
+  if (!text) return [];
+  const blocks: Array<{ kind: "heading" | "para" | "bullet"; text: string }> = [];
+  let para: string[] = [];
+
+  const flush = () => {
+    if (para.length === 0) return;
+    const joined = para.join("\n").trim();
+    if (joined) blocks.push({ kind: "para", text: joined });
+    para = [];
+  };
+
+  for (const raw of text.split("\n")) {
+    const line = raw.trimEnd();
+    const m = line.match(/^#{1,3}\s+(.*)/);
+    if (m) {
+      flush();
+      blocks.push({ kind: "heading", text: m[1].trim() });
+      continue;
+    }
+    if (/^[-*]\s+/.test(line)) {
+      flush();
+      blocks.push({ kind: "bullet", text: line.replace(/^[-*]\s+/, "") });
+      continue;
+    }
+    para.push(line);
+  }
+  flush();
+  return blocks;
+}
+
+function AgentBubble({ content }: { content: string }) {
+  return (
+    <>
+      {formatAgentReply(content).map((b, i) => (
+        <div key={i}>
+          {b.kind === "heading" ? (
+            <p className="mt-2 mb-1 text-[11px] font-sans font-semibold tracking-wide text-gold-200">
+              {b.text}
+            </p>
+          ) : b.kind === "bullet" ? (
+            <p className="ml-3 text-luxury-100">• {b.text}</p>
+          ) : (
+            <p className="mb-1 text-luxury-100">{b.text}</p>
+          )}
+        </div>
+      ))}
+    </>
+  );
+}
+
 interface AgentMessage {
   content: string;
   actions?: ConciergeResponse["actions"];
@@ -177,7 +232,11 @@ export default function ConciergeWidget({ open = false, onClose }: ConciergeWidg
                         : "bg-luxury-900 text-luxury-100 border border-luxury-800"
                     }`}
                   >
-                    {m.content}
+                    {m.role === "agent" ? (
+                      <AgentBubble content={m.content} />
+                    ) : (
+                      m.content
+                    )}
                     {m.role === "agent" && m.actions && m.actions.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-luxury-800/70">
                         {m.actions.map((a, j) => (
