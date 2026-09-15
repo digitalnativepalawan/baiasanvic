@@ -74,6 +74,11 @@ function formatChunkForGuest(chunk: KnowledgeChunk): string {
       out.push(`  ${line.replace(/^[-*]\s+/, "")}`);
       continue;
     }
+    // Drop bare field-style labels (Sleeps:, Size:, Category:, Amenities:,
+    // Property inventory:, etc.) — they're noise in a flowing guest-facing
+    // reply. The heading, the descriptive sentence, and the bullet list carry
+    // enough context on their own.
+    if (/^[A-Z][a-z]*(?:\s+[A-Z][a-z]*)*:\s*$/.test(line)) continue;
     // Keep real content lines (they contain at least one lowercase letter).
     if (/[a-z]/.test(line)) {
       out.push(line);
