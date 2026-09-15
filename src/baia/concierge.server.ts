@@ -24,6 +24,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { ConciergeMessage, ConciergeResponse } from "./concierge.types";
 import { runGuestTurn } from "./tala/agent/tala.loop";
+import { suggestFollowUps } from "./concierge.answer";
 
 export const conciergeChat = createServerFn({ method: "POST" })
   .inputValidator((data: { messages: ConciergeMessage[]; sessionId: string }) => data)
@@ -46,5 +47,6 @@ export const conciergeChat = createServerFn({ method: "POST" })
         evidenceJson: a.evidenceJson,
       })),
       brain: turn.brain,
+      followUps: (turn as { followUps?: string[] }).followUps ?? [],
     };
   });

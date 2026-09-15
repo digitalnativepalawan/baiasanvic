@@ -42,11 +42,14 @@ export interface ConciergeResponse {
   sanitized?: boolean;
   // --- Tool evidence (not shown to the guest) ---
   actions?: Array<{ name: string; status: string; evidenceJson?: string }>;
+  // --- Follow-up suggestions shown after the reply ---
   // "deterministic" = answered from static approved knowledge, no LLM call.
   // "tala" = the in-app agentic loop (model + tools) answered the turn.
   // "fallback" = none of the above could answer; guest was pointed to email
   // / Book Now.
   brain?: "deterministic" | "tala" | "fallback";
+  /** Up to 4 short follow-up questions the guest can tap. Empty when none fit. */
+  followUps?: string[];
 }
 
 // What the admin panel fetches to populate the model dropdowns (client-side).

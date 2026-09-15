@@ -26,7 +26,7 @@ import { loadConciergeConfig } from "../../concierge.config.server";
 import { buildTalaGuestPrompt, buildTalaAdminPrompt } from "./tala.prompts";
 import { retrieveRelevant, chunksToText } from "../../concierge.retrieve";
 import { buildMenuAnswer, isMenuQuestion, isNoKnowledgeFallback } from "../../concierge.knowledge";
-import { answerKnownTopic } from "../../concierge.answer";
+import { answerKnownTopic, suggestFollowUps } from "../../concierge.answer";
 import { loadDbKnowledgeChunks } from "../../concierge.knowledge.server";
 import { logConciergeTurn } from "../../concierge.log.server";
 import { detectIntent, sanitizeReply, APPROVED_RATE_RESPONSE } from "../../concierge.guardrails";
@@ -180,6 +180,36 @@ function safeJson(v: unknown): string | undefined {
   }
 }
 
+/**
+ * Parse the model's optional FOLLOW-UPS block out of a guest-facing reply.
+ * Expected format (produced by the TALA guest prompt):
+ *   --- FOLLOW-UPS ---
+ *   1. <question>
+ *   2. <question>
+ *   ...
+ * Returns [replyWithoutBlock, followUpStrings] — followUpStrings is empty when
+ * there is no block or the block is malformed.
+ */
+function parseFollowUps(reply: string): { reply: string; followUps: string[] } {
+  const blockStart = "--- FOLLOW-UPS ---";
+  const idx = reply.indexOf(blockStart);
+  if (idx < 0) return { reply, followUps: [] };
+  const body = reply.slice(idx + blockStart.length).trimStart();
+  // Questions are lines starting with "N. " — stop at the first blank line or
+  // anything that isn't a numbered question.
+  const lines = body.split("\n");
+  const followUps: string[] = [];
+  for (const line of lines) {
+    const m = line.match(/^\d+\.\s+(.+)/);
+    if (!m) break;
+    const q = m[1].trim();
+    if (q) followUps.push(q);
+    if (followUps.length >= 4) break;
+  }
+  const replyWithout = reply.slice(0, idx).trimEnd();
+  return { reply: replyWithout || reply, followUps };
+}
+
 // ---------------------------------------------------------------------------
 // Guest turn (public site chat)
 // ---------------------------------------------------------------------------
@@ -192,6 +222,9 @@ export interface GuestTurnResult {
   sanitized?: boolean;
   brain: "deterministic" | "tala" | "fallback";
   actions: TalaAction[];
+  /** Topic id/label when the answer came from the deterministic knowledge layer. */
+  topicId?: string;
+  topicLabel?: string;
 }
 
 function trimHistory(messages: ConciergeMessage[]): ConciergeMessage[] {
@@ -290,6 +323,9 @@ export async function runGuestTurn(params: {
       sanitized: false,
       brain: "deterministic",
       actions: [],
+      topicId: deterministic.topicId,
+      topicLabel: deterministic.label,
+      followUps: suggestFollowUps(deterministic.topicId, deterministic.label),
     };
   }
 
@@ -321,16 +357,27 @@ export async function runGuestTurn(params: {
             ? buildMenuAnswer()
             : loop.reply;
         const guarded = sanitizeReply(menuFixed, intent.intent);
+        // Parse the model's optional FOLLOW-UPS block — the TALA guest prompt
+        // asks the model to append "--- FOLLOW-UPS ---\n1. ..." when it has good
+        // next questions. When present, use the model's creative suggestions;
+        // otherwise fall back to deterministic follow-ups from the best chunk.
+        const parsed = parseFollowUps(guarded.reply);
+        const bestChunk = chunks[0];
         await logConciergeTurn(params.sessionId, "guest", question);
-        await logConciergeTurn(params.sessionId, "agent", guarded.reply);
+        await logConciergeTurn(params.sessionId, "agent", parsed.reply);
         return {
-          reply: guarded.reply,
+          reply: parsed.reply,
           intent: guarded.intent,
           approvalRequired: guarded.approvalRequired,
           databaseWriteDeferred: guarded.databaseWriteDeferred,
           sanitized: guarded.sanitized,
           brain: "tala",
           actions: loop.actions,
+          followUps: parsed.followUps.length > 0
+            ? parsed.followUps
+            : bestChunk
+              ? suggestFollowUps(bestChunk.id, bestChunk.label)
+              : [],
         };
       }
       console.error("TALA agentic loop ended without a reply:", loop.error);

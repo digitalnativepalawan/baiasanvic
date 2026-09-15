@@ -49,6 +49,23 @@ function ActionChip({ name, ok }: { name: string; ok: boolean }) {
   );
 }
 
+function FollowUpChips({ followUps, onSend }: { followUps: string[]; onSend: (q: string) => void }) {
+  if (!followUps.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-luxury-800/70">
+      {followUps.map((q) => (
+        <button
+          key={q}
+          onClick={() => onSend(q)}
+          className="text-[10px] text-luxury-200 border border-luxury-800 hover:border-gold-300 hover:text-gold-300 rounded-sm px-2.5 py-1 transition-all cursor-pointer whitespace-nowrap"
+        >
+          {q}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** Split a (possibly structured) agent reply into renderable blocks.
  * Auto-detects the markdown-style headings + bullets the knowledge + TALA
  * pipelines produce (## Room name, - amenity, Tip: ...), while still rendering
@@ -243,6 +260,9 @@ export default function ConciergeWidget({ open = false, onClose }: ConciergeWidg
                           <ActionChip key={j} name={a.name} ok={a.status === "success"} />
                         ))}
                       </div>
+                    )}
+                    {m.role === "agent" && (m as { followUps?: string[] }).followUps?.length && (
+                      <FollowUpChips followUps={(m as { followUps?: string[] }).followUps} onSend={send} />
                     )}
                   </div>
                 </div>

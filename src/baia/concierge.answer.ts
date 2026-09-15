@@ -141,3 +141,181 @@ export function answerKnownTopic(
   return { reply: formatted, topicId: top.chunk.id, label: top.chunk.label };
 }
 
+/**
+ * Derive a few contextual follow-up questions from the chunk that answered the
+ * guest, so the conversation carries forward even with no LLM provider.
+ * Deterministic, inexpensive, and on-topic: each follow-up is a short question
+ * the guest can tap. When nothing credible can be derived, returns an empty
+ * array (the widget then shows nothing).
+ */
+export function suggestFollowUps(chunkId: string, label: string): string[] {
+  const out: string[] = [];
+  // Topic-driven follow-ups — the guest just asked about X, here are natural
+  // next questions they might want to ask next.
+  switch (chunkId) {
+    case "accommodations":
+      out.push("Which room suits 2 adults + 1 child?");
+      out.push("Do you have a beachfront room available?");
+      out.push("What's the smallest room you have?");
+      break;
+    case "experiences":
+      out.push("Can you arrange a half-day island-hopping charter?");
+      out.push("Where's the best spot for snorkeling near BAIA?");
+      out.push("Do you offer sunrise yoga?");
+      break;
+    case "dining":
+      out.push("Do you accommodate vegetarian meals?");
+      out.push("Can we have a private beach dinner?");
+      out.push("What time is breakfast served?");
+      break;
+    case "booking":
+      out.push("What dates are you looking at?");
+      out.push("Which room type do you prefer?");
+      out.push("How do I reach the team by email?");
+      break;
+    case "transfers":
+      out.push("How long is the drive from Puerto Princesa?");
+      out.push("How much notice do you need for the van?");
+      out.push("Can the outrigger pick me up from the beach?");
+      break;
+    case "stay":
+      out.push("What time is check-in and check-out?");
+      out.push("Is WiFi reliable in the villas?");
+      out.push("Is BAIA good for a digital nomad stay?");
+      break;
+    case "family":
+      out.push("Can the Deluxe Suite sleep 4?");
+      out.push("Do you provide a crib?");
+      out.push("Is the beach safe for children?");
+      break;
+    case "town":
+      out.push("How do I get to Port Barton?");
+      out.push("Is there an ATM in San Vicente town?");
+      out.push("What restaurants are near BAIA?");
+      break;
+    case "breakfast":
+      out.push("What time is breakfast served?");
+      out.push("Can I get breakfast in my villa?");
+      out.push("Do you have vegetarian breakfast options?");
+      break;
+    case "checkin_checkout":
+      out.push("Can I arrive earlier than 2 PM?");
+      out.push("How do I arrange a late check-in?");
+      out.push("Can you store my luggage if I arrive early?");
+      break;
+    case "cancellation":
+      out.push("What's BAIA's cancellation policy?");
+      out.push("How far in advance do I need to cancel?");
+      out.push("What if I no-show?");
+      break;
+    case "airport_transfer":
+      out.push("How long is the drive from PPS?");
+      out.push("How much notice do you need for the van?");
+      out.push("Can you pick up more than 12 guests?");
+      break;
+    case "tour_partners":
+      out.push("Do you offer a half-day island-hopping charter?");
+      out.push("Where's the best place to see turtles?");
+      out.push("Can you arrange a beach lunch on the sandbar?");
+      break;
+    case "rentals":
+      out.push("How much is a scooter per day?");
+      out.push("Can I rent a bicycle to ride to Long Beach?");
+      out.push("Do you have bikes for adults and children?");
+      break;
+    case "wifi":
+      out.push("Is the WiFi reliable for video calls?");
+      out.push("Is there a backup if the WiFi drops?");
+      out.push("Is the WiFi free?");
+      break;
+    case "power":
+      out.push("How often does the power go out?");
+      out.push("Is there backup power for the AC?");
+      out.push("What should I pack for power outages?");
+      break;
+    case "faqs":
+      out.push("How do I get an exact package total?");
+      out.push("What dates are you looking at?");
+      out.push("Which room type do you prefer?");
+      break;
+    case "long_beach":
+      out.push("How do I get to Long Beach from BAIA?");
+      out.push("What time is best to go?");
+      out.push("Can I take a scooter there?");
+      break;
+    case "port_barton":
+      out.push("How do I get to Port Barton?");
+      out.push("Can you recommend restaurants there?");
+      out.push("Can Port Barton be combined with a waterfall day-trip?");
+      break;
+    case "island_hopping":
+      out.push("Can you arrange a half-day charter?");
+      out.push("Which island has the best beach lunch?");
+      out.push("Do turtles show up reliably?");
+      break;
+    case "waterfalls":
+      out.push("Which waterfall is easiest to reach?");
+      out.push("Can I combine a waterfall with Port Barton?");
+      out.push("Do I need a guide for Pamuayan Falls?");
+      break;
+    case "alimanguan_surfing":
+      out.push("How do I get to Alimanguan from BAIA?");
+      out.push("What's the best season for surfing there?");
+      out.push("Do you have surf board rentals?");
+      break;
+    case "seasons":
+      out.push("When is the best time to visit BAIA?");
+      out.push("Is June to October a good time to go?");
+      out.push("Are boat trips still running in the rainy season?");
+      break;
+    case "packing":
+      out.push("What sunscreen should I bring?");
+      out.push("Do I need reef shoes?");
+      out.push("Should I bring cash to San Vicente?");
+      break;
+    case "health_safety":
+      out.push("Where's the nearest medical help?");
+      out.push("Is travel insurance recommended?");
+      out.push("Is tap water safe to drink?");
+      break;
+    case "nomads":
+      out.push("Is the WiFi good enough for remote work?");
+      out.push("Do you offer long-stay rates?");
+      out.push("Is there a workspace at BAIA?");
+      break;
+    case "special_occasions":
+      out.push("Can you arrange a beachfront proposal?");
+      out.push("Can we have a private candle-lit dinner?");
+      out.push("How far in advance should I ask?");
+      break;
+    case "wellness":
+      out.push("What time is the sunrise yoga session?");
+      out.push("Can you arrange a massage?");
+      out.push("Is the shala open outside scheduled sessions?");
+      break;
+    case "sustainability":
+      out.push("Do you have reef-safe sunscreen?");
+      out.push("What are the marine park rules?");
+      out.push("Can I bring my own refillable bottle?");
+      break;
+    case "payments":
+      out.push("How do I pay for my stay?");
+      out.push("Is a deposit required?");
+      out.push("Do you list on Booking.com and Agoda?");
+      break;
+    case "house_rules":
+      out.push("Are pets allowed at BAIA?");
+      out.push("Can we have a small party in our villa?");
+      out.push("Is smoking allowed on the property?");
+      break;
+    case "culture":
+      out.push("What languages do the staff speak?");
+      out.push("What's a nice Filipino phrase I can use?");
+      out.push("Is tipping expected?");
+      break;
+    default:
+      break;
+  }
+  return out.slice(0, 4);
+}
+
