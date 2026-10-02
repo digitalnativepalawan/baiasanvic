@@ -71,7 +71,7 @@ async function openRouterOnce(
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${cfg.openrouterApiKey}`,
-      "HTTP-Referer": "https://baiasanvic.lovable.app",
+      "HTTP-Referer": process.env.SITE_URL || "https://baiasanvic.com",
       "X-Title": "BAIA Concierge",
     },
     body: JSON.stringify({

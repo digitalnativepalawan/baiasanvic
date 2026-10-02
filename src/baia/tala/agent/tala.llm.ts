@@ -115,7 +115,7 @@ async function openRouterWithTools(
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${cfg.openrouterApiKey}`,
-        "HTTP-Referer": "https://baiasanvic.lovable.app",
+        "HTTP-Referer": process.env.SITE_URL || "https://baiasanvic.com",
         "X-Title": "TALA Agent",
       },
       body: JSON.stringify(body),
